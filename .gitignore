@@ -103,3 +103,4 @@ temp/
 *.sw?
 
 data/**/*
+/data/
