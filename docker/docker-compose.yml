@@ -96,6 +96,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
     networks:
       - smart-search-network
 
@@ -106,9 +107,115 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./config/grafana:/etc/grafana/provisioning
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - smart-search-network
+
+  # Database Exporters
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: smart-search-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://user:password@postgres:5432/smartsearch?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
+    networks:
+      - smart-search-network
+
+  mysql-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: smart-search-mysql-exporter
+    environment:
+      DATA_SOURCE_NAME: "user:password@(mysql:3306)/smartsearch"
+    ports:
+      - "9104:9104"
+    depends_on:
+      - mysql
+    networks:
+      - smart-search-network
+
+  mongodb-exporter:
+    image: percona/mongodb_exporter:latest
+    container_name: smart-search-mongodb-exporter
+    environment:
+      MONGODB_URI: "mongodb://root:rootpassword@mongodb:27017"
+    ports:
+      - "9216:9216"
+    depends_on:
+      - mongodb
+    networks:
+      - smart-search-network
+
+  # Cache Exporters
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: smart-search-redis-exporter
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
+    networks:
+      - smart-search-network
+
+  dragonfly-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: smart-search-dragonfly-exporter
+    environment:
+      REDIS_ADDR: "redis://dragonfly:6379"
+    ports:
+      - "9122:9121"
+    depends_on:
+      - dragonfly
+    networks:
+      - smart-search-network
+
+  memcached-exporter:
+    image: prom/memcached-exporter:latest
+    container_name: smart-search-memcached-exporter
+    command:
+      - '--memcached.address=memcached:11211'
+    ports:
+      - "9150:9150"
+    depends_on:
+      - memcached
+    networks:
+      - smart-search-network
+
+  # System Monitoring
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: smart-search-node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - smart-search-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: smart-search-cadvisor
+    ports:
+      - "8083:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
     networks:
       - smart-search-network
 
