@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # Delta Lake with Apache Spark
+  deltalake:
+    image: apache/spark:3.4.1-scala2.12-java11-python3-ubuntu
+    container_name: smart-search-deltalake
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_HOST=0.0.0.0
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
+      - PYSPARK_PYTHON=python3
+    ports:
+      - "8080:8080"  # Spark UI
+      - "7077:7077"  # Spark Master
+      - "4040:4040"  # Spark Application UI
+    volumes:
+      - deltalake_data:/opt/spark/data
+      - ./data:/data
+      - ./scripts/delta:/scripts
+    command: >
+      bash -c "
+        pip install delta-spark pyspark pandas pyarrow &&
+        /opt/spark/bin/spark-submit --version &&
+        tail -f /dev/null
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - smart-search-network
+
+  # Redis for caching Delta Lake results
+  redis:
+    image: redis:7.2-alpine
+    container_name: smart-search-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smart-search-network
+
+  # Delta Lake Data Processor (Python service)
+  deltalake-processor:
+    build:
+      context: ../docker/deltalake
+      dockerfile: Dockerfile
+    container_name: smart-search-deltalake-processor
+    environment:
+      - DELTA_PATH=/data/delta
+      - REDIS_URL=redis://redis:6379
+      - SPARK_MASTER=spark://deltalake:7077
+    volumes:
+      - deltalake_data:/data/delta
+      - ../data:/source_data
+    depends_on:
+      deltalake:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8081:8081"  # Delta Lake API
+    networks:
+      - smart-search-network
+    restart: unless-stopped
+
+  # Delta Lake + Redis Showcase
+  deltalake-redis-showcase:
+    build: ../showcases/deltalake-redis
+    container_name: smart-search-deltalake-redis-showcase
+    environment:
+      - PORT=3005
+      - DELTA_PATH=/data/delta
+      - REDIS_URL=redis://redis:6379
+      - SPARK_MASTER=spark://deltalake:7077
+      - DATA_SIZE=large
+    ports:
+      - "3005:3005"
+    volumes:
+      - deltalake_data:/data/delta
+    depends_on:
+      deltalake:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      deltalake-processor:
+        condition: service_started
+    networks:
+      - smart-search-network
+    restart: unless-stopped
+
+  # MinIO for S3-compatible storage (optional for cloud simulation)
+  minio:
+    image: minio/minio:latest
+    container_name: smart-search-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - smart-search-network
+
+volumes:
+  deltalake_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  smart-search-network:
+    driver: bridge

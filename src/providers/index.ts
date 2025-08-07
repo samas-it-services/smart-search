@@ -18,6 +18,9 @@ export type { MongoDBConfig, MongoDBSearchConfig } from './MongoDBProvider';
 export { SQLiteProvider } from './SQLiteProvider';
 export type { SQLiteConfig, SQLiteSearchConfig } from './SQLiteProvider';
 
+export { DeltaLakeProvider } from './DeltaLakeProvider';
+export type { DeltaLakeConfig } from './DeltaLakeProvider';
+
 // Cache Providers
 export { RedisProvider } from './RedisProvider';
 export type { RedisConfig, RedisSearchIndexConfig } from './RedisProvider';

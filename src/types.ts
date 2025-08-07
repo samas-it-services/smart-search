@@ -5,7 +5,7 @@
 
 export interface SearchResult {
   id: string;
-  type: 'book' | 'user' | 'book_club' | 'author' | 'qa' | 'custom';
+  type: 'book' | 'user' | 'book_club' | 'author' | 'qa' | 'custom' | 'financial_data' | 'healthcare_data' | 'retail_data' | 'education_data' | 'real_estate_data';
   title: string;
   subtitle?: string;
   description?: string;
@@ -24,6 +24,8 @@ export interface SearchResult {
   isbn?: string;
   uploaderName?: string;
   uploaderEmail?: string;
+  url?: string; // For linking to detailed views
+  score?: number; // Relevance score (0-1)
   matchType: 'title' | 'author' | 'description' | 'username' | 'name' | 'tag' | 'category' | 'language' | 'isbn' | 'uploader' | 'question' | 'answer' | 'custom';
   relevanceScore: number;
   bookTitle?: string; // For Q&A results
@@ -75,13 +77,18 @@ export interface CircuitBreakerState {
 }
 
 export interface HealthStatus {
+  status?: 'healthy' | 'unhealthy' | 'degraded';
   isConnected: boolean;
   isSearchAvailable: boolean;
-  latency: number;
-  memoryUsage: string;
-  keyCount: number;
-  lastSync: string | null;
-  errors: string[];
+  latency?: number;
+  responseTime?: number;
+  memoryUsage?: string;
+  keyCount?: number;
+  lastSync?: string | null;
+  errors?: string[];
+  message?: string;
+  timestamp?: string;
+  details?: Record<string, any>;
 }
 
 // Provider Interfaces

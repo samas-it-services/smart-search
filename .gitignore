@@ -101,3 +101,6 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+data/healthcare/large/research_studies.json
+data/finance/large/market_data.json

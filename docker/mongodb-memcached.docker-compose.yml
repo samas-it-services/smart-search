@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: smart-search-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_DATABASE: smartsearch
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init/mongodb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - smart-search-network
+
+  memcached:
+    image: memcached:1.6-alpine
+    container_name: smart-search-memcached
+    ports:
+      - "11211:11211"
+    command: memcached -m 64
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "11211"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smart-search-network
+
+  # Showcase Application
+  mongodb-memcached-showcase:
+    build: ../showcases/mongodb-memcached
+    container_name: smart-search-mongodb-memcached-showcase
+    environment:
+      - PORT=3004
+      - DATABASE_URL=mongodb://root:rootpassword@mongodb:27017/smartsearch
+      - CACHE_URL=memcached://memcached:11211
+      - DATA_SIZE=medium
+    ports:
+      - "3004:3004"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      memcached:
+        condition: service_healthy
+    networks:
+      - smart-search-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  smart-search-network:
+    driver: bridge

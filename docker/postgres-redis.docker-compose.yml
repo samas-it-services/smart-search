@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: smart-search-postgres
+    environment:
+      POSTGRES_DB: smartsearch
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d smartsearch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - smart-search-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: smart-search-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smart-search-network
+
+  # Showcase Application
+  postgres-redis-showcase:
+    build: ../showcases/postgres-redis
+    container_name: smart-search-postgres-redis-showcase
+    environment:
+      - PORT=3002
+      - DATABASE_URL=postgresql://user:password@postgres:5432/smartsearch
+      - REDIS_URL=redis://redis:6379
+      - DATA_SIZE=medium
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - smart-search-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  smart-search-network:
+    driver: bridge
