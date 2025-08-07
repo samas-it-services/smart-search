@@ -170,6 +170,9 @@ Key configuration sections:
 
 **Unit Tests** (`src/__tests__/`) - Test core functionality and providers
 **E2E Tests** (`tests/e2e/`) - Test full integration scenarios with Playwright
+**Integration Tests** - Cross-database compatibility testing with Docker stacks
+**Performance Tests** (`benchmarks/`) - Automated performance regression testing
+**Chaos Tests** - Fault injection and resilience testing
 **Coverage Requirements** - 80% minimum coverage across branches, functions, lines, and statements
 
 ## Development Notes
@@ -194,3 +197,334 @@ Always run before making significant changes:
 ```bash
 npm run type-check && npm run test:unit && npm run build
 ```
+
+## Docker Infrastructure
+
+### Available Database + Cache Stacks
+
+The project provides pre-configured Docker stacks for comprehensive testing and showcasing:
+
+#### Production-Ready Stacks
+- **`mysql-redis`** - MySQL 8.0 + Redis 7 (E-commerce showcase)
+- **`postgres-redis`** - PostgreSQL 15 + Redis 7 (CMS showcase) 
+- **`mongodb-dragonfly`** - MongoDB 6.0 + DragonflyDB (Social media showcase)
+- **`supabase-redis`** - Local Supabase + Redis Stack (Real-time showcase)
+
+#### Development & Testing Stacks
+- **`sqlite-inmemory`** - SQLite + In-memory cache (Lightweight development)
+- **`all-databases`** - Multi-database comparison environment
+- **`monitoring-stack`** - Grafana + Prometheus + all databases
+
+#### Quick Start Commands
+```bash
+# Start MySQL + Redis with demo data
+./scripts/start-stack.sh mysql-redis
+
+# Start all databases for comparison
+./scripts/start-stack.sh all-databases
+
+# Stop all services
+./scripts/stop-all.sh
+```
+
+### Docker Compose Files Structure
+
+```
+docker/
+├── mysql-redis.docker-compose.yml       # MySQL + Redis + demo data
+├── postgres-redis.docker-compose.yml    # PostgreSQL + Redis + CMS data  
+├── mongodb-dragonfly.docker-compose.yml # MongoDB + DragonflyDB + social data
+├── supabase-redis.docker-compose.yml    # Supabase + Redis Stack
+├── sqlite-inmemory.docker-compose.yml   # Lightweight development stack
+├── all-databases.docker-compose.yml     # All databases + caches
+├── monitoring.docker-compose.yml        # Grafana + Prometheus monitoring
+└── nginx/
+    ├── nginx.conf                       # Load balancer configuration
+    └── ssl/                            # SSL certificates for HTTPS
+```
+
+## Showcase Applications
+
+### Individual Database Showcases
+
+#### MySQL E-commerce Showcase (`showcases/mysql-showcase/`)
+**Features:**
+- 100k products with categories, reviews, inventory
+- Real-time search with faceted filtering
+- Performance comparison: MySQL full-text vs Redis cache
+- Shopping cart with search history
+- Admin dashboard with search analytics
+
+**Key Demonstrations:**
+- MySQL 8.0 MATCH/AGAINST full-text search
+- JSON column search and filtering
+- Index optimization strategies
+- Cache warming and invalidation patterns
+
+**Access:** `http://localhost:3001` (after running `./scripts/start-showcase.sh mysql`)
+
+#### PostgreSQL CMS Showcase (`showcases/postgres-showcase/`)
+**Features:**
+- 50k articles, authors, comments, tags
+- Advanced search with relevance ranking
+- Multi-language content search
+- Full-text search with highlighting
+- Content recommendation engine
+
+**Key Demonstrations:**
+- PostgreSQL tsvector and tsquery
+- GIN and GiST indexing strategies
+- Custom ranking algorithms
+- Search result highlighting and snippets
+
+**Access:** `http://localhost:3002` (after running `./scripts/start-showcase.sh postgres`)
+
+#### MongoDB Social Media Showcase (`showcases/mongodb-showcase/`)
+**Features:**
+- 200k users, posts, comments, interactions
+- Real-time search with live updates
+- Geospatial search capabilities
+- Flexible schema search
+- Social graph search
+
+**Key Demonstrations:**
+- MongoDB text indexes and aggregation pipelines
+- Atlas Search integration (with local Atlas)
+- Geospatial queries and indexing
+- Real-time search with change streams
+
+**Access:** `http://localhost:3003` (after running `./scripts/start-showcase.sh mongodb`)
+
+#### Supabase Real-time Showcase (`showcases/supabase-showcase/`)
+**Features:**
+- Real-time collaborative search
+- Row-level security demonstrations
+- Edge function integration
+- Real-time subscriptions with search filters
+- Multi-tenant search patterns
+
+**Key Demonstrations:**
+- Supabase real-time subscriptions
+- PostgreSQL RLS policies
+- Edge function search enhancements
+- Multi-tenant data isolation
+
+**Access:** `http://localhost:3004` (after running `./scripts/start-showcase.sh supabase`)
+
+### Unified Multi-Stack Showcase (`showcases/unified-showcase/`)
+
+**Interactive Features:**
+- **Database Selector** - Switch between MySQL, PostgreSQL, MongoDB live
+- **Cache Provider Toggle** - Compare Redis, DragonflyDB, Memcached performance
+- **Real-time Metrics** - Search latency, throughput, cache hit rates
+- **Configuration Editor** - Live configuration changes with instant results
+- **Query Analyzer** - Explain query execution across different databases
+
+**Performance Comparisons:**
+- Search latency across different database types
+- Cache effectiveness for different query patterns
+- Scaling characteristics under load
+- Memory usage and connection pooling
+
+**Access:** `http://localhost:3000` (after running `./scripts/start-showcase.sh unified`)
+
+## Performance Benchmarking
+
+### Benchmark Suite
+
+The project includes comprehensive benchmarking tools for performance analysis:
+
+#### Load Testing Scenarios
+```bash
+# Basic search performance
+./scripts/benchmark-runner.js --test search-latency --duration 300s --rps 100
+
+# Cache effectiveness
+./scripts/benchmark-runner.js --test cache-performance --queries 10000
+
+# Concurrent user simulation  
+./scripts/benchmark-runner.js --test concurrent-users --users 50 --duration 600s
+
+# Failover performance
+./scripts/benchmark-runner.js --test failover-timing --failure-scenarios all
+```
+
+#### Database Comparison Framework
+```bash
+# Compare all databases with same query set
+./scripts/compare-databases.js --queries benchmarks/query-sets/ecommerce.json
+
+# Cache provider comparison
+./scripts/compare-caches.js --providers redis,dragonfly,memcached --load-pattern high-frequency
+
+# Memory usage comparison
+./scripts/memory-benchmark.js --databases all --data-size 1M
+```
+
+#### Performance Regression Testing
+```bash
+# Run performance regression suite
+./scripts/performance-regression.js --baseline v1.0.0 --current HEAD
+
+# Generate performance report
+./scripts/generate-reports.js --format html --output reports/performance.html
+```
+
+### Monitoring and Observability
+
+#### Grafana Dashboards
+- **Search Performance Dashboard** - Real-time search metrics
+- **Database Health Dashboard** - Connection pools, query performance  
+- **Cache Analytics Dashboard** - Hit rates, memory usage, eviction patterns
+- **Circuit Breaker Dashboard** - Failure patterns and recovery metrics
+
+#### Custom Metrics
+- Search request rate and latency percentiles
+- Cache hit/miss ratios by query pattern
+- Database connection pool utilization
+- Circuit breaker state changes
+- Query execution plan analysis
+
+#### Alerts and Monitoring
+- High latency alerts (>100ms p95)
+- Cache hit rate degradation (<80%)
+- Circuit breaker activation
+- Database connection pool exhaustion
+
+## Provider Development Guide
+
+### Creating a New Database Provider
+
+#### 1. Implement DatabaseProvider Interface
+```typescript
+// src/providers/CustomDBProvider.ts
+export class CustomDBProvider implements DatabaseProvider {
+  name = 'CustomDB';
+  
+  async connect(): Promise<void> {
+    // Connection logic
+  }
+  
+  async search(query: string, options: SearchOptions): Promise<SearchResult[]> {
+    // Search implementation
+  }
+  
+  async checkHealth(): Promise<HealthStatus> {
+    // Health check logic
+  }
+}
+```
+
+#### 2. Add Configuration Support
+```typescript
+// Add to SmartSearchFactory.ts
+case 'customdb':
+  return new CustomDBProvider({
+    connectionString: connection.uri,
+    options: options || {}
+  });
+```
+
+#### 3. Create Docker Configuration
+```yaml
+# docker/customdb-redis.docker-compose.yml
+version: '3.8'
+services:
+  customdb:
+    image: customdb:latest
+    environment:
+      - CUSTOMDB_DATABASE=testdb
+    ports:
+      - "5433:5432"
+```
+
+#### 4. Add Test Suite
+```typescript
+// src/__tests__/providers/CustomDBProvider.test.ts
+describe('CustomDBProvider', () => {
+  // Comprehensive test suite
+});
+```
+
+#### 5. Create Showcase Application
+```bash
+# Create showcase directory
+mkdir showcases/customdb-showcase
+# Implement showcase with realistic demo data
+```
+
+### Creating a New Cache Provider
+
+Follow similar pattern for cache providers, implementing the `CacheProvider` interface with `connect()`, `search()`, `set()`, `get()`, `delete()`, `clear()`, and `checkHealth()` methods.
+
+## Production Deployment
+
+### Database-Specific Optimization
+
+#### MySQL Production Setup
+```sql
+-- Optimize for full-text search
+SET GLOBAL innodb_ft_min_token_size=1;
+SET GLOBAL innodb_ft_server_stopword_table='';
+
+-- Create optimized indexes
+ALTER TABLE products ADD FULLTEXT(name, description);
+```
+
+#### PostgreSQL Production Setup
+```sql
+-- Create GIN indexes for text search
+CREATE INDEX CONCURRENTLY idx_articles_fts 
+ON articles USING gin(to_tsvector('english', title || ' ' || content));
+
+-- Configure text search
+ALTER DATABASE myapp SET default_text_search_config = 'english';
+```
+
+#### MongoDB Production Setup
+```javascript
+// Create text indexes
+db.articles.createIndex({
+  "title": "text",
+  "content": "text", 
+  "author": "text"
+}, {
+  weights: { title: 10, content: 1, author: 5 }
+});
+```
+
+### Cache Optimization
+
+#### Redis Configuration
+```conf
+# redis.conf optimization
+maxmemory 2gb
+maxmemory-policy allkeys-lru
+save 900 1
+```
+
+#### DragonflyDB Configuration  
+```conf
+# dragonfly.conf
+--maxmemory=4gb
+--cache_mode=true
+--proactor_threads=8
+```
+
+### Scaling Considerations
+
+#### Read Replicas
+- Configure read replicas for database providers
+- Implement read/write splitting in search operations
+- Load balance search queries across replicas
+
+#### Cache Clustering
+- Redis Cluster configuration for horizontal scaling
+- Consistent hashing for cache key distribution
+- Failover and recovery procedures
+
+#### Monitoring at Scale
+- Prometheus metrics collection
+- Grafana alerting rules
+- Log aggregation with ELK stack
+- Distributed tracing with OpenTelemetry
