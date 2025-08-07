@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  # Database Services
+  mysql:
+    image: mysql:8.0
+    container_name: smart-search-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: smartsearch
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init/mysql:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - smart-search-network
+
+  postgres:
+    image: postgres:15
+    container_name: smart-search-postgres
+    environment:
+      POSTGRES_DB: smartsearch
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init/postgres:/docker-entrypoint-initdb.d
+    networks:
+      - smart-search-network
+
+  mongodb:
+    image: mongo:7.0
+    container_name: smart-search-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+      MONGO_INITDB_DATABASE: smartsearch
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init/mongodb:/docker-entrypoint-initdb.d
+    networks:
+      - smart-search-network
+
+  # Cache Services
+  redis:
+    image: redis:7.2-alpine
+    container_name: smart-search-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./config/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    networks:
+      - smart-search-network
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.15.1
+    container_name: smart-search-dragonfly
+    ports:
+      - "6380:6379"
+    volumes:
+      - dragonfly_data:/data
+    command: dragonfly --logtostderr
+    networks:
+      - smart-search-network
+
+  memcached:
+    image: memcached:1.6-alpine
+    container_name: smart-search-memcached
+    ports:
+      - "11211:11211"
+    command: memcached -m 64
+    networks:
+      - smart-search-network
+
+  # Monitoring Services
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: smart-search-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - smart-search-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: smart-search-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana:/etc/grafana/provisioning
+    networks:
+      - smart-search-network
+
+  # Development Services
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: smart-search-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379,dragonfly:dragonfly:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+      - dragonfly
+    networks:
+      - smart-search-network
+
+  adminer:
+    image: adminer:4
+    container_name: smart-search-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - postgres
+    networks:
+      - smart-search-network
+
+  mongo-express:
+    image: mongo-express:1.0.0
+    container_name: smart-search-mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: rootpassword
+      ME_CONFIG_MONGODB_URL: mongodb://root:rootpassword@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - "8082:8081"
+    depends_on:
+      - mongodb
+    networks:
+      - smart-search-network
+
+volumes:
+  mysql_data:
+    driver: local
+  postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  dragonfly_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  smart-search-network:
+    driver: bridge
