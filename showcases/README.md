@@ -297,7 +297,7 @@ For questions or issues with the showcases:
 
 1. Check the [main documentation](../README.md)
 2. Review the [CLAUDE.md](../CLAUDE.md) development guide
-3. Open an issue on [GitHub](https://github.com/samas-org/smart-search)
+3. Open an issue on [GitHub](https://github.com/samas-it-services/smart-search)
 4. Join our [Discord community](https://discord.gg/smart-search)
 
 ## License

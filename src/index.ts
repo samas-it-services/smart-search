@@ -5,7 +5,7 @@
  * Licensed under Apache-2.0
  * 
  * Support the project:
- * - ⭐ Star on GitHub: https://github.com/samas-org/smart-search
+ * - ⭐ Star on GitHub: https://github.com/samas-it-services/smart-search
  * - 💰 Sponsor: https://github.com/sponsors/bilgrami
  * - ☕ Buy me a coffee: https://ko-fi.com/bilgrami
  * - 🐦 Follow: https://x.com/sbilgrami

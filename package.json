@@ -33,13 +33,13 @@
       "url": "https://ko-fi.com/bilgrami"
     }
   ],
-  "homepage": "https://github.com/samas-org/smart-search#readme",
+  "homepage": "https://github.com/samas-it-services/smart-search#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/samas-org/smart-search.git"
+    "url": "git+https://github.com/samas-it-services/smart-search.git"
   },
   "bugs": {
-    "url": "https://github.com/samas-org/smart-search/issues"
+    "url": "https://github.com/samas-it-services/smart-search/issues"
   },
   "files": [
     "dist",

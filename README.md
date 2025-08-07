@@ -12,7 +12,7 @@
 
 This is an open-source project developed with ❤️ by the community. If you find it useful, please consider supporting:
 
-- ⭐ **[Star on GitHub](https://github.com/samas-org/smart-search)** - Show your support
+- ⭐ **[Star on GitHub](https://github.com/samas-it-services/smart-search)** - Show your support
 - 💰 **[Sponsor on GitHub](https://github.com/sponsors/bilgrami)** - Monthly sponsorship
 - ☕ **[Buy me a coffee](https://ko-fi.com/bilgrami)** - One-time support
 - 🐦 **[Follow on X](https://x.com/sbilgrami)** - Stay updated
@@ -481,15 +481,178 @@ interface SearchFilters {
 
 ## 🧪 Testing
 
+### Unit Tests
 ```bash
-# Run tests
-npm test
+# Run unit tests
+npm run test:unit
 
 # Run tests with coverage
 npm run test:coverage
 
-# Run linting
+# Run tests in watch mode
+npm run test:watch
+```
+
+### End-to-End Testing with Playwright
+
+Smart Search includes comprehensive E2E tests using Playwright to test showcase applications and generate blog post screenshots.
+
+#### Prerequisites
+```bash
+# Install Playwright (already included in devDependencies)
+npm install
+
+# Install Playwright browsers
+npx playwright install
+```
+
+#### Running E2E Tests
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run tests with browser UI (headed mode)
+npm run test:e2e:headed
+
+# Run tests in debug mode
+npm run test:e2e:debug
+
+# Run specific showcase tests
+npx playwright test --grep "postgres-redis"
+```
+
+#### Using the Test Showcase Script
+
+We provide a comprehensive testing script for easy showcase testing:
+
+```bash
+# Install Playwright dependencies
+./scripts/test-showcase.sh install
+
+# Run all showcase tests
+./scripts/test-showcase.sh test
+
+# Run tests with interactive UI
+./scripts/test-showcase.sh test-ui
+
+# Generate blog post screenshots
+./scripts/test-showcase.sh screenshots postgres-redis
+
+# Run performance benchmarks
+./scripts/test-showcase.sh performance
+
+# Debug tests interactively
+./scripts/test-showcase.sh debug
+
+# View HTML test report
+./scripts/test-showcase.sh report
+
+# Clean test artifacts
+./scripts/test-showcase.sh clean
+```
+
+#### Screenshot Generation for Blog Posts
+
+Automatically generate high-quality screenshots for blog posts and documentation:
+
+```bash
+# Generate screenshots for PostgreSQL + Redis showcase
+./scripts/test-showcase.sh screenshots postgres-redis
+
+# Generated screenshots will be in screenshots/blog/:
+# - 01-homepage-overview.png
+# - 02-search-results-postgresql.png
+# - 03-search-results-redis.png
+# - 04-search-results-typescript.png
+# - 05-search-results-performance.png
+# - 06-results-section-detail.png
+# - 07-performance-stats.png
+# - 08-performance-info-detail.png
+# - 09-filtered-results.png
+# - 10-filter-controls.png
+# - 11-mobile-homepage.png
+# - 12-mobile-search-results.png
+# - 13-api-examples.png
+# - 14-no-results-state.png
+# - 15-initial-empty-state.png
+```
+
+#### Test Configuration
+
+The Playwright configuration includes:
+- **Multi-browser testing**: Chrome, Firefox, Safari, Mobile Chrome, Mobile Safari
+- **Automatic server startup**: Starts showcase applications during tests
+- **Screenshot capture**: On test failures and for blog posts
+- **Performance monitoring**: Response time and throughput measurement
+- **Global setup/teardown**: Docker service management and cleanup
+
+#### Custom Test Utilities
+
+```javascript
+// Screenshot generator utility
+const ScreenshotGenerator = require('./tests/utils/screenshot-generator');
+
+const generator = new ScreenshotGenerator({
+  baseURL: 'http://localhost:3001',
+  outputDir: 'screenshots/blog',
+  viewport: { width: 1200, height: 800 }
+});
+
+await generator.init();
+await generator.generateBlogScreenshots();
+await generator.close();
+```
+
+#### Environment Variables
+
+```bash
+# Run tests with visible browser
+HEADLESS=false npm run test:e2e
+
+# Slow down actions for debugging
+SLOW_MO=1000 npm run test:e2e
+
+# Enable Playwright debug mode
+PWDEBUG=1 npm run test:e2e
+
+# Stop Docker services after tests
+STOP_DOCKER=true npm run test:e2e
+```
+
+#### Continuous Integration
+
+For CI/CD pipelines:
+
+```bash
+# Install dependencies and browsers
+npm install
+npx playwright install --with-deps
+
+# Start Docker services
+./scripts/docker-dev.sh start
+
+# Run tests
+npm run test:all
+
+# Generate coverage report
+npm run test:coverage
+
+# Stop services
+./scripts/docker-dev.sh stop
+```
+
+### Linting and Type Checking
+
+```bash
+# Run ESLint
 npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# TypeScript type checking
+npm run type-check
 ```
 
 ## 🤝 Contributing
