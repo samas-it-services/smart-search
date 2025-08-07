@@ -49,14 +49,14 @@ export interface MongoDBSearchConfig {
 
 export class MongoDBProvider implements DatabaseProvider {
   name = 'MongoDB';
-  private client: any; // We'll use any for now to avoid requiring mongodb as dependency
-  private db: any;
+  private _client: any; // We'll use any for now to avoid requiring mongodb as dependency
+  private _db: any;
   private isConnectedFlag = false;
-  private config: MongoDBConfig;
+  private _config: MongoDBConfig;
   private searchConfig: MongoDBSearchConfig;
 
   constructor(config: MongoDBConfig, searchConfig: MongoDBSearchConfig) {
-    this.config = config;
+    this._config = config;
     this.searchConfig = searchConfig;
     // Note: In real implementation, this would be:
     // const { MongoClient } = require('mongodb');
@@ -139,7 +139,7 @@ export class MongoDBProvider implements DatabaseProvider {
   }
 
   private async searchCollection(
-    tableName: string,
+    _tableName: string,
     tableConfig: any,
     query: string,
     options: SearchOptions
@@ -359,7 +359,7 @@ export class MongoDBProvider implements DatabaseProvider {
     return match;
   }
 
-  private generateMockResults(collection: string, query: string, type: string): any[] {
+  private generateMockResults(_collection: string, query: string, type: string): any[] {
     // Generate realistic mock data based on collection type
     const baseResults = [];
     const queryLower = query.toLowerCase();

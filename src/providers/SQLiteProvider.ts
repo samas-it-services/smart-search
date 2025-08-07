@@ -44,7 +44,7 @@ export interface SQLiteSearchConfig {
 
 export class SQLiteProvider implements DatabaseProvider {
   name = 'SQLite';
-  private db: any; // We'll use any for now to avoid requiring better-sqlite3 as dependency
+  private _db: any; // We'll use any for now to avoid requiring better-sqlite3 as dependency
   private isConnectedFlag = false;
   private config: SQLiteConfig;
   private searchConfig: SQLiteSearchConfig;
@@ -338,7 +338,7 @@ export class SQLiteProvider implements DatabaseProvider {
     return { clauses, params };
   }
 
-  private generateMockResults(tableName: string, query: string, type: string): any[] {
+  private generateMockResults(_tableName: string, query: string, type: string): any[] {
     // Generate realistic mock data based on table type
     const baseResults = [];
     const queryLower = query.toLowerCase();

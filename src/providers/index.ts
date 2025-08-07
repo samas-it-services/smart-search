@@ -2,24 +2,31 @@
  * @samas/smart-search - Provider Exports
  */
 
+// Database Providers
 export { SupabaseProvider } from './SupabaseProvider';
 export type { SupabaseConfig, SupabaseSearchConfig } from './SupabaseProvider';
 
+export { MySQLProvider } from './MySQLProvider';
+export type { MySQLConfig, MySQLSearchConfig } from './MySQLProvider';
+
+export { PostgreSQLProvider } from './PostgreSQLProvider';
+export type { PostgreSQLConfig, PostgreSQLSearchConfig } from './PostgreSQLProvider';
+
+export { MongoDBProvider } from './MongoDBProvider';
+export type { MongoDBConfig, MongoDBSearchConfig } from './MongoDBProvider';
+
+export { SQLiteProvider } from './SQLiteProvider';
+export type { SQLiteConfig, SQLiteSearchConfig } from './SQLiteProvider';
+
+// Cache Providers
 export { RedisProvider } from './RedisProvider';
 export type { RedisConfig, RedisSearchIndexConfig } from './RedisProvider';
 
-// Re-export MySQL provider when implemented
-// export { MySQLProvider } from './MySQLProvider';
-// export type { MySQLConfig, MySQLSearchConfig } from './MySQLProvider';
+export { DragonflyProvider } from './DragonflyProvider';
+export type { DragonflyConfig } from './DragonflyProvider';
 
-// Re-export MongoDB provider when implemented
-// export { MongoDBProvider } from './MongoDBProvider';
-// export type { MongoDBConfig, MongoDBSearchConfig } from './MongoDBProvider';
+export { MemcachedProvider } from './MemcachedProvider';
+export type { MemcachedConfig } from './MemcachedProvider';
 
-// Re-export Memcached provider when implemented
-// export { MemcachedProvider } from './MemcachedProvider';
-// export type { MemcachedConfig } from './MemcachedProvider';
-
-// Re-export DragonflyDB provider when implemented
-// export { DragonflyProvider } from './DragonflyProvider';
-// export type { DragonflyConfig } from './DragonflyProvider';
+export { InMemoryProvider } from './InMemoryProvider';
+export type { InMemoryConfig } from './InMemoryProvider';

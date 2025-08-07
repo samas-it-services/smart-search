@@ -47,7 +47,7 @@ export interface PostgreSQLSearchConfig {
 
 export class PostgreSQLProvider implements DatabaseProvider {
   name = 'PostgreSQL';
-  private pool: any; // We'll use any for now to avoid requiring pg as dependency
+  private _pool: any; // We'll use any for now to avoid requiring pg as dependency
   private isConnectedFlag = false;
   private config: PostgreSQLConfig;
   private searchConfig: PostgreSQLSearchConfig;
@@ -60,7 +60,7 @@ export class PostgreSQLProvider implements DatabaseProvider {
     // this.pool = new Pool(this.buildConnectionConfig());
   }
 
-  private buildConnectionConfig(): any {
+  private _buildConnectionConfig(): any {
     return {
       host: this.config.host,
       port: this.config.port || 5432,
@@ -297,10 +297,10 @@ export class PostgreSQLProvider implements DatabaseProvider {
     return { filterClauses: clauses, filterParams: params };
   }
 
-  private generateMockResults(tableName: string, query: string, type: string): any[] {
+  private generateMockResults(_tableName: string, query: string, type: string): any[] {
     // Generate realistic mock data based on table type
     const baseResults = [];
-    const queryLower = query.toLowerCase();
+    const _queryLower = query.toLowerCase();
 
     if (type === 'article') {
       baseResults.push({

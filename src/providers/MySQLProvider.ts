@@ -46,7 +46,7 @@ export interface MySQLSearchConfig {
 
 export class MySQLProvider implements DatabaseProvider {
   name = 'MySQL';
-  private connection: any; // We'll use any for now to avoid requiring mysql2 as dependency
+  private _connection: any; // We'll use any for now to avoid requiring mysql2 as dependency
   private isConnectedFlag = false;
   private config: MySQLConfig;
   private searchConfig: MySQLSearchConfig;
@@ -59,7 +59,7 @@ export class MySQLProvider implements DatabaseProvider {
     // this.connection = mysql.createPool(this.buildConnectionConfig());
   }
 
-  private buildConnectionConfig(): any {
+  private _buildConnectionConfig(): any {
     return {
       host: this.config.host,
       port: this.config.port || 3306,
@@ -253,7 +253,7 @@ export class MySQLProvider implements DatabaseProvider {
     return query.replace(/[+\-><()~*"@]/g, '\\$&');
   }
 
-  private generateMockResults(tableName: string, query: string, type: string): any[] {
+  private generateMockResults(_tableName: string, query: string, type: string): any[] {
     // Generate realistic mock data based on table type
     const baseResults = [];
     const queryLower = query.toLowerCase();
