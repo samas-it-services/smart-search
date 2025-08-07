@@ -1,0 +1,58 @@
+# Example configuration for MongoDB + DragonflyDB
+database:
+  type: mongodb
+  connection:
+    uri: ${MONGODB_URI}
+  options:
+    useNewUrlParser: true
+    useUnifiedTopology: true
+    maxPoolSize: 10
+    serverSelectionTimeoutMS: 5000
+
+cache:
+  type: dragonfly  # DragonflyDB (Redis-compatible)
+  connection:
+    host: ${DRAGONFLY_HOST}
+    port: 6380
+    password: ${DRAGONFLY_PASSWORD}
+
+search:
+  fallback: database
+  tables:
+    articles:
+      columns:
+        id: _id
+        title: title
+        subtitle: author
+        description: content
+        category: category
+        language: language
+        createdAt: publishedAt
+      searchColumns:
+        - title
+        - content
+        - author
+        - tags
+      type: article
+    
+    authors:
+      columns:
+        id: _id
+        title: name
+        description: bio
+        createdAt: joinedAt
+      searchColumns:
+        - name
+        - bio
+        - expertise
+      type: author
+
+circuitBreaker:
+  failureThreshold: 5
+  recoveryTimeout: 30000
+  healthCacheTTL: 15000
+
+performance:
+  enableMetrics: true
+  logQueries: false
+  slowQueryThreshold: 500

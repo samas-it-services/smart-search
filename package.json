@@ -1,0 +1,95 @@
+{
+  "name": "@samas/smart-search",
+  "version": "1.0.0",
+  "description": "Universal search with intelligent fallback for any database + cache combination",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "keywords": [
+    "search",
+    "database",
+    "cache",
+    "redis",
+    "postgresql",
+    "mysql",
+    "mongodb",
+    "supabase",
+    "fallback",
+    "performance",
+    "universal"
+  ],
+  "author": {
+    "name": "Samas Bilgrami",
+    "url": "https://github.com/bilgrami"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/bilgrami"
+    },
+    {
+      "type": "individual",
+      "url": "https://ko-fi.com/bilgrami"
+    }
+  ],
+  "homepage": "https://github.com/samas-org/smart-search#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samas-org/smart-search.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samas-org/smart-search/issues"
+  },
+  "files": [
+    "dist",
+    "src",
+    "bin",
+    "config-examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "smart-search": "./bin/smart-search-cli.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest",
+    "test:unit": "vitest run --reporter=verbose",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:serve": "python -m http.server 3000 --directory tests/e2e",
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "type-check": "tsc --noEmit",
+    "examples:basic": "tsx examples/basic-usage.ts",
+    "examples:advanced": "tsx examples/advanced-configuration.ts",
+    "examples:multi-db": "tsx examples/multiple-databases.ts",
+    "examples:all": "npm run examples:basic && npm run examples:advanced && npm run examples:multi-db",
+    "prepublishOnly": "npm run type-check && npm run test:unit && npm run build"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "eslint": "^8.0.0",
+    "tsup": "^7.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

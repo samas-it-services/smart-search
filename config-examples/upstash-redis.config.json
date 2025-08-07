@@ -1,0 +1,62 @@
+{
+  "$schema": "../config-schema.json",
+  "database": {
+    "type": "supabase",
+    "connection": {
+      "url": "${SUPABASE_URL}",
+      "key": "${SUPABASE_ANON_KEY}"
+    }
+  },
+  "cache": {
+    "type": "redis",
+    "connection": {
+      "url": "${UPSTASH_REDIS_REST_URL}",
+      "apiKey": "${UPSTASH_REDIS_REST_TOKEN}"
+    }
+  },
+  "search": {
+    "fallback": "database",
+    "tables": {
+      "books": {
+        "columns": {
+          "id": "id",
+          "title": "title",
+          "subtitle": "author",
+          "description": "description",
+          "category": "category",
+          "language": "language",
+          "visibility": "visibility",
+          "createdAt": "uploaded_at"
+        },
+        "searchColumns": ["title", "author", "description"],
+        "type": "book"
+      },
+      "users": {
+        "columns": {
+          "id": "id",
+          "title": "full_name",
+          "subtitle": "username",
+          "description": "bio",
+          "createdAt": "created_at"
+        },
+        "searchColumns": ["full_name", "username", "bio"],
+        "type": "user"
+      }
+    }
+  },
+  "circuitBreaker": {
+    "failureThreshold": 3,
+    "recoveryTimeout": 60000,
+    "healthCacheTTL": 30000
+  },
+  "cache": {
+    "enabled": true,
+    "defaultTTL": 300000,
+    "maxSize": 10000
+  },
+  "performance": {
+    "enableMetrics": true,
+    "logQueries": false,
+    "slowQueryThreshold": 1000
+  }
+}

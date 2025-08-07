@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@samas/smart-search E2E Test Server</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .sponsor-links {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        .sponsor-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        .sponsor-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>@samas/smart-search</h1>
+            <p>E2E Test Environment</p>
+            <p>Universal search with intelligent fallback for any database + cache combination</p>
+        </div>
+
+        <div class="sponsor-links">
+            <p><strong>Support this project:</strong></p>
+            <a href="https://github.com/sponsors/bilgrami" target="_blank">💰 GitHub Sponsors</a>
+            <a href="https://ko-fi.com/bilgrami" target="_blank">☕ Buy me a coffee</a>
+            <a href="https://x.com/sbilgrami" target="_blank">🐦 Follow on X</a>
+        </div>
+
+        <div class="test-section">
+            <h3>Basic Search Test</h3>
+            <input type="text" id="searchQuery" placeholder="Enter search query" value="javascript">
+            <button onclick="testBasicSearch()">Test Search</button>
+            <div id="searchResults" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Circuit Breaker Test</h3>
+            <button onclick="testCircuitBreaker()">Test Circuit Breaker</button>
+            <div id="circuitBreakerResults" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Health Monitoring Test</h3>
+            <button onclick="testHealthMonitoring()">Test Health Check</button>
+            <div id="healthResults" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Performance Test</h3>
+            <button onclick="testPerformance()">Test Performance</button>
+            <div id="performanceResults" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Fallback Test</h3>
+            <button onclick="testFallback()">Test Cache Fallback</button>
+            <div id="fallbackResults" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock implementation for browser testing
+        // In a real scenario, this would be the actual @samas/smart-search package
+
+        class MockSupabaseProvider {
+            constructor(config, searchConfig) {
+                this.name = 'Supabase';
+                this.config = config;
+                this.searchConfig = searchConfig;
+                this.connected = true;
+            }
+
+            async connect() {
+                if (!this.connected) throw new Error('Connection failed');
+            }
+
+            async disconnect() {
+                this.connected = false;
+            }
+
+            async isConnected() {
+                return this.connected;
+            }
+
+            async search(query, options = {}) {
+                // Simulate database search with mock data
+                const mockResults = [
+                    {
+                        id: '1',
+                        type: 'book',
+                        title: 'JavaScript: The Good Parts',
+                        subtitle: 'Douglas Crockford',
+                        description: 'A deep dive into JavaScript',
+                        category: 'programming',
+                        matchType: 'title',
+                        relevanceScore: 95
+                    },
+                    {
+                        id: '2',
+                        type: 'book',
+                        title: 'Learning JavaScript',
+                        subtitle: 'Ethan Brown',
+                        description: 'Modern JavaScript development',
+                        category: 'programming',
+                        matchType: 'title',
+                        relevanceScore: 90
+                    }
+                ];
+
+                return mockResults.filter(result => 
+                    result.title.toLowerCase().includes(query.toLowerCase()) ||
+                    result.description.toLowerCase().includes(query.toLowerCase())
+                );
+            }
+
+            async checkHealth() {
+                return {
+                    isConnected: this.connected,
+                    isSearchAvailable: this.connected,
+                    latency: 45,
+                    memoryUsage: 'N/A',
+                    keyCount: 1000,
+                    lastSync: new Date().toISOString(),
+                    errors: []
+                };
+            }
+        }
+
+        class MockRedisProvider {
+            constructor(config) {
+                this.name = 'Redis';
+                this.config = config;
+                this.connected = true;
+                this.shouldFail = false;
+                this.cache = new Map();
+            }
+
+            setShouldFail(fail) {
+                this.shouldFail = fail;
+            }
+
+            async connect() {
+                if (this.shouldFail) throw new Error('Redis connection failed');
+            }
+
+            async disconnect() {
+                this.connected = false;
+            }
+
+            async isConnected() {
+                return this.connected && !this.shouldFail;
+            }
+
+            async search(query, options = {}) {
+                if (this.shouldFail) throw new Error('Redis search failed');
+                
+                const mockResults = [
+                    {
+                        id: '1',
+                        type: 'book',
+                        title: 'JavaScript Guide (Cached)',
+                        subtitle: 'From Cache',
+                        description: 'Cached result',
+                        matchType: 'title',
+                        relevanceScore: 100
+                    }
+                ];
+
+                return mockResults.filter(result => 
+                    result.title.toLowerCase().includes(query.toLowerCase())
+                );
+            }
+
+            async set(key, value, ttl) {
+                if (this.shouldFail) throw new Error('Redis set failed');
+                this.cache.set(key, { value, expiry: Date.now() + (ttl || 300000) });
+            }
+
+            async get(key) {
+                if (this.shouldFail) throw new Error('Redis get failed');
+                const item = this.cache.get(key);
+                if (item && item.expiry > Date.now()) {
+                    return item.value;
+                }
+                return null;
+            }
+
+            async delete(key) {
+                this.cache.delete(key);
+            }
+
+            async clear(pattern) {
+                if (pattern) {
+                    for (const key of this.cache.keys()) {
+                        if (key.startsWith(pattern.replace('*', ''))) {
+                            this.cache.delete(key);
+                        }
+                    }
+                } else {
+                    this.cache.clear();
+                }
+            }
+
+            async checkHealth() {
+                return {
+                    isConnected: this.connected && !this.shouldFail,
+                    isSearchAvailable: this.connected && !this.shouldFail,
+                    latency: 8,
+                    memoryUsage: '25MB',
+                    keyCount: this.cache.size,
+                    lastSync: new Date().toISOString(),
+                    errors: this.shouldFail ? ['Redis error'] : []
+                };
+            }
+        }
+
+        class SmartSearch {
+            constructor(config) {
+                this.database = config.database;
+                this.cache = config.cache;
+                this.fallbackStrategy = config.fallback;
+                this.circuitBreaker = {
+                    isOpen: false,
+                    failureCount: 0,
+                    lastFailure: 0,
+                    nextRetryTime: 0
+                };
+                this.FAILURE_THRESHOLD = config.circuitBreaker?.failureThreshold || 3;
+                this.RECOVERY_TIMEOUT = config.circuitBreaker?.recoveryTimeout || 60000;
+            }
+
+            async search(query, options = {}) {
+                const startTime = Date.now();
+                
+                try {
+                    const strategy = await this.determineSearchStrategy();
+                    let results = [];
+                    let performance = {};
+
+                    try {
+                        if (strategy.primary === 'cache' && this.cache) {
+                            results = await this.cache.search(query, options);
+                            performance = {
+                                searchTime: Date.now() - startTime,
+                                resultCount: results.length,
+                                strategy: 'cache',
+                                cacheHit: true
+                            };
+                            this.resetCircuitBreaker();
+                        } else {
+                            results = await this.database.search(query, options);
+                            performance = {
+                                searchTime: Date.now() - startTime,
+                                resultCount: results.length,
+                                strategy: 'database',
+                                cacheHit: false
+                            };
+                        }
+                    } catch (primaryError) {
+                        if (strategy.primary === 'cache') {
+                            this.recordCacheFailure();
+                        }
+
+                        // Fallback
+                        if (strategy.fallback === 'database') {
+                            results = await this.database.search(query, options);
+                            performance = {
+                                searchTime: Date.now() - startTime,
+                                resultCount: results.length,
+                                strategy: 'database',
+                                cacheHit: false,
+                                errors: [primaryError.message]
+                            };
+                        }
+                    }
+
+                    return { results, performance, strategy };
+                } catch (error) {
+                    return {
+                        results: [],
+                        performance: {
+                            searchTime: Date.now() - startTime,
+                            resultCount: 0,
+                            strategy: 'database',
+                            cacheHit: false,
+                            errors: [error.message]
+                        },
+                        strategy: {
+                            primary: 'database',
+                            fallback: 'database',
+                            reason: 'All search methods failed'
+                        }
+                    };
+                }
+            }
+
+            async determineSearchStrategy() {
+                if (!this.cache) {
+                    return {
+                        primary: 'database',
+                        fallback: 'database',
+                        reason: 'No cache provider configured'
+                    };
+                }
+
+                if (this.isCircuitBreakerOpen()) {
+                    return {
+                        primary: 'database',
+                        fallback: 'database',
+                        reason: 'Cache circuit breaker is open due to repeated failures'
+                    };
+                }
+
+                const health = await this.cache.checkHealth();
+                
+                if (health.isConnected && health.isSearchAvailable) {
+                    return {
+                        primary: 'cache',
+                        fallback: 'database',
+                        reason: `Cache healthy (${health.latency}ms latency)`
+                    };
+                }
+
+                return {
+                    primary: 'database',
+                    fallback: 'database',
+                    reason: 'Cache unavailable or unhealthy'
+                };
+            }
+
+            isCircuitBreakerOpen() {
+                if (!this.circuitBreaker.isOpen) return false;
+                
+                if (Date.now() >= this.circuitBreaker.nextRetryTime) {
+                    this.circuitBreaker.isOpen = false;
+                    return false;
+                }
+                
+                return true;
+            }
+
+            recordCacheFailure() {
+                this.circuitBreaker.failureCount++;
+                this.circuitBreaker.lastFailure = Date.now();
+
+                if (this.circuitBreaker.failureCount >= this.FAILURE_THRESHOLD) {
+                    this.circuitBreaker.isOpen = true;
+                    this.circuitBreaker.nextRetryTime = Date.now() + this.RECOVERY_TIMEOUT;
+                }
+            }
+
+            resetCircuitBreaker() {
+                if (this.circuitBreaker.failureCount > 0) {
+                    this.circuitBreaker.failureCount = 0;
+                    this.circuitBreaker.isOpen = false;
+                    this.circuitBreaker.lastFailure = 0;
+                    this.circuitBreaker.nextRetryTime = 0;
+                }
+            }
+
+            async getSearchStats() {
+                const cacheHealth = this.cache ? await this.cache.checkHealth() : null;
+                const databaseHealth = await this.database.checkHealth();
+                const recommendedStrategy = await this.determineSearchStrategy();
+                
+                return {
+                    cacheHealth,
+                    databaseHealth,
+                    circuitBreaker: { ...this.circuitBreaker },
+                    recommendedStrategy
+                };
+            }
+
+            async clearCache(pattern) {
+                if (this.cache) {
+                    await this.cache.clear(pattern);
+                }
+            }
+        }
+
+        // Make available globally for tests
+        window.SamasSmartSearch = {
+            SmartSearch,
+            SupabaseProvider: MockSupabaseProvider,
+            RedisProvider: MockRedisProvider
+        };
+
+        // Test functions
+        window.testBasicSearch = async function() {
+            const resultsDiv = document.getElementById('searchResults');
+            const query = document.getElementById('searchQuery').value;
+            
+            try {
+                resultsDiv.style.display = 'block';
+                resultsDiv.className = 'results';
+                resultsDiv.textContent = 'Running search test...';
+
+                const database = new MockSupabaseProvider(
+                    { url: 'test-url', key: 'test-key' },
+                    { tables: {} }
+                );
+
+                const search = new SmartSearch({
+                    database,
+                    fallback: 'database'
+                });
+
+                const result = await search.search(query);
+                
+                resultsDiv.className = 'results success';
+                resultsDiv.textContent = `✅ Search Success!\n\nQuery: "${query}"\nResults: ${result.results.length}\nSearch Time: ${result.performance.searchTime}ms\nStrategy: ${result.performance.strategy}\n\nResults:\n${JSON.stringify(result.results, null, 2)}`;
+            } catch (error) {
+                resultsDiv.className = 'results error';
+                resultsDiv.textContent = `❌ Search Failed!\n\nError: ${error.message}\nStack: ${error.stack}`;
+            }
+        };
+
+        window.testCircuitBreaker = async function() {
+            const resultsDiv = document.getElementById('circuitBreakerResults');
+            
+            try {
+                resultsDiv.style.display = 'block';
+                resultsDiv.className = 'results';
+                resultsDiv.textContent = 'Running circuit breaker test...';
+
+                const database = new MockSupabaseProvider({ url: 'test', key: 'test' }, { tables: {} });
+                const cache = new MockRedisProvider({ host: 'localhost' });
+                
+                const search = new SmartSearch({
+                    database,
+                    cache,
+                    fallback: 'database',
+                    circuitBreaker: { failureThreshold: 2, recoveryTimeout: 5000 }
+                });
+
+                // Make cache fail
+                cache.setShouldFail(true);
+                
+                // Trigger failures
+                await search.search('test1');
+                await search.search('test2');
+                
+                const stats = await search.getSearchStats();
+                const finalSearch = await search.search('test3');
+
+                resultsDiv.className = 'results success';
+                resultsDiv.textContent = `✅ Circuit Breaker Test Success!\n\nFailure Count: ${stats.circuitBreaker.failureCount}\nCircuit Open: ${stats.circuitBreaker.isOpen}\nFinal Strategy: ${finalSearch.strategy.reason}\n\nCache Health: ${JSON.stringify(stats.cacheHealth, null, 2)}`;
+            } catch (error) {
+                resultsDiv.className = 'results error';
+                resultsDiv.textContent = `❌ Circuit Breaker Test Failed!\n\nError: ${error.message}`;
+            }
+        };
+
+        window.testHealthMonitoring = async function() {
+            const resultsDiv = document.getElementById('healthResults');
+            
+            try {
+                resultsDiv.style.display = 'block';
+                resultsDiv.className = 'results';
+                resultsDiv.textContent = 'Running health monitoring test...';
+
+                const database = new MockSupabaseProvider({ url: 'test', key: 'test' }, { tables: {} });
+                const cache = new MockRedisProvider({ host: 'localhost' });
+                
+                const search = new SmartSearch({
+                    database,
+                    cache,
+                    fallback: 'database'
+                });
+
+                const stats = await search.getSearchStats();
+
+                resultsDiv.className = 'results success';
+                resultsDiv.textContent = `✅ Health Monitoring Test Success!\n\nDatabase Health:\n${JSON.stringify(stats.databaseHealth, null, 2)}\n\nCache Health:\n${JSON.stringify(stats.cacheHealth, null, 2)}\n\nRecommended Strategy:\n${JSON.stringify(stats.recommendedStrategy, null, 2)}`;
+            } catch (error) {
+                resultsDiv.className = 'results error';
+                resultsDiv.textContent = `❌ Health Monitoring Test Failed!\n\nError: ${error.message}`;
+            }
+        };
+
+        window.testPerformance = async function() {
+            const resultsDiv = document.getElementById('performanceResults');
+            
+            try {
+                resultsDiv.style.display = 'block';
+                resultsDiv.className = 'results';
+                resultsDiv.textContent = 'Running performance test...';
+
+                const database = new MockSupabaseProvider({ url: 'test', key: 'test' }, { tables: {} });
+                const cache = new MockRedisProvider({ host: 'localhost' });
+                
+                const search = new SmartSearch({
+                    database,
+                    cache,
+                    fallback: 'database'
+                });
+
+                const results = [];
+                const iterations = 10;
+
+                for (let i = 0; i < iterations; i++) {
+                    const result = await search.search(`test query ${i}`);
+                    results.push(result.performance.searchTime);
+                }
+
+                const avgTime = results.reduce((sum, time) => sum + time, 0) / results.length;
+                const maxTime = Math.max(...results);
+                const minTime = Math.min(...results);
+
+                resultsDiv.className = 'results success';
+                resultsDiv.textContent = `✅ Performance Test Success!\n\nIterations: ${iterations}\nAverage Time: ${avgTime.toFixed(2)}ms\nMin Time: ${minTime}ms\nMax Time: ${maxTime}ms\n\nAll Times: [${results.map(t => t.toFixed(1)).join(', ')}]`;
+            } catch (error) {
+                resultsDiv.className = 'results error';
+                resultsDiv.textContent = `❌ Performance Test Failed!\n\nError: ${error.message}`;
+            }
+        };
+
+        window.testFallback = async function() {
+            const resultsDiv = document.getElementById('fallbackResults');
+            
+            try {
+                resultsDiv.style.display = 'block';
+                resultsDiv.className = 'results';
+                resultsDiv.textContent = 'Running fallback test...';
+
+                const database = new MockSupabaseProvider({ url: 'test', key: 'test' }, { tables: {} });
+                const cache = new MockRedisProvider({ host: 'localhost' });
+                
+                const search = new SmartSearch({
+                    database,
+                    cache,
+                    fallback: 'database'
+                });
+
+                // First test with working cache
+                const workingResult = await search.search('test with cache');
+                
+                // Then test with failed cache
+                cache.setShouldFail(true);
+                const fallbackResult = await search.search('test with fallback');
+
+                resultsDiv.className = 'results success';
+                resultsDiv.textContent = `✅ Fallback Test Success!\n\nWorking Cache Result:\nStrategy: ${workingResult.performance.strategy}\nCache Hit: ${workingResult.performance.cacheHit}\nResults: ${workingResult.results.length}\n\nFallback Result:\nStrategy: ${fallbackResult.performance.strategy}\nCache Hit: ${fallbackResult.performance.cacheHit}\nResults: ${fallbackResult.results.length}\nErrors: ${fallbackResult.performance.errors ? fallbackResult.performance.errors.join(', ') : 'None'}`;
+            } catch (error) {
+                resultsDiv.className = 'results error';
+                resultsDiv.textContent = `❌ Fallback Test Failed!\n\nError: ${error.message}`;
+            }
+        };
+    </script>
+</body>
+</html>

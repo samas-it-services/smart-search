@@ -1,0 +1,94 @@
+{
+  "database": {
+    "type": "supabase",
+    "connection": {
+      "url": "${SUPABASE_URL}",
+      "key": "${SUPABASE_ANON_KEY}"
+    },
+    "options": {
+      "auth": {
+        "autoRefreshToken": true,
+        "persistSession": false
+      }
+    }
+  },
+  "cache": {
+    "type": "redis",
+    "connection": {
+      "url": "${REDIS_URL}"
+    },
+    "options": {
+      "connectTimeout": 10000,
+      "lazyConnect": true,
+      "retryDelayOnFailover": 100,
+      "maxRetriesPerRequest": 3
+    }
+  },
+  "search": {
+    "fallback": "database",
+    "tables": {
+      "books": {
+        "columns": {
+          "id": "id",
+          "title": "title",
+          "subtitle": "author",
+          "description": "description",
+          "category": "category",
+          "language": "language",
+          "visibility": "visibility",
+          "createdAt": "uploaded_at"
+        },
+        "searchColumns": [
+          "title",
+          "author",
+          "description"
+        ],
+        "type": "book"
+      },
+      "users": {
+        "columns": {
+          "id": "id",
+          "title": "full_name",
+          "subtitle": "username",
+          "description": "bio",
+          "createdAt": "created_at"
+        },
+        "searchColumns": [
+          "full_name",
+          "username",
+          "bio"
+        ],
+        "type": "user"
+      },
+      "book_clubs": {
+        "columns": {
+          "id": "id",
+          "title": "name",
+          "description": "description",
+          "visibility": "is_private",
+          "createdAt": "created_at"
+        },
+        "searchColumns": [
+          "name",
+          "description"
+        ],
+        "type": "book_club"
+      }
+    }
+  },
+  "circuitBreaker": {
+    "failureThreshold": 3,
+    "recoveryTimeout": 60000,
+    "healthCacheTTL": 30000
+  },
+  "cache": {
+    "enabled": true,
+    "defaultTTL": 300000,
+    "maxSize": 10000
+  },
+  "performance": {
+    "enableMetrics": true,
+    "logQueries": false,
+    "slowQueryThreshold": 1000
+  }
+}

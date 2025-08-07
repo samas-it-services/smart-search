@@ -1,0 +1,61 @@
+{
+  "_comment": "Example configuration for MySQL + Redis",
+  "database": {
+    "type": "mysql",
+    "connection": {
+      "host": "${DB_HOST}",
+      "port": 3306,
+      "user": "${DB_USER}",
+      "password": "${DB_PASSWORD}",
+      "database": "${DB_NAME}"
+    },
+    "options": {
+      "connectionLimit": 10,
+      "acquireTimeout": 60000,
+      "timeout": 60000
+    }
+  },
+  "cache": {
+    "type": "redis",
+    "connection": {
+      "host": "${REDIS_HOST}",
+      "port": 6379,
+      "password": "${REDIS_PASSWORD}"
+    }
+  },
+  "search": {
+    "fallback": "database",
+    "tables": {
+      "products": {
+        "columns": {
+          "id": "product_id",
+          "title": "product_name",
+          "description": "product_description",
+          "category": "category_name",
+          "createdAt": "created_date"
+        },
+        "searchColumns": [
+          "product_name",
+          "product_description",
+          "category_name"
+        ],
+        "type": "product"
+      },
+      "customers": {
+        "columns": {
+          "id": "customer_id",
+          "title": "customer_name",
+          "subtitle": "email",
+          "description": "notes",
+          "createdAt": "registration_date"
+        },
+        "searchColumns": [
+          "customer_name",
+          "email",
+          "notes"
+        ],
+        "type": "customer"
+      }
+    }
+  }
+}
