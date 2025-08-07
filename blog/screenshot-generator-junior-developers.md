@@ -376,6 +376,20 @@ As a junior developer, mastering tools like this will make you more efficient an
 
 **Ready to try it?** Start with `node generate-screenshots.js postgres-redis` and explore the generated screenshots!
 
+## Support This Work
+
+If you found this guide helpful, please consider supporting the development of Smart Search and more educational content like this:
+
+**☕ Buy me a coffee:**
+- [GitHub Sponsors](https://github.com/sponsors/bilgrami) - Support ongoing development
+- [Ko-fi](https://ko-fi.com/bilgrami) - One-time donations welcome
+
+**🤝 Connect with the author:**
+- LinkedIn: [linkedin.com/in/bilgrami](https://linkedin.com/in/bilgrami)
+- Follow for more insights on search technology, database optimization, and system architecture
+
+Your support helps us create more high-quality showcases, maintain the Smart Search library, and build tools that make developers' lives easier. Every contribution makes a difference! 🙏
+
 ---
 
 *Want to learn more about browser automation and testing? Check out our [Advanced Testing Guide](screenshot-generator-senior-developers.md) and [QA Automation Tutorial](screenshot-generator-testers.md).*

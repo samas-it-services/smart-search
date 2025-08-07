@@ -580,6 +580,20 @@ Explore more Smart Search architectures:
 - **[MySQL + DragonflyDB](mysql-dragonfly-showcase.md)**: Boolean search with ultra-fast cache
 - **[SQLite + InMemory](sqlite-inmemory-showcase.md)**: Embedded search for edge applications
 
+## Support This Work
+
+If you found this showcase helpful, please consider supporting the development of Smart Search and more educational content like this:
+
+**☕ Buy me a coffee:**
+- [GitHub Sponsors](https://github.com/sponsors/bilgrami) - Support ongoing development
+- [Ko-fi](https://ko-fi.com/bilgrami) - One-time donations welcome
+
+**🤝 Connect with the author:**
+- LinkedIn: [linkedin.com/in/bilgrami](https://linkedin.com/in/bilgrami)
+- Follow for more insights on search technology, database optimization, and system architecture
+
+Your support helps us create more high-quality showcases, maintain the Smart Search library, and build tools that make developers' lives easier. Every contribution makes a difference! 🙏
+
 ---
 
 *Have questions about MongoDB aggregations or Memcached clustering? Join our [GitHub discussions](https://github.com/samas-it-services/smart-search/discussions) or connect on [Twitter](https://twitter.com/smartsearch).*

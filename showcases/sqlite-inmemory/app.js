@@ -93,58 +93,113 @@ function generateMockResults(query, options = {}) {
     const sampleArticles = [
         {
             id: '1',
-            type: 'article',
-            title: 'Getting Started with PostgreSQL Full-Text Search',
-            author: 'John Database',
-            description: 'Learn how to implement powerful full-text search capabilities using PostgreSQL tsvector and tsquery with practical examples.',
-            category: 'Database',
+            type: 'research',
+            title: 'Learning Management Systems: Implementation and Student Success',
+            author: 'Dr. Sarah Williams, Ed.D',
+            description: 'Comprehensive study on LMS implementation strategies, user adoption patterns, and measurable impacts on student learning outcomes in higher education.',
+            category: 'Learning Technology',
             language: 'en',
             createdAt: '2024-01-15T10:00:00Z',
             relevanceScore: 95
         },
         {
             id: '2', 
-            type: 'article',
-            title: 'Redis Caching Strategies for High Performance',
-            author: 'Cache Expert',
-            description: 'Explore advanced Redis caching patterns and strategies to optimize application performance and reduce database load.',
-            category: 'Performance',
+            type: 'guide',
+            title: 'Student Engagement Strategies in the Digital Classroom',
+            author: 'Prof. Michael Chen, Ph.D',
+            description: 'Evidence-based approaches to increase student participation and engagement through interactive digital tools and pedagogical techniques.',
+            category: 'Curriculum Development',
             language: 'en',
             createdAt: '2024-01-10T14:30:00Z',
             relevanceScore: 88
         },
         {
             id: '3',
-            type: 'article', 
-            title: 'Building Scalable Search with Smart Search',
-            author: 'Search Engineer',
-            description: 'Complete guide to building scalable search solutions using the Smart Search library with multiple database backends.',
-            category: 'Architecture',
+            type: 'analysis', 
+            title: 'Assessment Strategies for Competency-Based Learning',
+            author: 'Dr. Lisa Rodriguez, M.Ed',
+            description: 'Modern assessment methodologies for measuring student competencies, including formative assessment techniques and outcome-based evaluation.',
+            category: 'Student Assessment',
             language: 'en',
             createdAt: '2024-01-08T09:15:00Z',
             relevanceScore: 92
         },
         {
             id: '4',
-            type: 'article',
-            title: 'TypeScript Best Practices for Large Applications',
-            author: 'TypeScript Pro',
-            description: 'Learn advanced TypeScript patterns and best practices for building maintainable large-scale applications.',
-            category: 'Programming',
+            type: 'report',
+            title: 'Higher Education Trends: Data-Driven Decision Making',
+            author: 'James Park, Ph.D',
+            description: 'Analytics and institutional research methodologies for improving student retention, academic performance, and institutional effectiveness.',
+            category: 'Higher Education',
             language: 'en',
             createdAt: '2024-01-05T16:45:00Z',
             relevanceScore: 85
         },
         {
             id: '5',
-            type: 'article',
-            title: 'Docker Container Performance Optimization',
-            author: 'DevOps Engineer',
-            description: 'Optimize Docker container performance with advanced techniques for resource management and orchestration.',
-            category: 'DevOps',
+            type: 'guide',
+            title: 'Differentiated Instruction for K-12 Mathematics',
+            author: 'Dr. Emma Thompson, M.Ed',
+            description: 'Practical strategies for adapting mathematics instruction to meet diverse learning needs, including scaffolding techniques and multimodal approaches.',
+            category: 'K-12 Education',
             language: 'en',
             createdAt: '2024-01-03T11:20:00Z',
             relevanceScore: 80
+        },
+        {
+            id: '6',
+            type: 'research',
+            title: 'Cognitive Load Theory in Educational Psychology',
+            author: 'Dr. Robert Kim, Ph.D',
+            description: 'Application of cognitive load theory principles to instructional design, working memory considerations, and effective learning strategies.',
+            category: 'Educational Psychology',
+            language: 'en',
+            createdAt: '2024-01-02T08:30:00Z',
+            relevanceScore: 87
+        },
+        {
+            id: '7',
+            type: 'guide',
+            title: 'Building Effective Online Learning Communities',
+            author: 'Maria Davis, Ed.D',
+            description: 'Best practices for fostering collaboration and community in distance learning environments, including social presence and engagement strategies.',
+            category: 'Distance Learning',
+            language: 'en',
+            createdAt: '2024-01-01T13:15:00Z',
+            relevanceScore: 83
+        },
+        {
+            id: '8',
+            type: 'analysis',
+            title: 'Inclusive Education: Supporting Students with Learning Differences',
+            author: 'Dr. Jennifer Liu, Ph.D',
+            description: 'Evidence-based strategies for creating inclusive classrooms that support students with diverse learning needs and disabilities.',
+            category: 'Special Education',
+            language: 'en',
+            createdAt: '2023-12-28T11:45:00Z',
+            relevanceScore: 89
+        },
+        {
+            id: '9',
+            type: 'report',
+            title: 'Educational Research Methods in the Digital Age',
+            author: 'Dr. David Anderson, Ph.D',
+            description: 'Modern research methodologies for education, including learning analytics, qualitative research techniques, and mixed-methods approaches.',
+            category: 'Educational Research',
+            language: 'en',
+            createdAt: '2023-12-25T16:20:00Z',
+            relevanceScore: 86
+        },
+        {
+            id: '10',
+            type: 'strategy',
+            title: 'Professional Development for 21st Century Educators',
+            author: 'Amanda Foster, M.Ed',
+            description: 'Continuous learning strategies for educators, including technology integration, collaborative learning, and reflective practice methodologies.',
+            category: 'Professional Development',
+            language: 'en',
+            createdAt: '2023-12-20T14:10:00Z',
+            relevanceScore: 84
         }
     ];
     
@@ -254,7 +309,7 @@ app.get('/api/health', (req, res) => {
         success: true,
         status: 'healthy',
         timestamp: new Date().toISOString(),
-        service: 'PostgreSQL + Redis Showcase'
+        service: 'SQLite + InMemory Showcase'
     });
 });
 
@@ -280,21 +335,21 @@ async function startServer() {
     await initializeSearch();
     
     app.listen(PORT, () => {
-        console.log(`🌐 PostgreSQL + Redis showcase running at:`);
+        console.log(`🌐 SQLite + InMemory showcase running at:`);
         console.log(`   http://localhost:${PORT}`);
-        console.log(`   API: http://localhost:${PORT}/api/search?q=postgresql`);
+        console.log(`   API: http://localhost:${PORT}/api/search?q=learning`);
         console.log(`   Stats: http://localhost:${PORT}/api/stats`);
         console.log('');
         console.log('📋 Available API endpoints:');
         console.log('   GET  /                          - Web interface');
-        console.log('   GET  /api/search?q=<query>      - Search articles');
+        console.log('   GET  /api/search?q=<query>      - Search educational resources');
         console.log('   GET  /api/stats                 - System statistics');
         console.log('   GET  /api/health                - Health check');
         console.log('');
         console.log('🔍 Example searches:');
-        console.log('   http://localhost:' + PORT + '/api/search?q=postgresql');
-        console.log('   http://localhost:' + PORT + '/api/search?q=redis&category=Performance');
-        console.log('   http://localhost:' + PORT + '/api/search?q=typescript&limit=5');
+        console.log('   http://localhost:' + PORT + '/api/search?q=learning');
+        console.log('   http://localhost:' + PORT + '/api/search?q=assessment&category=Student Assessment');
+        console.log('   http://localhost:' + PORT + '/api/search?q=technology&limit=5');
     });
 }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Search - SQLite + InMemory Showcase</title>
+    <title>Educational Resource Platform - SQLite + InMemory Showcase</title>
     <style>
         * {
             margin: 0;
@@ -290,8 +290,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 Smart Search Showcase</h1>
-            <p>SQLite + InMemory Universal Search Demo</p>
+            <h1>🎓 Educational Resource Platform</h1>
+            <p>SQLite + InMemory - Learning Resources & Educational Research</p>
         </div>
 
         <div class="search-section">
@@ -300,8 +300,8 @@
                     type="text" 
                     class="search-input" 
                     id="searchInput"
-                    placeholder="Search for articles, authors, or topics..."
-                    value="postgresql"
+                    placeholder="Search educational research, teaching strategies, learning resources..."
+                    value="learning management systems"
                 >
                 <button type="submit" class="search-btn" id="searchBtn">
                     🔍 Search
@@ -313,11 +313,16 @@
                     <label for="categoryFilter">Category</label>
                     <select id="categoryFilter" onchange="performSearch()">
                         <option value="">All Categories</option>
-                        <option value="Database">Database</option>
-                        <option value="Performance">Performance</option>
-                        <option value="Architecture">Architecture</option>
-                        <option value="Programming">Programming</option>
-                        <option value="DevOps">DevOps</option>
+                        <option value="Learning Technology">Learning Technology</option>
+                        <option value="Curriculum Development">Curriculum Development</option>
+                        <option value="Student Assessment">Student Assessment</option>
+                        <option value="Higher Education">Higher Education</option>
+                        <option value="K-12 Education">K-12 Education</option>
+                        <option value="Educational Psychology">Educational Psychology</option>
+                        <option value="Distance Learning">Distance Learning</option>
+                        <option value="Special Education">Special Education</option>
+                        <option value="Educational Research">Educational Research</option>
+                        <option value="Professional Development">Professional Development</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -347,8 +352,8 @@
             
             <div id="resultsContainer">
                 <div class="empty-state">
-                    <h3>Welcome to Smart Search!</h3>
-                    <p>Try searching for "postgresql", "redis", "typescript", or any other topic.</p>
+                    <h3>Welcome to Educational Resource Platform!</h3>
+                    <p>Try searching for "learning management systems", "student engagement", "assessment strategies", or any educational topic.</p>
                 </div>
             </div>
         </div>

@@ -17,26 +17,26 @@ const fs = require('fs');
 const SHOWCASES = {
   'postgres-redis': {
     port: 3002,
-    name: 'PostgreSQL + Redis',
-    searches: ['postgresql', 'redis', 'typescript', 'performance'],
+    name: 'PostgreSQL + Redis - Healthcare',
+    searches: ['diabetes', 'cardiac surgery', 'immunotherapy', 'mental health'],
     directory: 'postgres-redis'
   },
   'mysql-dragonfly': {
     port: 3003,
-    name: 'MySQL + DragonflyDB', 
-    searches: ['mysql', 'dragonfly', 'boolean search', 'optimization'],
+    name: 'MySQL + DragonflyDB - Finance', 
+    searches: ['portfolio', 'risk management', 'cryptocurrency', 'derivatives'],
     directory: 'mysql-dragonfly'
   },
   'mongodb-memcached': {
     port: 3004,
-    name: 'MongoDB + Memcached',
-    searches: ['mongodb', 'memcached', 'document search', 'aggregation'],
+    name: 'MongoDB + Memcached - Retail',
+    searches: ['customer analytics', 'inventory management', 'omnichannel', 'personalization'],
     directory: 'mongodb-memcached'
   },
   'sqlite-inmemory': {
     port: 3005,
-    name: 'SQLite + InMemory',
-    searches: ['sqlite', 'inmemory', 'edge computing', 'fts5'],
+    name: 'SQLite + InMemory - Education',
+    searches: ['learning management systems', 'student engagement', 'assessment strategies', 'educational technology'],
     directory: 'sqlite-inmemory'
   }
 };
@@ -76,7 +76,16 @@ async function generateScreenshotsForShowcase(showcaseKey, config) {
       console.log(`📸 Taking "${searchTerm}" search screenshot...`);
       await page.fill('#searchInput', searchTerm);
       await page.click('#searchBtn');
-      await page.waitForTimeout(2000); // Wait for results
+      
+      // Wait for search results to actually load
+      try {
+        await page.waitForSelector('.result-item', { timeout: 10000 });
+        console.log(`✅ Search results loaded for "${searchTerm}"`);
+      } catch (error) {
+        console.log(`⚠️ No results found for "${searchTerm}", taking screenshot anyway`);
+        // Wait a bit for the "no results" state to render
+        await page.waitForTimeout(2000);
+      }
       
       await page.screenshot({ 
         path: `${screenshotDir}/${screenshotIndex.toString().padStart(2, '0')}-search-${searchTerm.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`,
@@ -89,7 +98,26 @@ async function generateScreenshotsForShowcase(showcaseKey, config) {
     console.log('📸 Taking performance metrics screenshot...');
     await page.fill('#searchInput', 'performance');
     await page.click('#searchBtn');
-    await page.waitForTimeout(2000);
+    
+    // Wait for search results and stats to load
+    try {
+      await page.waitForSelector('.result-item', { timeout: 10000 });
+      console.log('✅ Performance search results loaded');
+    } catch (error) {
+      console.log('⚠️ No results for performance search, continuing...');
+      await page.waitForTimeout(2000);
+    }
+    
+    // Wait for stats section to load with actual data
+    try {
+      await page.waitForFunction(() => {
+        const statsSection = document.querySelector('#statsSection');
+        return statsSection && statsSection.innerHTML.includes('ms') && statsSection.innerHTML.includes('stat-value');
+      }, { timeout: 15000 });
+      console.log('✅ Stats section loaded with data');
+    } catch (error) {
+      console.log('⚠️ Stats section not fully loaded, taking screenshot anyway');
+    }
     
     // Focus on the stats section
     const statsSection = page.locator('#statsSection');
@@ -98,6 +126,9 @@ async function generateScreenshotsForShowcase(showcaseKey, config) {
         path: `${screenshotDir}/${screenshotIndex.toString().padStart(2, '0')}-performance-stats.png`
       });
       screenshotIndex++;
+      console.log('✅ Stats section screenshot captured');
+    } else {
+      console.log('⚠️ Stats section not visible, skipping stats screenshot');
     }
     
     // Mobile view screenshots
@@ -117,7 +148,16 @@ async function generateScreenshotsForShowcase(showcaseKey, config) {
     // Mobile search
     await page.fill('#searchInput', 'mobile search');
     await page.click('#searchBtn');
-    await page.waitForTimeout(2000);
+    
+    // Wait for mobile search results to load
+    try {
+      await page.waitForSelector('.result-item', { timeout: 10000 });
+      console.log('✅ Mobile search results loaded');
+    } catch (error) {
+      console.log('⚠️ No mobile search results, taking screenshot anyway');
+      await page.waitForTimeout(2000);
+    }
+    
     await page.screenshot({ 
       path: `${screenshotDir}/${screenshotIndex.toString().padStart(2, '0')}-mobile-search-results.png`,
       fullPage: true

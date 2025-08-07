@@ -1087,6 +1087,20 @@ npx @samas/smart-search init json
 
 Happy coding! 🚀
 
+## Support This Work
+
+If you found this guide helpful, please consider supporting the development of Smart Search and more educational content like this:
+
+**☕ Buy me a coffee:**
+- [GitHub Sponsors](https://github.com/sponsors/bilgrami) - Support ongoing development
+- [Ko-fi](https://ko-fi.com/bilgrami) - One-time donations welcome
+
+**🤝 Connect with the author:**
+- LinkedIn: [linkedin.com/in/bilgrami](https://linkedin.com/in/bilgrami)
+- Follow for more insights on search technology, database optimization, and system architecture
+
+Your support helps us create more high-quality showcases, maintain the Smart Search library, and build tools that make developers' lives easier. Every contribution makes a difference! 🙏
+
 ---
 
 *Want to dive deeper? Check out our [Advanced Developer Guide](smart-search-senior-developers.md) and [Testing Guide](smart-search-testers.md) for more advanced concepts and testing strategies.*

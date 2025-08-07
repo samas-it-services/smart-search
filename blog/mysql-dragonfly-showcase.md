@@ -431,6 +431,20 @@ Continue your Smart Search journey:
 - **[MongoDB + Memcached](mongodb-memcached-showcase.md)**: Document search with distributed caching
 - **[SQLite + InMemory](sqlite-inmemory-showcase.md)**: Lightweight search for edge computing
 
+## Support This Work
+
+If you found this showcase helpful, please consider supporting the development of Smart Search and more educational content like this:
+
+**☕ Buy me a coffee:**
+- [GitHub Sponsors](https://github.com/sponsors/bilgrami) - Support ongoing development
+- [Ko-fi](https://ko-fi.com/bilgrami) - One-time donations welcome
+
+**🤝 Connect with the author:**
+- LinkedIn: [linkedin.com/in/bilgrami](https://linkedin.com/in/bilgrami)
+- Follow for more insights on search technology, database optimization, and system architecture
+
+Your support helps us create more high-quality showcases, maintain the Smart Search library, and build tools that make developers' lives easier. Every contribution makes a difference! 🙏
+
 ---
 
 *Questions about MySQL Boolean search or DragonflyDB optimization? Join our [GitHub discussions](https://github.com/samas-it-services/smart-search/discussions) or reach out on [Twitter](https://twitter.com/smartsearch).*
