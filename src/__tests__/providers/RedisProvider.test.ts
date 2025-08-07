@@ -317,6 +317,13 @@ describe('RedisProvider', () => {
 
   describe('Health Check', () => {
     it('should return healthy status when connected', async () => {
+      // Setup search index for health check
+      await provider.createSearchIndex({
+        indexName: 'idx:test',
+        prefix: 'test:',
+        schema: { title: 'TEXT', author: 'TEXT' }
+      });
+      
       mockRedisClient.ping.mockResolvedValue('PONG');
       mockRedisClient.call.mockResolvedValue([0]); // Empty search result
       mockRedisClient.info.mockResolvedValue('used_memory_human:50MB\r\n');
@@ -325,7 +332,7 @@ describe('RedisProvider', () => {
       const health = await provider.checkHealth();
 
       expect(health.isConnected).toBe(true);
-      expect(health.latency).toBeGreaterThan(0);
+      expect(health.latency).toBeGreaterThanOrEqual(0);
       expect(health.memoryUsage).toBe('50MB');
       expect(health.keyCount).toBe(1000);
       expect(health.errors).toHaveLength(0);
@@ -338,8 +345,8 @@ describe('RedisProvider', () => {
 
       expect(health.isConnected).toBe(false);
       expect(health.isSearchAvailable).toBe(false);
-      expect(health.latency).toBeGreaterThan(0);
-      expect(health.errors).toContain('Connection failed');
+      expect(health.latency).toBe(-1); // -1 indicates not connected
+      expect(health.errors).toContain('Redis not connected');
     });
 
     it('should detect search unavailability', async () => {

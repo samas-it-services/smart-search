@@ -99,7 +99,7 @@ export class RedisProvider implements CacheProvider {
 
   async connect(): Promise<void> {
     try {
-      const redisConfig = this.buildRedisConfig(this.config);
+      this.buildRedisConfig(this.config);
       
       // Log connection method (without sensitive data)
       this.logConnectionMethod();
@@ -238,7 +238,7 @@ export class RedisProvider implements CacheProvider {
       const { filters, limit = 20 } = options;
 
       // Search across all configured indexes
-      for (const [indexName, indexConfig] of this.searchIndexes) {
+      for (const [indexName] of this.searchIndexes) {
         // Filter by type if specified
         if (filters?.type && filters.type.length > 0) {
           const indexType = this.getIndexType(indexName);
@@ -289,7 +289,7 @@ export class RedisProvider implements CacheProvider {
         return [];
       }
 
-      const totalResults = result[0];
+      // const totalResults = result[0]; // Future: use for pagination
       const documents = [];
 
       // Parse results (format: [count, key1, fields1, key2, fields2, ...])
@@ -349,9 +349,9 @@ export class RedisProvider implements CacheProvider {
       thumbnail: doc.thumbnail_path,
       profilePicture: doc.avatar_url,
       coverImage: doc.cover_image_url,
-      memberCount: doc.member_count ? parseInt(doc.member_count) : undefined,
-      bookCount: doc.book_count ? parseInt(doc.book_count) : undefined,
-      viewCount: doc.view_count ? parseInt(doc.view_count) : undefined,
+      ...(doc.member_count ? { memberCount: parseInt(doc.member_count) } : {}),
+      ...(doc.book_count ? { bookCount: parseInt(doc.book_count) } : {}),
+      ...(doc.view_count ? { viewCount: parseInt(doc.view_count) } : {}),
       createdAt: doc.created_at || doc.uploaded_at,
       tags: doc.tags ? (typeof doc.tags === 'string' ? JSON.parse(doc.tags) : doc.tags) : undefined,
       isbn: doc.isbn,

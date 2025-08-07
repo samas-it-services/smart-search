@@ -26,7 +26,7 @@ import {
 export class SmartSearch {
   private database: DatabaseProvider;
   private cache?: CacheProvider;
-  private fallbackStrategy: 'database' | 'cache';
+  // private _fallbackStrategy: 'database' | 'cache'; // Future: use for more complex fallback logic
   
   private healthCheckInterval = 30000; // 30 seconds
   private lastHealthCheck = 0;
@@ -55,8 +55,10 @@ export class SmartSearch {
 
   constructor(config: SmartSearchConfig) {
     this.database = config.database;
-    this.cache = config.cache;
-    this.fallbackStrategy = config.fallback;
+    if (config.cache) {
+      this.cache = config.cache;
+    }
+    // this._fallbackStrategy = config.fallback; // Future: use for more complex fallback logic
     
     // Circuit breaker configuration
     this.FAILURE_THRESHOLD = config.circuitBreaker?.failureThreshold ?? 3;
@@ -69,8 +71,8 @@ export class SmartSearch {
     this.slowQueryThreshold = config.performance?.slowQueryThreshold ?? 1000;
     
     // Cache configuration
-    this.cacheEnabled = config.cache?.enabled ?? true;
-    this.defaultCacheTTL = config.cache?.defaultTTL ?? 300000; // 5 minutes
+    this.cacheEnabled = config.cacheConfig?.enabled ?? true;
+    this.defaultCacheTTL = config.cacheConfig?.defaultTTL ?? 300000; // 5 minutes
 
     this.initializeHealthMonitoring();
   }
@@ -436,7 +438,7 @@ export class SmartSearch {
     }
 
     // Set up periodic health monitoring (only in browser environment)
-    if (typeof window !== 'undefined') {
+    if (typeof globalThis !== 'undefined' && 'window' in globalThis && (globalThis as any).window) {
       setInterval(() => {
         this.forceHealthCheck().catch(error => {
           console.warn('⚠️ Periodic health check failed:', error);

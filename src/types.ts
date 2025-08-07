@@ -116,7 +116,7 @@ export interface SmartSearchConfig {
     recoveryTimeout?: number;
     healthCacheTTL?: number;
   };
-  cache?: {
+  cacheConfig?: {
     enabled?: boolean;
     defaultTTL?: number;
     maxSize?: number;

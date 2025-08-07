@@ -46,4 +46,5 @@ export type {
 } from './providers';
 
 // Default export for convenience
+import { SmartSearch } from './SmartSearch';
 export default SmartSearch;

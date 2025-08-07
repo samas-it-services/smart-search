@@ -50,7 +50,7 @@ export interface SmartSearchConfigFile {
     recoveryTimeout?: number;
     healthCacheTTL?: number;
   };
-  cache?: {
+  cacheConfig?: {
     enabled?: boolean;
     defaultTTL?: number;
     maxSize?: number;
@@ -183,27 +183,32 @@ export class ConfigLoader {
     // Database configuration
     switch (config.database.type) {
       case 'supabase':
-        config.database.connection = {
-          url: process.env.SUPABASE_URL || process.env.SMART_SEARCH_DB_URL,
-          key: process.env.SUPABASE_ANON_KEY || process.env.SMART_SEARCH_DB_KEY
-        };
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.SMART_SEARCH_DB_URL;
+        const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SMART_SEARCH_DB_KEY;
+        if (supabaseUrl && supabaseKey) {
+          config.database.connection = { url: supabaseUrl, key: supabaseKey };
+        }
         break;
       
       case 'mysql':
       case 'postgresql':
+        const dbUser = process.env.SMART_SEARCH_DB_USER || process.env.SMART_SEARCH_DB_USERNAME;
+        const dbPassword = process.env.SMART_SEARCH_DB_PASSWORD;
+        const dbName = process.env.SMART_SEARCH_DB_DATABASE || process.env.SMART_SEARCH_DB_NAME;
         config.database.connection = {
           host: process.env.SMART_SEARCH_DB_HOST || 'localhost',
-          port: parseInt(process.env.SMART_SEARCH_DB_PORT || '5432'),
-          user: process.env.SMART_SEARCH_DB_USER || process.env.SMART_SEARCH_DB_USERNAME,
-          password: process.env.SMART_SEARCH_DB_PASSWORD,
-          database: process.env.SMART_SEARCH_DB_DATABASE || process.env.SMART_SEARCH_DB_NAME
+          port: parseInt(process.env.SMART_SEARCH_DB_PORT || '5432')
         };
+        if (dbUser) config.database.connection.user = dbUser;
+        if (dbPassword) config.database.connection.password = dbPassword;
+        if (dbName) config.database.connection.database = dbName;
         break;
       
       case 'mongodb':
-        config.database.connection = {
-          uri: process.env.MONGODB_URI || process.env.SMART_SEARCH_DB_URI
-        };
+        const mongoUri = process.env.MONGODB_URI || process.env.SMART_SEARCH_DB_URI;
+        if (mongoUri) {
+          config.database.connection = { uri: mongoUri };
+        }
         break;
     }
 
@@ -217,16 +222,21 @@ export class ConfigLoader {
       switch (config.cache.type) {
         case 'redis':
         case 'dragonfly':
-          config.cache.connection = {
-            url: process.env.REDIS_URL || process.env.SMART_SEARCH_CACHE_URL,
-            host: process.env.REDIS_HOST || process.env.SMART_SEARCH_CACHE_HOST,
-            port: parseInt(process.env.REDIS_PORT || process.env.SMART_SEARCH_CACHE_PORT || '6379'),
-            password: process.env.REDIS_PASSWORD || process.env.SMART_SEARCH_CACHE_PASSWORD,
-            username: process.env.REDIS_USERNAME || process.env.SMART_SEARCH_CACHE_USERNAME,
-            apiKey: process.env.REDIS_API_KEY || process.env.REDIS_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env.SMART_SEARCH_CACHE_API_KEY,
-            db: parseInt(process.env.REDIS_DB || process.env.SMART_SEARCH_CACHE_DB || '0'),
-            tls: process.env.REDIS_TLS === 'true' || process.env.SMART_SEARCH_CACHE_TLS === 'true'
-          };
+          config.cache.connection = {};
+          const redisUrl = process.env.REDIS_URL || process.env.SMART_SEARCH_CACHE_URL;
+          const redisHost = process.env.REDIS_HOST || process.env.SMART_SEARCH_CACHE_HOST;
+          const redisPassword = process.env.REDIS_PASSWORD || process.env.SMART_SEARCH_CACHE_PASSWORD;
+          const redisUsername = process.env.REDIS_USERNAME || process.env.SMART_SEARCH_CACHE_USERNAME;
+          const redisApiKey = process.env.REDIS_API_KEY || process.env.REDIS_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env.SMART_SEARCH_CACHE_API_KEY;
+          
+          if (redisUrl) config.cache.connection.url = redisUrl;
+          if (redisHost) config.cache.connection.host = redisHost;
+          config.cache.connection.port = parseInt(process.env.REDIS_PORT || process.env.SMART_SEARCH_CACHE_PORT || '6379');
+          if (redisPassword) config.cache.connection.password = redisPassword;
+          if (redisUsername) config.cache.connection.username = redisUsername;
+          if (redisApiKey) config.cache.connection.apiKey = redisApiKey;
+          config.cache.connection.db = parseInt(process.env.REDIS_DB || process.env.SMART_SEARCH_CACHE_DB || '0');
+          config.cache.connection.tls = process.env.REDIS_TLS === 'true' || process.env.SMART_SEARCH_CACHE_TLS === 'true';
           break;
         
         case 'memcached':
@@ -276,7 +286,7 @@ export class ConfigLoader {
         recoveryTimeout: 60000,
         healthCacheTTL: 30000
       },
-      cache: {
+      cacheConfig: {
         enabled: true,
         defaultTTL: 300000,
         maxSize: 10000
@@ -292,7 +302,7 @@ export class ConfigLoader {
       ...defaults,
       ...config,
       circuitBreaker: { ...defaults.circuitBreaker, ...config.circuitBreaker },
-      cache: { ...defaults.cache, ...config.cache },
+      cacheConfig: { ...defaults.cacheConfig, ...config.cacheConfig },
       performance: { ...defaults.performance, ...config.performance }
     };
   }
@@ -350,7 +360,7 @@ export class ConfigLoader {
         recoveryTimeout: 60000,
         healthCacheTTL: 30000
       },
-      cache: {
+      cacheConfig: {
         enabled: true,
         defaultTTL: 300000,
         maxSize: 10000

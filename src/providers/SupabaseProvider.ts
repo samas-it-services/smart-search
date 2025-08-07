@@ -47,7 +47,7 @@ export class SupabaseProvider implements DatabaseProvider {
   private isConnectedFlag = false;
   private searchConfig: SupabaseSearchConfig;
 
-  constructor(config: SupabaseConfig, searchConfig: SupabaseSearchConfig) {
+  constructor(_config: SupabaseConfig, searchConfig: SupabaseSearchConfig) {
     // Note: In real implementation, this would be:
     // this.supabase = createClient(config.url, config.key, config.options);
     this.searchConfig = searchConfig;

@@ -6,7 +6,7 @@ import { SmartSearch } from './SmartSearch';
 import { SupabaseProvider } from './providers/SupabaseProvider';
 import { RedisProvider } from './providers/RedisProvider';
 import { ConfigLoader, SmartSearchConfigFile } from './config/ConfigLoader';
-import { DatabaseProvider, CacheProvider } from './types';
+import { DatabaseProvider, CacheProvider, SmartSearchConfig } from './types';
 
 export class SmartSearchFactory {
   private static configLoader = ConfigLoader.getInstance();
@@ -42,14 +42,28 @@ export class SmartSearchFactory {
     const cache = config.cache ? SmartSearchFactory.createCacheProvider(config) : undefined;
 
     // Create SmartSearch instance
-    return new SmartSearch({
+    const smartSearchConfig: SmartSearchConfig = {
       database,
-      cache,
-      fallback: config.search.fallback,
-      circuitBreaker: config.circuitBreaker,
-      cache: config.cache,
-      performance: config.performance
-    });
+      fallback: config.search.fallback
+    };
+    
+    if (cache) {
+      smartSearchConfig.cache = cache;
+    }
+    
+    if (config.circuitBreaker) {
+      smartSearchConfig.circuitBreaker = config.circuitBreaker;
+    }
+    
+    if (config.cacheConfig) {
+      smartSearchConfig.cacheConfig = config.cacheConfig;
+    }
+    
+    if (config.performance) {
+      smartSearchConfig.performance = config.performance;
+    }
+    
+    return new SmartSearch(smartSearchConfig);
   }
 
   private static createDatabaseProvider(config: SmartSearchConfigFile): DatabaseProvider {
@@ -64,10 +78,23 @@ export class SmartSearchFactory {
           {
             url: connection.url,
             key: connection.key,
-            options
+            options: options || {}
           },
           {
-            tables: config.search.tables
+            tables: Object.fromEntries(
+              Object.entries(config.search.tables).map(([key, table]) => [
+                key,
+                {
+                  columns: {
+                    ...table.columns,
+                    id: table.columns.id || 'id',
+                    title: table.columns.title || 'title'
+                  },
+                  searchColumns: table.searchColumns,
+                  type: table.type
+                }
+              ])
+            )
           }
         );
 
@@ -132,31 +159,29 @@ export class SmartSearchFactory {
 
     switch (type) {
       case 'redis':
-        return new RedisProvider({
-          url: connection.url,
-          host: connection.host,
-          port: connection.port,
-          password: connection.password,
-          username: connection.username,
-          apiKey: connection.apiKey,
-          db: connection.db,
-          tls: connection.tls,
-          ...options
-        });
+        const redisConfig: any = {};
+        if (connection.url) redisConfig.url = connection.url;
+        if (connection.host) redisConfig.host = connection.host;
+        if (connection.port) redisConfig.port = connection.port;
+        if (connection.password) redisConfig.password = connection.password;
+        if (connection.username) redisConfig.username = connection.username;
+        if (connection.apiKey) redisConfig.apiKey = connection.apiKey;
+        if (connection.db !== undefined) redisConfig.db = connection.db;
+        if (connection.tls !== undefined) redisConfig.tls = connection.tls;
+        return new RedisProvider({ ...redisConfig, ...options });
 
       case 'dragonfly':
         // DragonflyDB is Redis-compatible
-        return new RedisProvider({
-          url: connection.url,
-          host: connection.host,
-          port: connection.port || 6380,
-          password: connection.password,
-          username: connection.username,
-          apiKey: connection.apiKey,
-          db: connection.db,
-          tls: connection.tls,
-          ...options
-        });
+        const dragonflyConfig: any = {};
+        if (connection.url) dragonflyConfig.url = connection.url;
+        if (connection.host) dragonflyConfig.host = connection.host;
+        dragonflyConfig.port = connection.port || 6380;
+        if (connection.password) dragonflyConfig.password = connection.password;
+        if (connection.username) dragonflyConfig.username = connection.username;
+        if (connection.apiKey) dragonflyConfig.apiKey = connection.apiKey;
+        if (connection.db !== undefined) dragonflyConfig.db = connection.db;
+        if (connection.tls !== undefined) dragonflyConfig.tls = connection.tls;
+        return new RedisProvider({ ...dragonflyConfig, ...options });
 
       case 'memcached':
         // When MemcachedProvider is implemented:
