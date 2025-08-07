@@ -66,9 +66,9 @@ start_all() {
     echo "  💾 Memcached:      localhost:11211"
     echo ""
     echo "  🌐 Adminer:        http://localhost:8080"
-    echo "  📊 Redis Commander: http://localhost:8081"
+    echo "  📊 Redis Commander: http://localhost:8085"
     echo "  🍀 Mongo Express:  http://localhost:8082 (admin/admin)"
-    echo "  📈 Grafana:        http://localhost:3000 (admin/admin)"
+    echo "  📈 Grafana:        http://localhost:3001 (admin/admin)"
     echo "  🔍 Prometheus:     http://localhost:9090"
 }
 

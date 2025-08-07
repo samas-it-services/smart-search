@@ -594,7 +594,7 @@ The Playwright configuration includes:
 const ScreenshotGenerator = require('./tests/utils/screenshot-generator');
 
 const generator = new ScreenshotGenerator({
-  baseURL: 'http://localhost:3001',
+  baseURL: 'http://localhost:3002',
   outputDir: 'screenshots/blog',
   viewport: { width: 1200, height: 800 }
 });

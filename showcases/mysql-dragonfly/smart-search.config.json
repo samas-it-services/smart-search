@@ -1,0 +1,35 @@
+{
+  "database": {
+    "type": "mysql",
+    "connection": {
+      "host": "localhost",
+      "port": 3306,
+      "user": "user",
+      "password": "password",
+      "database": "smartsearch"
+    }
+  },
+  "cache": {
+    "type": "dragonfly",
+    "connection": {
+      "host": "localhost",
+      "port": 6380
+    }
+  },
+  "search": {
+    "fallback": "database",
+    "tables": {
+      "books": {
+        "columns": {
+          "id": "id",
+          "title": "title",
+          "author": "author",
+          "description": "description",
+          "category": "category"
+        },
+        "searchColumns": ["title", "author", "description"],
+        "type": "book"
+      }
+    }
+  }
+}

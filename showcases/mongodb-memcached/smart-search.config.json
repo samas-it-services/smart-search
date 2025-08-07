@@ -1,0 +1,31 @@
+{
+  "database": {
+    "type": "mongodb",
+    "connection": {
+      "uri": "mongodb://root:rootpassword@localhost:27017/smartsearch?authSource=admin"
+    }
+  },
+  "cache": {
+    "type": "memcached",
+    "connection": {
+      "servers": ["localhost:11211"]
+    }
+  },
+  "search": {
+    "fallback": "database",
+    "tables": {
+      "documents": {
+        "collection": "documents",
+        "columns": {
+          "id": "_id",
+          "title": "title",
+          "author": "author",
+          "description": "content",
+          "category": "category"
+        },
+        "searchColumns": ["title", "author", "content"],
+        "type": "document"
+      }
+    }
+  }
+}

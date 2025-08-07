@@ -1,6 +1,6 @@
 /**
- * @samas/smart-search - PostgreSQL + Redis Showcase
- * Demonstrates universal search capabilities with PostgreSQL database and Redis cache
+ * @samas/smart-search - MySQL + DragonflyDB Showcase
+ * Demonstrates universal search capabilities with MySQL database and DragonflyDB cache
  */
 
 const { SmartSearchFactory } = require('../../dist/index.js');
@@ -8,7 +8,7 @@ const express = require('express');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3003;
 
 // Middleware
 app.use(express.json());
@@ -19,7 +19,7 @@ let smartSearch;
 
 async function initializeSearch() {
     try {
-        console.log('🚀 Initializing Smart Search with PostgreSQL + Redis...');
+        console.log('🚀 Initializing Smart Search with MySQL + DragonflyDB...');
         
         // Note: Since we're using mock providers, this won't actually connect
         // In a real implementation, this would use actual database and cache connections

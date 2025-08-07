@@ -1,0 +1,39 @@
+{
+  "database": {
+    "type": "sqlite",
+    "connection": {
+      "database": "./data/search.db",
+      "options": {
+        "readonly": false,
+        "timeout": 5000,
+        "verbose": false
+      }
+    }
+  },
+  "cache": {
+    "type": "inmemory",
+    "connection": {
+      "maxSize": 5000,
+      "defaultTTL": 600000,
+      "enableStats": true
+    }
+  },
+  "search": {
+    "fallback": "database",
+    "tables": {
+      "documents": {
+        "columns": {
+          "id": "id",
+          "title": "title",
+          "content": "content",
+          "category": "category",
+          "createdAt": "created_at"
+        },
+        "searchColumns": ["title", "content"],
+        "type": "document",
+        "ftsTable": "documents_fts",
+        "ftsConfig": "tokenize=porter"
+      }
+    }
+  }
+}

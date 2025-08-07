@@ -1,0 +1,22 @@
+{
+  "name": "smart-search-showcase-sqlite-inmemory",
+  "version": "1.0.0",
+  "description": "SQLite + InMemory showcase for @samas/smart-search",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "keywords": [
+    "search",
+    "sqlite",
+    "inmemory",
+    "showcase",
+    "demo"
+  ],
+  "author": "Smart Search Team",
+  "license": "Apache-2.0"
+}
