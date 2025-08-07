@@ -38,14 +38,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Docker Infrastructure Commands
 - `./scripts/start-stack.sh <stack-name>` - Launch specific database+cache combination
-  - Available stacks: `mysql-redis`, `postgres-redis`, `mongodb-dragonfly`, `supabase-redis`, `sqlite-inmemory`, `all-databases`
+  - Available stacks: `postgres-redis`, `mysql-dragonfly`, `mongodb-memcached`, `deltalake-redis`, `all-databases`
 - `./scripts/stop-all.sh` - Clean shutdown of all Docker services
 - `./scripts/reset-data.sh [stack-name]` - Reset databases to clean state
 - `./scripts/backup-data.sh [stack-name]` - Backup database contents
 - `./scripts/monitor-health.sh` - Health check across all running services
-- `docker-compose -f docker/mysql-redis.docker-compose.yml up -d` - Start MySQL + Redis stack
 - `docker-compose -f docker/postgres-redis.docker-compose.yml up -d` - Start PostgreSQL + Redis stack
-- `docker-compose -f docker/mongodb-dragonfly.docker-compose.yml up -d` - Start MongoDB + DragonflyDB stack
+- `docker-compose -f docker/mysql-dragonfly.docker-compose.yml up -d` - Start MySQL + DragonflyDB stack
+- `docker-compose -f docker/mongodb-memcached.docker-compose.yml up -d` - Start MongoDB + Memcached stack
+- `docker-compose -f docker/deltalake-redis.docker-compose.yml up -d` - Start Delta Lake + Redis stack
+
+### Data Management Commands
+- `./scripts/download-data.sh [industry] [size]` - Download real datasets from public sources
+  - Industries: `healthcare`, `finance`, `retail`, `education`, `real-estate`, `all`
+  - Sizes: `tiny` (1K), `small` (10K), `medium` (100K), `large` (1M+), `all`
+- `./scripts/seed-data.sh [industry] [size] [database]` - Seed Docker containers with real data
+  - Databases: `postgres`, `mysql`, `mongodb`, `redis`, `all`
+- `./scripts/generate-config.js --interactive` - Interactive configuration generator
+- `./scripts/validate-config.js --config path/to/config.json` - Comprehensive config validation
+
+### Enhanced Screenshot Generation Commands
+- `./scripts/generate-screenshots-docker.sh [showcase]` - Generate screenshots with Docker integration
+- `./scripts/generate-screenshots-docker.sh all` - Generate screenshots for all showcases
+- `./scripts/generate-screenshots-docker.sh postgres-redis --keep-services` - Keep services running after screenshots
+- `node generate-screenshots.js [showcase]` - Legacy screenshot generation (without Docker)
 
 ### Database-Specific Commands
 - `./scripts/seed-mysql.sh` - Populate MySQL with e-commerce demo data
@@ -105,9 +121,10 @@ The library uses a provider pattern for database and cache abstraction:
 
 **DatabaseProvider Interface** - Defines contract for database implementations:
 - ✅ **SupabaseProvider** - Production ready with real-time features
-- 🔄 **MySQLProvider** - Full-text search with MATCH/AGAINST and JSON support
-- 🔄 **PostgreSQLProvider** - Advanced text search with GIN indexes and ranking
-- 🔄 **MongoDBProvider** - Text indexes, Atlas Search, and aggregation pipelines
+- ✅ **PostgreSQLProvider** - Advanced text search with GIN indexes and ranking
+- ✅ **MySQLProvider** - Full-text search with MATCH/AGAINST and JSON support
+- ✅ **MongoDBProvider** - Text indexes, Atlas Search, and aggregation pipelines
+- ✅ **DeltaLakeProvider** - ACID transactions, time travel, columnar storage
 - 📋 **SQLiteProvider** - FTS5 extension for lightweight applications
 
 **CacheProvider Interface** - Defines contract for cache implementations:
@@ -122,9 +139,10 @@ The library uses a provider pattern for database and cache abstraction:
 
 **Database Providers:**
 - `SupabaseProvider.ts` - Full-text search via Supabase with real-time subscriptions
-- `MySQLProvider.ts` - MySQL 8.0+ full-text search with InnoDB and MyISAM support
 - `PostgreSQLProvider.ts` - Advanced PostgreSQL full-text search with tsvector and ranking
+- `MySQLProvider.ts` - MySQL 8.0+ full-text search with InnoDB and MyISAM support
 - `MongoDBProvider.ts` - MongoDB text search with Atlas Search and aggregation pipelines
+- `DeltaLakeProvider.ts` - Delta Lake with ACID transactions, time travel, and Parquet storage
 - `SQLiteProvider.ts` - Lightweight SQLite FTS5 for demos and embedded applications
 
 **Cache Providers:**

@@ -40,6 +40,77 @@
             font-size: 1.2rem;
             opacity: 0.9;
         }
+        
+        .dataset-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .dataset-size-badge {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+            border: 2px solid rgba(255,255,255,0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        /* Size-specific color schemes */
+        .dataset-size-badge.size-tiny {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        
+        .dataset-size-badge.size-small {
+            background: linear-gradient(135deg, #45b7d1, #2980b9);
+            box-shadow: 0 4px 15px rgba(69, 183, 209, 0.4);
+        }
+        
+        .dataset-size-badge.size-medium {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+        }
+        
+        .dataset-size-badge.size-large {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .dataset-records-info {
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 10px 20px;
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .dataset-records-info .total-records {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        
+        .dataset-cache-info {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 10px 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            font-size: 0.9rem;
+        }
 
         .search-section {
             background: white;
@@ -82,6 +153,21 @@
 
         .search-btn:hover {
             background: #5a6fd8;
+        }
+        
+        /* Strategy Selector Styles */
+        .strategy-selector {
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            outline: none;
+            transition: border-color 0.3s;
+            min-width: 200px;
+        }
+        .strategy-selector:focus {
+            border-color: #667eea;
         }
 
         .search-btn:disabled {
@@ -292,6 +378,17 @@
         <div class="header">
             <h1>🏥 Healthcare Search Platform</h1>
             <p>PostgreSQL + Redis - Medical Research & Clinical Guidelines Search</p>
+            <div class="dataset-info">
+                <div class="dataset-size-badge">
+                    <span id="datasetSize">Loading...</span>
+                </div>
+                <div class="dataset-records-info">
+                    📊 <span class="total-records"><span id="totalRecords">...</span></span> Healthcare Records
+                </div>
+                <div class="dataset-cache-info">
+                    ⚡ Cache: <span id="cacheStatus">...</span>
+                </div>
+            </div>
         </div>
 
         <div class="search-section">
@@ -303,6 +400,12 @@
                     placeholder="Search medical research, clinical guidelines, protocols..."
                     value="diabetes"
                 >
+                <select class="strategy-selector" id="strategySelector">
+                    <option value="cache-first">⚡ Cache-First (Fast)</option>
+                    <option value="database-only">🗄️ Database-Only (Accurate)</option>
+                    <option value="circuit-breaker">🔧 Circuit Breaker (Failover)</option>
+                    <option value="hybrid">🤖 Hybrid (Intelligent)</option>
+                </select>
                 <button type="submit" class="search-btn" id="searchBtn">
                     🔍 Search
                 </button>
@@ -362,7 +465,7 @@
     <script>
         let currentStats = null;
 
-        // Load initial stats
+        // Load initial stats and dataset info
         async function loadStats() {
             try {
                 const response = await fetch('/api/stats');
@@ -371,10 +474,68 @@
                 if (data.success) {
                     currentStats = data.data;
                     renderStats();
+                    updateDatasetInfo(data.data);
                 }
             } catch (error) {
                 console.error('Failed to load stats:', error);
+                // Set default dataset info
+                updateDatasetInfo({ 
+                    databaseHealth: { queryCount: 'N/A' }, 
+                    cacheHealth: { isConnected: false, keyCount: 0 }
+                });
             }
+        }
+        
+        function updateDatasetInfo(stats) {
+            // Use dataset info from API response if available
+            let datasetName, recordCount, dataSize;
+            
+            if (stats.dataset) {
+                datasetName = stats.dataset.name;
+                recordCount = stats.dataset.estimatedRecords;
+                dataSize = stats.dataset.size;
+            } else {
+                // Fallback to client-side detection
+                dataSize = getDatasetSize();
+                const sizeInfo = getDatasetSizeInfo(dataSize);
+                datasetName = sizeInfo.name;
+                recordCount = sizeInfo.records;
+            }
+            
+            // Update dataset size badge with appropriate color
+            const sizeElement = document.getElementById('datasetSize');
+            const sizeBadge = sizeElement.parentElement;
+            
+            // Remove existing size classes
+            sizeBadge.classList.remove('size-tiny', 'size-small', 'size-medium', 'size-large');
+            // Add the current size class
+            sizeBadge.classList.add(`size-${dataSize}`);
+            
+            sizeElement.textContent = datasetName;
+            document.getElementById('totalRecords').textContent = recordCount;
+            
+            const cacheConnected = stats.cacheHealth && stats.cacheHealth.isConnected;
+            const cacheKeyCount = stats.cacheHealth ? stats.cacheHealth.keyCount : 0;
+            document.getElementById('cacheStatus').textContent = 
+                cacheConnected ? `Connected (${cacheKeyCount} items)` : 'Disconnected';
+        }
+        
+        function getDatasetSize() {
+            // Try to get from URL params, environment, or default to medium
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('size') || 
+                   (typeof window !== 'undefined' && window.DATA_SIZE) || 
+                   'medium';
+        }
+        
+        function getDatasetSizeInfo(size) {
+            const sizeMap = {
+                'tiny': { name: 'Tiny (1K records)', records: '~1,000' },
+                'small': { name: 'Small (10K records)', records: '~10,000' },
+                'medium': { name: 'Medium (100K records)', records: '~100,000' },
+                'large': { name: 'Large (1M+ records)', records: '~1,000,000' }
+            };
+            return sizeMap[size] || sizeMap['medium'];
         }
 
         function renderStats() {
@@ -411,6 +572,7 @@
             }
 
             const searchInput = document.getElementById('searchInput');
+            const strategySelector = document.getElementById('strategySelector');
             const categoryFilter = document.getElementById('categoryFilter');
             const limitFilter = document.getElementById('limitFilter');
             const searchBtn = document.getElementById('searchBtn');
@@ -430,7 +592,8 @@
                 // Build query parameters
                 const params = new URLSearchParams({
                     q: query,
-                    limit: limitFilter.value
+                    limit: limitFilter.value,
+                    strategy: strategySelector.value
                 });
 
                 if (categoryFilter.value) {
@@ -470,12 +633,34 @@
 
             const { results, performance, strategy } = searchData;
 
-            // Update header info
+            // Update header info with strategy-specific styling
             resultsCount.textContent = `Found ${results.length} results for "${query}"`;
+            
+            // Strategy-specific color and icon mapping
+            const strategyStyles = {
+                'cache': { color: '#28a745', icon: '⚡', label: 'Cache' },
+                'database': { color: '#007bff', icon: '🗄️', label: 'Database' },
+                'circuit-breaker': { color: '#ffc107', icon: '🔧', label: 'Failover' },
+                'hybrid': { color: '#6f42c1', icon: '🤖', label: 'Hybrid' }
+            };
+            
+            const strategyInfo = strategyStyles[performance.strategy] || strategyStyles.cache;
+            const sourceIcon = performance.source === 'redis' ? '⚡' : '🗄️';
+            const sourceColor = performance.source === 'redis' ? '#28a745' : '#007bff';
+            
             performanceInfo.innerHTML = `
-                ⚡ ${performance.searchTime.toFixed(1)}ms 
-                | 📊 ${performance.strategy} 
-                | 🎯 ${performance.cacheHit ? 'Cache Hit' : 'Cache Miss'}
+                <span style="color: ${strategyInfo.color}; font-weight: bold;">
+                    ${strategyInfo.icon} ${performance.searchTime.toFixed(1)}ms
+                </span>
+                | <span style="color: ${sourceColor};">
+                    ${sourceIcon} ${performance.source.toUpperCase()}
+                </span>
+                | <span style="color: ${performance.cacheHit ? '#28a745' : '#dc3545'};">
+                    🎯 ${performance.cacheHit ? 'Cache Hit' : 'Cache Miss'}
+                </span>
+                ${strategy.circuitBreakerState ? `| <span style="color: ${strategy.circuitBreakerState === 'OPEN' ? '#dc3545' : '#28a745'};">🔧 CB:${strategy.circuitBreakerState}</span>` : ''}
+                ${performance.failoverReason ? `<br><small style="color: #ffc107;">⚠️ ${performance.failoverReason}</small>` : ''}
+                ${performance.routingReason ? `<br><small style="color: #6f42c1;">🤖 ${performance.routingReason}</small>` : ''}
             `;
 
             if (results.length === 0) {
@@ -488,27 +673,45 @@
                 return;
             }
 
-            // Render results
-            resultsContainer.innerHTML = results.map(result => `
-                <div class="result-item">
-                    <div class="result-title">${highlightText(result.title, query)}</div>
-                    <div class="result-meta">
-                        <span>👤 ${result.author}</span>
-                        <span>📁 ${result.category}</span>
-                        <span>📅 ${new Date(result.createdAt).toLocaleDateString()}</span>
-                        <span>⭐ ${result.relevanceScore}</span>
+            // Render results with strategy-specific styling
+            resultsContainer.innerHTML = results.map(result => {
+                const source = result.metadata?.source || 'database';
+                const cached = result.metadata?.cached || false;
+                const strategy = result.metadata?.strategy || 'cache-first';
+                const responseTime = result.metadata?.responseTime || performance.searchTime;
+                
+                // Color-code based on data source
+                const sourceColor = source === 'redis' ? '#e8f5e8' : source === 'postgresql' ? '#e8f4fd' : '#f8f9fa';
+                const sourceIcon = source === 'redis' ? '⚡' : '🗄️';
+                
+                return `
+                    <div class="result-item" style="border-left: 4px solid ${source === 'redis' ? '#28a745' : '#007bff'}; background: ${sourceColor};">
+                        <div class="result-title">${highlightText(result.title, query)}</div>
+                        <div class="result-meta">
+                            <span>👤 ${result.author}</span>
+                            <span>📁 ${result.category}</span>
+                            <span>📅 ${new Date(result.createdAt).toLocaleDateString()}</span>
+                            <span>⭐ ${result.relevanceScore}</span>
+                            <span style="color: ${source === 'redis' ? '#28a745' : '#007bff'}; font-weight: bold;">
+                                ${sourceIcon} ${source.toUpperCase()} (${responseTime.toFixed(1)}ms)
+                            </span>
+                        </div>
+                        <div class="result-description">
+                            ${highlightText(result.description, query)}
+                        </div>
+                        <div class="result-tags">
+                            <span class="tag match-type">Match: ${result.matchType}</span>
+                            <span class="tag category-tag">${result.category}</span>
+                            <span class="tag">Type: ${result.type}</span>
+                            <span class="tag">Lang: ${result.language}</span>
+                            <span class="tag" style="background: ${cached ? '#d4edda' : '#f8d7da'}; color: ${cached ? '#155724' : '#721c24'};">
+                                ${cached ? '⚡ Cached' : '🗄️ Fresh'}
+                            </span>
+                            <span class="tag" style="background: #e9ecef; color: #495057;">Strategy: ${strategy}</span>
+                        </div>
                     </div>
-                    <div class="result-description">
-                        ${highlightText(result.description, query)}
-                    </div>
-                    <div class="result-tags">
-                        <span class="tag match-type">Match: ${result.matchType}</span>
-                        <span class="tag category-tag">${result.category}</span>
-                        <span class="tag">Type: ${result.type}</span>
-                        <span class="tag">Lang: ${result.language}</span>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function highlightText(text, query) {

@@ -1,0 +1,26 @@
+{
+  "name": "@samas/smart-search-deltalake-redis-showcase",
+  "version": "1.0.0",
+  "description": "Delta Lake + Redis Showcase - Financial Analytics Platform",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "delta-lake",
+    "redis",
+    "financial-analytics",
+    "search",
+    "parquet",
+    "big-data"
+  ]
+}

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta Lake + Redis - Financial Analytics Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .data-size-selector {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .data-size-selector label {
+            color: white;
+            font-weight: 500;
+            margin-right: 15px;
+        }
+
+        .data-size-selector select {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: none;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .search-section {
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #searchInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #searchBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #searchBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        #searchBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-searches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-search-btn {
+            padding: 8px 16px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .quick-search-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        #loadingIndicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #resultsSection {
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .results-count {
+            font-size: 1.1rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .results-meta {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .result-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .result-description {
+            color: #4a5568;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .result-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .metadata-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .metadata-label {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .metadata-value {
+            color: #4a5568;
+            text-align: right;
+        }
+
+        .price-positive {
+            color: #38a169;
+        }
+
+        .price-negative {
+            color: #e53e3e;
+        }
+
+        #statsSection {
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .delta-features {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .delta-features h3 {
+            margin-bottom: 15px;
+        }
+
+        .delta-features ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .delta-features li {
+            padding: 5px 0;
+        }
+
+        .delta-features li:before {
+            content: "✓ ";
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .result-metadata {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 Delta Lake + Redis</h1>
+            <p>Financial Analytics Platform with Big Data Processing</p>
+            <p>ACID Transactions • Time Travel • Columnar Storage • Real-time Caching</p>
+        </div>
+
+        <div class="data-size-selector">
+            <label for="dataSizeSelect">📊 Dataset Size:</label>
+            <select id="dataSizeSelect">
+                <option value="tiny">Tiny (1K records) - Quick Demo</option>
+                <option value="small">Small (10K records) - Standard Testing</option>
+                <option value="medium">Medium (100K records) - Performance Testing</option>
+                <option value="large" selected>Large (1M+ records) - Production Scale</option>
+            </select>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🗃️</span>
+                <h3>Delta Lake ACID</h3>
+                <p>Reliable transactions with schema enforcement and data versioning</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">⏰</span>
+                <h3>Time Travel</h3>
+                <p>Query historical versions and audit data changes over time</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>Columnar Storage</h3>
+                <p>Optimized Parquet format with compression and predicate pushdown</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <h3>Redis Cache</h3>
+                <p>Sub-millisecond response times for frequently accessed data</p>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search financial data, companies, sectors, or analytics terms..." />
+                <button id="searchBtn">🔍 Search</button>
+            </div>
+            
+            <div class="quick-searches">
+                <span style="margin-right: 10px; color: #666; font-weight: 500;">Quick searches:</span>
+                <div class="quick-search-btn" onclick="quickSearch('AAPL')">Apple (AAPL)</div>
+                <div class="quick-search-btn" onclick="quickSearch('technology sector')">Technology</div>
+                <div class="quick-search-btn" onclick="quickSearch('market analytics')">Market Analytics</div>
+                <div class="quick-search-btn" onclick="quickSearch('volatility')">Volatility</div>
+                <div class="quick-search-btn" onclick="quickSearch('dividend')">Dividends</div>
+                <div class="quick-search-btn" onclick="quickSearch('cryptocurrency')">Crypto</div>
+            </div>
+
+            <div id="loadingIndicator">
+                <span class="spinner"></span>
+                Processing Delta Lake query with partition pruning...
+            </div>
+        </div>
+
+        <div id="resultsSection">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">Found 0 results</div>
+                <div class="results-meta" id="resultsMeta">Strategy: Delta Lake • Time: 0ms</div>
+            </div>
+            <div id="resultsContainer"></div>
+        </div>
+
+        <div id="statsSection">
+            <h2 style="margin-bottom: 20px; color: #2d3748;">📈 Platform Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRecords">0</div>
+                    <div class="stat-label">Total Records</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTables">0</div>
+                    <div class="stat-label">Delta Tables</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgResponseTime">0ms</div>
+                    <div class="stat-label">Avg Response</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cacheHitRate">0%</div>
+                    <div class="stat-label">Cache Hit Rate</div>
+                </div>
+            </div>
+
+            <div class="delta-features">
+                <h3>🚀 Delta Lake + Redis Features</h3>
+                <ul>
+                    <li>ACID transactions with schema evolution</li>
+                    <li>Time travel and data versioning</li>
+                    <li>Optimized Parquet columnar format</li>
+                    <li>Partition pruning and predicate pushdown</li>
+                    <li>Redis caching for hot data</li>
+                    <li>Real-time financial analytics</li>
+                    <li>Scalable big data processing</li>
+                    <li>Data lineage and audit trails</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let searchTimeout;
+        let totalSearches = 0;
+        let totalResponseTime = 0;
+        let cacheHits = 0;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            
+            // Auto-search on data size change
+            document.getElementById('dataSizeSelect').addEventListener('change', function() {
+                const currentQuery = document.getElementById('searchInput').value;
+                if (currentQuery) {
+                    performSearch(currentQuery);
+                }
+                loadStats();
+            });
+
+            // Search on enter key
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch(this.value);
+                }
+            });
+
+            // Search button click
+            document.getElementById('searchBtn').addEventListener('click', function() {
+                const query = document.getElementById('searchInput').value;
+                performSearch(query);
+            });
+
+            // Demo search after 2 seconds
+            setTimeout(() => {
+                document.getElementById('searchInput').value = 'financial analytics';
+                performSearch('financial analytics');
+            }, 2000);
+        });
+
+        function quickSearch(query) {
+            document.getElementById('searchInput').value = query;
+            performSearch(query);
+        }
+
+        async function performSearch(query) {
+            if (!query.trim()) return;
+
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultsSection = document.getElementById('resultsSection');
+            const searchBtn = document.getElementById('searchBtn');
+            const dataSize = document.getElementById('dataSizeSelect').value;
+
+            // Show loading state
+            loadingIndicator.style.display = 'block';
+            resultsSection.style.display = 'none';
+            searchBtn.disabled = true;
+            searchBtn.textContent = '🔄 Searching...';
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=20&data_size=${dataSize}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResults(data);
+                    updateStats(data.performance);
+                } else {
+                    showError(data.error || 'Search failed');
+                }
+
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('Network error occurred');
+            } finally {
+                loadingIndicator.style.display = 'none';
+                searchBtn.disabled = false;
+                searchBtn.textContent = '🔍 Search';
+            }
+        }
+
+        function displayResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsCount = document.getElementById('resultsCount');
+            const resultsMeta = document.getElementById('resultsMeta');
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            const { results, performance, strategy } = data;
+
+            // Update header
+            resultsCount.textContent = `Found ${results.length} results`;
+            resultsMeta.innerHTML = `
+                Strategy: ${strategy.primary} • 
+                Time: ${performance.searchTime}ms • 
+                Data Size: ${performance.dataSize} • 
+                ${performance.deltaLakeVersion ? `Delta v${performance.deltaLakeVersion} • ` : ''}
+                ${performance.partitionsScanned ? `${performance.partitionsScanned} partitions scanned` : ''}
+            `;
+
+            // Clear and populate results
+            resultsContainer.innerHTML = '';
+
+            results.forEach(result => {
+                const resultElement = document.createElement('div');
+                resultElement.className = 'result-item';
+                
+                const metadata = result.metadata || {};
+                const priceChange = metadata.price_change || 0;
+                const priceChangeClass = priceChange >= 0 ? 'price-positive' : 'price-negative';
+                
+                resultElement.innerHTML = `
+                    <div class="result-title">${result.title}</div>
+                    <div class="result-description">${result.description}</div>
+                    <div class="result-metadata">
+                        <div class="metadata-item">
+                            <span class="metadata-label">Symbol:</span>
+                            <span class="metadata-value">${metadata.symbol || 'N/A'}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Current Price:</span>
+                            <span class="metadata-value">$${metadata.current_price || 'N/A'}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Change:</span>
+                            <span class="metadata-value ${priceChangeClass}">
+                                ${priceChange >= 0 ? '+' : ''}${metadata.price_change || 0} 
+                                (${metadata.price_change_percent || 0}%)
+                            </span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Volume:</span>
+                            <span class="metadata-value">${(metadata.volume || 0).toLocaleString()}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Market Cap:</span>
+                            <span class="metadata-value">$${(metadata.market_cap || 0).toLocaleString()}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">P/E Ratio:</span>
+                            <span class="metadata-value">${metadata.pe_ratio || 'N/A'}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Delta Table:</span>
+                            <span class="metadata-value">${metadata.delta_table || 'N/A'}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Delta Version:</span>
+                            <span class="metadata-value">${metadata.delta_version || 'N/A'}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Partition:</span>
+                            <span class="metadata-value">${metadata.partition_info || 'N/A'}</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Time Travel:</span>
+                            <span class="metadata-value">${metadata.time_travel_available ? '✅ Available' : '❌ Not Available'}</span>
+                        </div>
+                    </div>
+                `;
+                
+                resultsContainer.appendChild(resultElement);
+            });
+
+            resultsSection.style.display = 'block';
+        }
+
+        function updateStats(performance) {
+            totalSearches++;
+            totalResponseTime += performance.searchTime;
+            if (performance.cacheHit) cacheHits++;
+
+            document.getElementById('avgResponseTime').textContent = 
+                Math.round(totalResponseTime / totalSearches) + 'ms';
+            document.getElementById('cacheHitRate').textContent = 
+                Math.round((cacheHits / totalSearches) * 100) + '%';
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                let totalRecords = 0;
+                if (data.tables && data.tables.length > 0) {
+                    totalRecords = data.tables.reduce((sum, table) => sum + (table.record_count || 0), 0);
+                }
+
+                document.getElementById('totalRecords').textContent = totalRecords.toLocaleString();
+                document.getElementById('totalTables').textContent = data.total_tables || 0;
+
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+                // Set default values
+                document.getElementById('totalRecords').textContent = '1,000,000+';
+                document.getElementById('totalTables').textContent = '3';
+            }
+        }
+
+        function showError(message) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            resultsContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #e53e3e;">
+                    <h3>⚠️ Search Error</h3>
+                    <p>${message}</p>
+                    <p style="margin-top: 15px; font-size: 0.9rem; color: #666;">
+                        This might occur if the Delta Lake processor is starting up or unavailable.
+                        The showcase will fall back to mock data for demonstration purposes.
+                    </p>
+                </div>
+            `;
+            
+            document.getElementById('resultsCount').textContent = 'Search failed';
+            document.getElementById('resultsMeta').textContent = 'Please try again';
+            resultsSection.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

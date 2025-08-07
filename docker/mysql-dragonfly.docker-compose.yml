@@ -49,7 +49,7 @@ services:
       - PORT=3003
       - DATABASE_URL=mysql://user:password@mysql:3306/smartsearch
       - CACHE_URL=redis://dragonfly:6379
-      - DATA_SIZE=medium
+      - DATA_SIZE=${DATA_SIZE:-medium}
     ports:
       - "3003:3003"
     depends_on:

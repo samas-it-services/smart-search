@@ -147,6 +147,8 @@ export class DeltaLakeProvider implements DatabaseProvider {
           url: `/analytics/${symbol}`,
           type: 'financial_data',
           score: Math.random() * 0.5 + 0.5, // Higher relevance scores
+          matchType: 'title',
+          relevanceScore: Math.random() * 0.5 + 0.5,
           metadata: {
             symbol,
             sector,

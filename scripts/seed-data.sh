@@ -48,17 +48,51 @@ wait_for_service() {
     print_step "Waiting for $service_name to be ready..."
     
     while [ $attempt -le $max_attempts ]; do
-        if docker exec smart-search-$service_name nc -z localhost $port 2>/dev/null; then
-            print_status "$service_name is ready!"
-            return 0
-        fi
+        # Use different health check methods based on service
+        case $service_name in
+            postgres)
+                if docker exec smart-search-$service_name pg_isready -U user -d smartsearch >/dev/null 2>&1; then
+                    print_status "$service_name is ready!"
+                    return 0
+                fi
+                ;;
+            mysql)
+                if docker exec smart-search-$service_name mysqladmin ping -h localhost -u user -ppassword >/dev/null 2>&1; then
+                    print_status "$service_name is ready!"
+                    return 0
+                fi
+                ;;
+            mongodb)
+                if docker exec smart-search-$service_name mongo --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
+                    print_status "$service_name is ready!"
+                    return 0
+                fi
+                ;;
+            redis)
+                if docker exec smart-search-$service_name redis-cli ping >/dev/null 2>&1; then
+                    print_status "$service_name is ready!"
+                    return 0
+                fi
+                ;;
+            *)
+                # Fallback: try to connect to port using curl or basic tools
+                if curl -s -f "http://localhost:$port" >/dev/null 2>&1; then
+                    print_status "$service_name is ready!"
+                    return 0
+                fi
+                ;;
+        esac
         
-        echo -n "."
-        sleep 1
+        if [ $((attempt % 10)) -eq 0 ]; then
+            echo " (attempt $attempt/$max_attempts)"
+        else
+            echo -n "."
+        fi
+        sleep 2
         ((attempt++))
     done
     
-    print_error "$service_name failed to start within $max_attempts seconds"
+    print_error "$service_name failed to start within $((max_attempts * 2)) seconds"
     return 1
 }
 
@@ -139,7 +173,7 @@ for record in data:
 conn.commit()
 cur.close()
 conn.close()
-print(f'Seeded {filename} data into PostgreSQL')
+print('Seeded healthcare data into PostgreSQL')
 "
                 done
             fi

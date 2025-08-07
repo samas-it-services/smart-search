@@ -45,7 +45,7 @@ services:
       - PORT=3004
       - DATABASE_URL=mongodb://root:rootpassword@mongodb:27017/smartsearch
       - CACHE_URL=memcached://memcached:11211
-      - DATA_SIZE=medium
+      - DATA_SIZE=${DATA_SIZE:-medium}
     ports:
       - "3004:3004"
     depends_on:

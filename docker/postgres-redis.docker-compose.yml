@@ -48,7 +48,7 @@ services:
       - PORT=3002
       - DATABASE_URL=postgresql://user:password@postgres:5432/smartsearch
       - REDIS_URL=redis://redis:6379
-      - DATA_SIZE=medium
+      - DATA_SIZE=${DATA_SIZE:-medium}
     ports:
       - "3002:3002"
     depends_on:

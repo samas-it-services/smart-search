@@ -301,7 +301,7 @@ export class SmartSearch {
     const health = await this.getCacheHealth();
     
     // Cache is healthy and search is available
-    if (health && health.isConnected && health.isSearchAvailable && health.latency < 1000) {
+    if (health && health.isConnected && health.isSearchAvailable && health.latency !== undefined && health.latency < 1000) {
       return {
         primary: 'cache',
         fallback: 'database',
@@ -319,7 +319,7 @@ export class SmartSearch {
     }
 
     // Cache has high latency
-    if (health && health.isConnected && health.latency > 1000) {
+    if (health && health.isConnected && health.latency !== undefined && health.latency > 1000) {
       return {
         primary: 'database',
         fallback: 'cache',
