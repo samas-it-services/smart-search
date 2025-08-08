@@ -4,6 +4,7 @@
 
 import { SmartSearch } from './SmartSearch';
 import { SupabaseProvider } from './providers/SupabaseProvider';
+import { PostgreSQLProvider } from './providers/PostgreSQLProvider';
 import { RedisProvider } from './providers/RedisProvider';
 import { ConfigLoader, SmartSearchConfigFile } from './config/ConfigLoader';
 import { DatabaseProvider, CacheProvider, SmartSearchConfig } from './types';
@@ -116,21 +117,37 @@ export class SmartSearchFactory {
         throw new Error('MySQLProvider not yet implemented. Use SupabaseProvider or implement MySQLProvider.');
 
       case 'postgresql':
-        // When PostgreSQLProvider is implemented:
-        /*
         if (!connection.host || !connection.user || !connection.password || !connection.database) {
           throw new Error('PostgreSQL configuration requires host, user, password, and database');
         }
-        return new PostgreSQLProvider({
-          host: connection.host,
-          port: connection.port || 5432,
-          user: connection.user,
-          password: connection.password,
-          database: connection.database,
-          ...options
-        });
-        */
-        throw new Error('PostgreSQLProvider not yet implemented. Use SupabaseProvider or implement PostgreSQLProvider.');
+        return new PostgreSQLProvider(
+          {
+            connection: {
+              host: connection.host,
+              port: connection.port || 5432,
+              user: connection.user,
+              password: connection.password,
+              database: connection.database,
+              ssl: false,
+              ...connection
+            },
+            ...options
+          },
+          (config.search as any) || { 
+            tables: {
+              healthcare_data: {
+                columns: {
+                  id: 'id',
+                  title: 'title',
+                  description: 'description',
+                  category: 'type'
+                },
+                searchColumns: ['title', 'description', 'condition_name', 'treatment', 'specialty'],
+                type: 'healthcare'
+              }
+            }
+          }
+        );
 
       case 'mongodb':
         // When MongoDBProvider is implemented:

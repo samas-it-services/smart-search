@@ -695,10 +695,10 @@ Comprehensive guides and tutorials for different user personas:
 
 | **Component** | **Health Check Command** | **Expected Response** | **Troubleshooting** |
 |---------------|-------------------------|---------------------|-------------------|
-| **Application** | `curl http://localhost:3002/api/health` | `{"success":true,"status":"healthy"}` | Check container logs: `docker logs smart-search-postgres-redis-showcase` |
-| **PostgreSQL** | `docker exec smart-search-postgres pg_isready -U user -d smartsearch` | `accepting connections` | Verify connection: `docker exec -it smart-search-postgres psql -U user -d smartsearch` |
-| **Redis** | `docker exec smart-search-redis redis-cli ping` | `PONG` | Check Redis CLI: `docker exec -it smart-search-redis redis-cli` |
-| **All Services** | `docker ps --filter "name=smart-search" --format "table {{.Names}}\t{{.Status}}"` | All containers `Up` | Restart services: `docker-compose down && docker-compose up -d` |
+| **Application** | `curl http://localhost:3002/api/health` | `{"success":true,"status":"healthy"}` | Check container logs: `docker logs docker-saMas-smart-search-postgres-redis-showcase` |
+| **PostgreSQL** | `docker exec docker-saMas-smart-search-postgres-main pg_isready -U search_user -d smartsearch_healthcare` | `accepting connections` | Verify connection: `docker exec -it docker-saMas-smart-search-postgres-main psql -U search_user -d smartsearch_healthcare` |
+| **Redis** | `docker exec docker-saMas-smart-search-redis-main redis-cli ping` | `PONG` | Check Redis CLI: `docker exec -it docker-saMas-smart-search-redis-main redis-cli` |
+| **All Services** | `docker ps --filter "name=docker-saMas-smart-search" --format "table {{.Names}}\t{{.Status}}"` | All containers `Up` | Restart services: `docker-compose down && docker-compose up -d` |
 | **Search Stats** | `curl http://localhost:3002/api/stats` | JSON with dataset info | Check API logs and database connections |
 
 ### Development Workflow Commands

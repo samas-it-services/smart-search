@@ -90,459 +90,146 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `./scripts/export-schema.js --database mysql --output schema.sql` - Export database schema
 - `./scripts/import-data.js --database postgres --file data.json` - Import data into database
 
-## Architecture
-
-This is a universal search library with intelligent cache/database fallback capabilities. The architecture follows a provider-based pattern:
-
-### Core Components
-
-**SmartSearch** (`src/SmartSearch.ts`) - Main orchestrator class that:
-- Manages intelligent search strategy selection (cache vs database)
-- Implements circuit breaker pattern for cache failures
-- Provides performance monitoring and metrics
-- Handles automatic fallback between cache and database
-- Supports configurable health checking and recovery
-
-**SmartSearchFactory** (`src/SmartSearchFactory.ts`) - Factory for creating SmartSearch instances:
-- Creates instances from configuration files (JSON/YAML)
-- Creates instances from environment variables
-- Handles provider instantiation and dependency injection
-- Provides configuration validation
-
-**ConfigLoader** (`src/config/ConfigLoader.ts`) - Configuration management:
-- Supports multiple config file formats (JSON, YAML)
-- Environment variable loading with prefixes
-- Configuration validation and defaults merging
-- Template generation for quick setup
-
-### Provider System
-
-The library uses a provider pattern for database and cache abstraction:
-
-**DatabaseProvider Interface** - Defines contract for database implementations:
-- ✅ **SupabaseProvider** - Production ready with real-time features
-- ✅ **PostgreSQLProvider** - Advanced text search with GIN indexes and ranking
-- ✅ **MySQLProvider** - Full-text search with MATCH/AGAINST and JSON support
-- ✅ **MongoDBProvider** - Text indexes, Atlas Search, and aggregation pipelines
-- ✅ **DeltaLakeProvider** - ACID transactions, time travel, columnar storage
-- 📋 **SQLiteProvider** - FTS5 extension for lightweight applications
-
-**CacheProvider Interface** - Defines contract for cache implementations:
-- ✅ **RedisProvider** - Production ready with RediSearch and JSON modules
-- 🔄 **DragonflyProvider** - High-performance Redis-compatible cache
-- 📋 **MemcachedProvider** - Traditional distributed caching
-- 📋 **InMemoryProvider** - Development and testing cache
-
-**Legend:** ✅ Complete | 🔄 In Progress | 📋 Planned
-
-**Provider Implementations** (`src/providers/`):
-
-**Database Providers:**
-- `SupabaseProvider.ts` - Full-text search via Supabase with real-time subscriptions
-- `PostgreSQLProvider.ts` - Advanced PostgreSQL full-text search with tsvector and ranking
-- `MySQLProvider.ts` - MySQL 8.0+ full-text search with InnoDB and MyISAM support
-- `MongoDBProvider.ts` - MongoDB text search with Atlas Search and aggregation pipelines
-- `DeltaLakeProvider.ts` - Delta Lake with ACID transactions, time travel, and Parquet storage
-- `SQLiteProvider.ts` - Lightweight SQLite FTS5 for demos and embedded applications
-
-**Cache Providers:**
-- `RedisProvider.ts` - Redis 7+ with RediSearch, JSON, and TimeSeries modules
-- `DragonflyProvider.ts` - High-performance DragonflyDB with multi-threading support
-- `MemcachedProvider.ts` - Traditional Memcached for simple key-value caching
-- `InMemoryProvider.ts` - Simple in-memory cache for development and testing
-
-### Key Features
-
-**Circuit Breaker Pattern** - Prevents cascade failures by:
-- Monitoring cache failure rates
-- Opening circuit after configurable threshold
-- Automatic recovery attempts with backoff
-
-**Intelligent Fallback** - Strategy selection based on:
-- Cache health and availability
-- Response time metrics
-- Circuit breaker state
-- Configuration preferences
-
-**Performance Monitoring** - Tracks:
-- Search response times
-- Cache hit/miss rates
-- Circuit breaker events
-- Slow query detection
-
-### Configuration Structure
-
-The library supports flexible configuration through:
-- JSON/YAML config files
-- Environment variables
-- Programmatic configuration
-
-Key configuration sections:
-- `database` - Database provider configuration
-- `cache` - Cache provider configuration (optional)
-- `search` - Table mappings and search columns
-- `circuitBreaker` - Failure handling parameters
-- `performance` - Monitoring and logging settings
-
-### Testing Strategy
-
-**Unit Tests** (`src/__tests__/`) - Test core functionality and providers
-**E2E Tests** (`tests/e2e/`) - Test full integration scenarios with Playwright
-**Integration Tests** - Cross-database compatibility testing with Docker stacks
-**Performance Tests** (`benchmarks/`) - Automated performance regression testing
-**Chaos Tests** - Fault injection and resilience testing
-**Coverage Requirements** - 80% minimum coverage across branches, functions, lines, and statements
-
-## Development Notes
-
-- TypeScript strict mode enabled with comprehensive type checking
-- ESLint configured with TypeScript rules
-- Uses tsup for building with multiple output formats (CJS, ESM, types)
-- Vitest for unit testing with coverage tracking
-- Playwright for end-to-end testing
-- CLI tool for configuration management and testing
-
-### Testing a Single Provider
-
-To test a specific provider in isolation:
-```bash
-npm run test -- src/__tests__/providers/RedisProvider.test.ts
-```
-
-### Building and Testing Before Release
-
-Always run before making significant changes:
-```bash
-npm run type-check && npm run test:unit && npm run build
-```
-
-## Docker Infrastructure
-
-### Available Database + Cache Stacks
-
-The project provides pre-configured Docker stacks for comprehensive testing and showcasing:
-
-#### Production-Ready Stacks
-- **`mysql-redis`** - MySQL 8.0 + Redis 7 (E-commerce showcase)
-- **`postgres-redis`** - PostgreSQL 15 + Redis 7 (CMS showcase) 
-- **`mongodb-dragonfly`** - MongoDB 6.0 + DragonflyDB (Social media showcase)
-- **`supabase-redis`** - Local Supabase + Redis Stack (Real-time showcase)
-
-#### Development & Testing Stacks
-- **`sqlite-inmemory`** - SQLite + In-memory cache (Lightweight development)
-- **`all-databases`** - Multi-database comparison environment
-- **`monitoring-stack`** - Grafana + Prometheus + all databases
-
-#### Quick Start Commands
-```bash
-# Start MySQL + Redis with demo data
-./scripts/start-stack.sh mysql-redis
-
-# Start all databases for comparison
-./scripts/start-stack.sh all-databases
-
-# Stop all services
-./scripts/stop-all.sh
-```
-
-### Docker Compose Files Structure
-
-```
-docker/
-├── mysql-redis.docker-compose.yml       # MySQL + Redis + demo data
-├── postgres-redis.docker-compose.yml    # PostgreSQL + Redis + CMS data  
-├── mongodb-dragonfly.docker-compose.yml # MongoDB + DragonflyDB + social data
-├── supabase-redis.docker-compose.yml    # Supabase + Redis Stack
-├── sqlite-inmemory.docker-compose.yml   # Lightweight development stack
-├── all-databases.docker-compose.yml     # All databases + caches
-├── monitoring.docker-compose.yml        # Grafana + Prometheus monitoring
-└── nginx/
-    ├── nginx.conf                       # Load balancer configuration
-    └── ssl/                            # SSL certificates for HTTPS
-```
-
-## Showcase Applications
-
-### Individual Database Showcases
-
-#### MySQL E-commerce Showcase (`showcases/mysql-showcase/`)
-**Features:**
-- 100k products with categories, reviews, inventory
-- Real-time search with faceted filtering
-- Performance comparison: MySQL full-text vs Redis cache
-- Shopping cart with search history
-- Admin dashboard with search analytics
-
-**Key Demonstrations:**
-- MySQL 8.0 MATCH/AGAINST full-text search
-- JSON column search and filtering
-- Index optimization strategies
-- Cache warming and invalidation patterns
-
-**Access:** `http://localhost:3001` (after running `./scripts/start-showcase.sh mysql`)
-
-#### PostgreSQL CMS Showcase (`showcases/postgres-showcase/`)
-**Features:**
-- 50k articles, authors, comments, tags
-- Advanced search with relevance ranking
-- Multi-language content search
-- Full-text search with highlighting
-- Content recommendation engine
-
-**Key Demonstrations:**
-- PostgreSQL tsvector and tsquery
-- GIN and GiST indexing strategies
-- Custom ranking algorithms
-- Search result highlighting and snippets
-
-**Access:** `http://localhost:3002` (after running `./scripts/start-showcase.sh postgres`)
-
-#### MongoDB Social Media Showcase (`showcases/mongodb-showcase/`)
-**Features:**
-- 200k users, posts, comments, interactions
-- Real-time search with live updates
-- Geospatial search capabilities
-- Flexible schema search
-- Social graph search
-
-**Key Demonstrations:**
-- MongoDB text indexes and aggregation pipelines
-- Atlas Search integration (with local Atlas)
-- Geospatial queries and indexing
-- Real-time search with change streams
-
-**Access:** `http://localhost:3003` (after running `./scripts/start-showcase.sh mongodb`)
-
-#### Supabase Real-time Showcase (`showcases/supabase-showcase/`)
-**Features:**
-- Real-time collaborative search
-- Row-level security demonstrations
-- Edge function integration
-- Real-time subscriptions with search filters
-- Multi-tenant search patterns
-
-**Key Demonstrations:**
-- Supabase real-time subscriptions
-- PostgreSQL RLS policies
-- Edge function search enhancements
-- Multi-tenant data isolation
-
-**Access:** `http://localhost:3004` (after running `./scripts/start-showcase.sh supabase`)
-
-### Unified Multi-Stack Showcase (`showcases/unified-showcase/`)
-
-**Interactive Features:**
-- **Database Selector** - Switch between MySQL, PostgreSQL, MongoDB live
-- **Cache Provider Toggle** - Compare Redis, DragonflyDB, Memcached performance
-- **Real-time Metrics** - Search latency, throughput, cache hit rates
-- **Configuration Editor** - Live configuration changes with instant results
-- **Query Analyzer** - Explain query execution across different databases
-
-**Performance Comparisons:**
-- Search latency across different database types
-- Cache effectiveness for different query patterns
-- Scaling characteristics under load
-- Memory usage and connection pooling
-
-**Access:** `http://localhost:3000` (after running `./scripts/start-showcase.sh unified`)
-
-## Performance Benchmarking
-
-### Benchmark Suite
-
-The project includes comprehensive benchmarking tools for performance analysis:
-
-#### Load Testing Scenarios
-```bash
-# Basic search performance
-./scripts/benchmark-runner.js --test search-latency --duration 300s --rps 100
-
-# Cache effectiveness
-./scripts/benchmark-runner.js --test cache-performance --queries 10000
-
-# Concurrent user simulation  
-./scripts/benchmark-runner.js --test concurrent-users --users 50 --duration 600s
-
-# Failover performance
-./scripts/benchmark-runner.js --test failover-timing --failure-scenarios all
-```
-
-#### Database Comparison Framework
-```bash
-# Compare all databases with same query set
-./scripts/compare-databases.js --queries benchmarks/query-sets/ecommerce.json
-
-# Cache provider comparison
-./scripts/compare-caches.js --providers redis,dragonfly,memcached --load-pattern high-frequency
-
-# Memory usage comparison
-./scripts/memory-benchmark.js --databases all --data-size 1M
-```
-
-#### Performance Regression Testing
-```bash
-# Run performance regression suite
-./scripts/performance-regression.js --baseline v1.0.0 --current HEAD
-
-# Generate performance report
-./scripts/generate-reports.js --format html --output reports/performance.html
-```
-
-### Monitoring and Observability
-
-#### Grafana Dashboards
-- **Search Performance Dashboard** - Real-time search metrics
-- **Database Health Dashboard** - Connection pools, query performance  
-- **Cache Analytics Dashboard** - Hit rates, memory usage, eviction patterns
-- **Circuit Breaker Dashboard** - Failure patterns and recovery metrics
-
-#### Custom Metrics
-- Search request rate and latency percentiles
-- Cache hit/miss ratios by query pattern
-- Database connection pool utilization
-- Circuit breaker state changes
-- Query execution plan analysis
-
-#### Alerts and Monitoring
-- High latency alerts (>100ms p95)
-- Cache hit rate degradation (<80%)
-- Circuit breaker activation
-- Database connection pool exhaustion
-
-## Provider Development Guide
-
-### Creating a New Database Provider
-
-#### 1. Implement DatabaseProvider Interface
-```typescript
-// src/providers/CustomDBProvider.ts
-export class CustomDBProvider implements DatabaseProvider {
-  name = 'CustomDB';
-  
-  async connect(): Promise<void> {
-    // Connection logic
-  }
-  
-  async search(query: string, options: SearchOptions): Promise<SearchResult[]> {
-    // Search implementation
-  }
-  
-  async checkHealth(): Promise<HealthStatus> {
-    // Health check logic
-  }
-}
-```
-
-#### 2. Add Configuration Support
-```typescript
-// Add to SmartSearchFactory.ts
-case 'customdb':
-  return new CustomDBProvider({
-    connectionString: connection.uri,
-    options: options || {}
-  });
-```
-
-#### 3. Create Docker Configuration
-```yaml
-# docker/customdb-redis.docker-compose.yml
-version: '3.8'
-services:
-  customdb:
-    image: customdb:latest
-    environment:
-      - CUSTOMDB_DATABASE=testdb
-    ports:
-      - "5433:5432"
-```
-
-#### 4. Add Test Suite
-```typescript
-// src/__tests__/providers/CustomDBProvider.test.ts
-describe('CustomDBProvider', () => {
-  // Comprehensive test suite
-});
-```
-
-#### 5. Create Showcase Application
-```bash
-# Create showcase directory
-mkdir showcases/customdb-showcase
-# Implement showcase with realistic demo data
-```
-
-### Creating a New Cache Provider
-
-Follow similar pattern for cache providers, implementing the `CacheProvider` interface with `connect()`, `search()`, `set()`, `get()`, `delete()`, `clear()`, and `checkHealth()` methods.
-
-## Production Deployment
-
-### Database-Specific Optimization
-
-#### MySQL Production Setup
-```sql
--- Optimize for full-text search
-SET GLOBAL innodb_ft_min_token_size=1;
-SET GLOBAL innodb_ft_server_stopword_table='';
-
--- Create optimized indexes
-ALTER TABLE products ADD FULLTEXT(name, description);
-```
-
-#### PostgreSQL Production Setup
-```sql
--- Create GIN indexes for text search
-CREATE INDEX CONCURRENTLY idx_articles_fts 
-ON articles USING gin(to_tsvector('english', title || ' ' || content));
-
--- Configure text search
-ALTER DATABASE myapp SET default_text_search_config = 'english';
-```
-
-#### MongoDB Production Setup
-```javascript
-// Create text indexes
-db.articles.createIndex({
-  "title": "text",
-  "content": "text", 
-  "author": "text"
-}, {
-  weights: { title: 10, content: 1, author: 5 }
-});
-```
-
-### Cache Optimization
-
-#### Redis Configuration
-```conf
-# redis.conf optimization
-maxmemory 2gb
-maxmemory-policy allkeys-lru
-save 900 1
-```
-
-#### DragonflyDB Configuration  
-```conf
-# dragonfly.conf
---maxmemory=4gb
---cache_mode=true
---proactor_threads=8
-```
-
-### Scaling Considerations
-
-#### Read Replicas
-- Configure read replicas for database providers
-- Implement read/write splitting in search operations
-- Load balance search queries across replicas
-
-#### Cache Clustering
-- Redis Cluster configuration for horizontal scaling
-- Consistent hashing for cache key distribution
-- Failover and recovery procedures
-
-#### Monitoring at Scale
-- Prometheus metrics collection
-- Grafana alerting rules
-- Log aggregation with ELK stack
-- Distributed tracing with OpenTelemetry
+## Development Guidelines
+
+### Mandatory Foundation Audit Protocol
+
+🚨 CRITICAL: Before ANY enhancement, optimization, or feature work begins, Claude MUST complete this foundation audit. No exceptions.
+
+#### Phase 1: Core Functionality Verification (15 minutes)
+
+1. ALWAYS run these commands first:
+   - `npm run test:unit` - Do tests pass?
+   - `npm run build` - Does it build?
+   - `npm run type-check` - Are there type errors?
+   - `npm run lint` - Any code quality issues?
+
+2. Check main functionality:
+   - `node -e "console.log(require('./dist/index.js'))"` - Can it import?
+
+#### Phase 2: Reality Check Audit
+
+MANDATORY QUESTIONS - Answer ALL before proceeding:
+
+1. Dependencies Reality Check:
+   - Open package.json - are dependencies empty or minimal?
+   - Do claimed integrations (Redis, PostgreSQL, etc.) have corresponding NPM packages?
+   - Are there peer dependencies for database/cache libraries?
+
+2. Implementation Reality Check:
+   - Read the main class file completely
+   - Read at least 3 provider implementation files completely
+   - Look for "mock", "fake", "placeholder", or "In real implementation" comments
+   - Check if providers import actual database libraries (pg, mysql2, ioredis, etc.)
+
+3. Test Reality Check:
+   - Do tests pass and test real functionality (not just mocks)?
+   - Can you run an actual example that connects to a database?
+   - Are there integration tests with real services?
+
+#### Phase 3: Red Flag Detection
+
+STOP IMMEDIATELY if you find:
+- Empty or minimal dependencies in package.json when product claims multiple integrations
+- Provider files with comments like "In real implementation, this would be:"
+- Database providers that don't import database libraries
+- Functions that generate fake/mock data instead of querying real systems
+- Tests that only test mock implementations
+
+#### Phase 4: Foundation Status Report
+
+REQUIRED: Before any work begins, Claude must provide:
+
+FOUNDATION AUDIT REPORT:
+- [ ] ✅ Core functionality verified working
+- [ ] ✅ All claimed integrations have real implementations
+- [ ] ✅ Dependencies match claimed features
+- [ ] ✅ Tests pass and test real functionality
+- [ ] ✅ Can successfully run basic examples
+
+STATUS: [PRODUCTION_READY | PROTOTYPE | NON_FUNCTIONAL]
+RECOMMENDATION: [PROCEED_WITH_ENHANCEMENTS | IMPLEMENT_CORE_FIRST | STOP_WORK]
+
+### Systematic Analysis Requirements
+
+1. Foundation First: Always audit core before enhancements
+2. Dependencies First: Check package.json matches claimed capabilities
+3. Implementation First: Verify providers actually implement functionality
+4. Tests First: Ensure tests validate real behavior, not mocks
+
+#### Trust But Verify Protocol:
+- Never assume documentation reflects implementation
+- Always verify claimed integrations have real code
+- Question everything that seems "too good to be true"
+- Validate dependencies match claimed capabilities
+
+🚨 MANDATORY ALERTS
+
+Claude MUST immediately alert the user if:
+- Product claims N integrations but has 0 dependencies
+- Providers generate fake data instead of connecting to real systems
+- Comments indicate placeholder/mock implementations
+- Tests only validate mock behavior
+- Core functionality is non-functional
+
+### Professional Standards
+
+#### Honest Communication:
+- Distinguish between "documented" and "implemented"
+- Report uncertainty rather than assume functionality
+- Flag prototype/mock implementations immediately
+- Communicate risks of building on unstable foundations
+
+#### Work Prioritization:
+1. Foundation audit (mandatory first step)
+2. Core functionality (implement real features)
+3. Testing (ensure real functionality works)
+4. Documentation (only after functionality exists)
+5. Enhancements (only after solid foundation)
+
+💡 Prevention Mindset
+
+Ask these questions constantly:
+- "Does this actually work or is it just documented?"
+- "If I were a user, could I successfully use this feature?"
+- "Are there real dependencies for these claimed capabilities?"
+- "Would this code actually connect to [database/cache] or just pretend to?"
+
+Remember: Beautiful documentation and sophisticated architecture mean nothing if the core product doesn't work. Always verify the foundation before building on it.
+
+## Project Strategy and Approach
+
+### Approach, Solution, and Plan
+- Develop a comprehensive smart search solution that integrates seamlessly across multiple database and cache systems
+- Create a flexible, extensible architecture that supports dynamic configuration and multi-database queries
+- Implement a robust testing strategy covering unit, integration, and end-to-end scenarios
+- Build a modular system that allows easy addition of new database and cache providers
+- Focus on performance optimization and intelligent caching mechanisms
+- Develop a user-friendly CLI for configuration, validation, and management
+- Implement comprehensive error handling and logging
+- Create detailed documentation and examples for different use cases
+
+---
+This protocol is mandatory and designed to prevent catastrophic failures in judgment that waste time and damage trust. Following it ensures Claude never again mistakes elaborate prototypes for functional products.
+
+## Session Context & Planning Log
+
+This section preserves planning information and context between Claude Code sessions to prevent loss of work progress.
+
+### Current Session Context (2025-08-08)
+
+**Status**: Session restarted after Cursor crash - no previous context available
+
+**Work In Progress**: 
+- Significant staged and unstaged changes visible in git status
+- Recent commits show work on multi-strategy search implementations
+- Multiple new Docker configurations and showcase scripts
+- Provider enhancements and core functionality updates
+
+**Next Steps**: Awaiting user direction on which specific task to continue
+
+**Planning Notes**: 
+- Will update this section after each response to preserve context
+- User requested to save planning info to CLAUDE.md after each response
+- save to memory current plan and progress
+- save to memory current plan and execution strategy

@@ -4,11 +4,33 @@
 
 ---
 
-## Introduction
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Why Delta Lake + Redis?](#why-delta-lake--redis)
+3. [Financial Analytics Use Cases](#financial-analytics-use-cases)
+4. [Time Travel & Audit Compliance](#time-travel--audit-compliance)
+5. [Data Compaction Strategies](#data-compaction-strategies)
+6. [Performance Architecture](#performance-architecture)
+7. [Multi-Strategy Search Comparison](#-multi-strategy-analytics-search-comparison)
+8. [Getting Started](#getting-started)
+9. [Advanced Time Travel Operations](#advanced-time-travel-operations)
+10. [Production Deployment](#production-deployment-considerations)
+
+## Overview
 
 Modern financial analytics demands both **reliability and speed**. Traditional big data solutions often force you to choose between ACID compliance and performance, between data consistency and real-time access. What if you didn't have to choose?
 
-In this showcase, we explore how **Delta Lake's ACID transactions and time travel capabilities** combine with **Redis's sub-millisecond caching** to create a financial analytics platform that delivers both reliability and performance at scale.
+This comprehensive showcase explores how **Delta Lake's ACID transactions and time travel capabilities** combine with **Redis's sub-millisecond caching** to create a financial analytics platform that delivers both reliability and performance at scale.
+
+**Key Features Demonstrated:**
+- ✅ **ACID Transactions** with full consistency guarantees
+- ✅ **Time Travel Queries** for historical analysis and compliance
+- ✅ **Data Compaction** strategies for optimal performance
+- ✅ **Real-time Caching** with Redis for sub-10ms responses
+- ✅ **Audit Trails** for regulatory compliance
+- ✅ **Multi-Strategy Search** with intelligent routing
+
 
 ## Why Delta Lake + Redis?
 
@@ -94,6 +116,329 @@ const pointInTimeQuery = `
   VERSION AS OF 25 
   WHERE sector = 'technology'
 `;
+```
+
+## Time Travel & Audit Compliance
+
+Delta Lake's time travel capabilities are essential for financial compliance and regulatory requirements. This section demonstrates comprehensive time travel operations and their business benefits.
+
+### Historical Data Analysis
+
+**Time Travel by Version:**
+```sql
+-- Query specific version for audit compliance
+SELECT 
+  symbol,
+  current_price,
+  volume,
+  timestamp,
+  _commit_version as audit_version
+FROM market_data 
+VERSION AS OF 42
+WHERE symbol = 'AAPL' 
+  AND date = '2024-12-15'
+ORDER BY timestamp DESC;
+
+-- Compare data across multiple versions
+SELECT 
+  v1.symbol,
+  v1.current_price as price_v1,
+  v2.current_price as price_v2,
+  (v2.current_price - v1.current_price) as price_change
+FROM market_data VERSION AS OF 40 v1
+JOIN market_data VERSION AS OF 45 v2 
+  ON v1.symbol = v2.symbol 
+  AND v1.date = v2.date;
+```
+
+**Time Travel by Timestamp:**
+```sql
+-- Query data as it existed at specific time for regulatory reporting
+SELECT 
+  portfolio_id,
+  symbol,
+  quantity,
+  market_value,
+  timestamp
+FROM portfolio_holdings 
+TIMESTAMP AS OF '2024-12-15T16:00:00.000Z'
+WHERE portfolio_id = 'FUND_001'
+ORDER BY market_value DESC;
+
+-- Historical volatility analysis
+SELECT 
+  symbol,
+  AVG(price_volatility) as avg_volatility_historical,
+  COUNT(*) as data_points
+FROM market_analytics 
+TIMESTAMP AS OF '2024-11-30T23:59:59.000Z'
+WHERE symbol IN ('AAPL', 'MSFT', 'GOOGL')
+GROUP BY symbol;
+```
+
+### Audit Trail Generation
+
+**Complete Transaction History:**
+```typescript
+// Generate complete audit trail for compliance
+const auditTrail = await deltaProvider.generateAuditTrail({
+  table: 'trading_transactions',
+  startDate: '2024-01-01',
+  endDate: '2024-12-31',
+  includeVersions: true,
+  includeMetadata: true
+});
+
+// Sample audit trail output
+const auditExample = {
+  transaction_id: 'TXN_123456',
+  version_history: [
+    {
+      version: 38,
+      timestamp: '2024-12-15T10:30:00Z',
+      operation: 'INSERT',
+      data: { symbol: 'AAPL', quantity: 100, price: 195.50 },
+      user: 'trader_001',
+      system: 'trading_platform'
+    },
+    {
+      version: 45,
+      timestamp: '2024-12-15T14:15:00Z',
+      operation: 'UPDATE',
+      data: { symbol: 'AAPL', quantity: 150, price: 196.25 },
+      user: 'trader_001',
+      system: 'trading_platform',
+      reason: 'position_adjustment'
+    }
+  ]
+};
+```
+
+**Regulatory Compliance Queries:**
+```sql
+-- SEC compliance: Show all transactions for specific period
+SELECT 
+  symbol,
+  transaction_type,
+  quantity,
+  price,
+  transaction_time,
+  _commit_version as audit_version,
+  _commit_timestamp as audit_timestamp
+FROM trading_transactions 
+WHERE transaction_time BETWEEN '2024-Q4-START' AND '2024-Q4-END'
+  AND symbol IN ('AAPL', 'MSFT', 'TSLA')
+ORDER BY transaction_time, _commit_version;
+
+-- Data retention compliance: Identify data older than retention period
+DESCRIBE HISTORY trading_transactions;
+-- Shows all versions with timestamps for retention management
+```
+
+### Risk Management with Time Travel
+
+**Historical Risk Assessment:**
+```sql
+-- Analyze portfolio risk at different points in time
+WITH historical_portfolio AS (
+  SELECT 
+    portfolio_id,
+    symbol,
+    quantity,
+    market_value,
+    risk_score
+  FROM portfolio_holdings 
+  TIMESTAMP AS OF '2024-10-15T16:00:00Z'  -- Before market volatility
+),
+current_portfolio AS (
+  SELECT 
+    portfolio_id,
+    symbol,
+    quantity,
+    market_value,
+    risk_score
+  FROM portfolio_holdings   -- Current state
+)
+SELECT 
+  h.portfolio_id,
+  h.symbol,
+  h.risk_score as historical_risk,
+  c.risk_score as current_risk,
+  (c.risk_score - h.risk_score) as risk_change,
+  CASE 
+    WHEN (c.risk_score - h.risk_score) > 0.2 THEN 'HIGH_INCREASE'
+    WHEN (c.risk_score - h.risk_score) > 0.1 THEN 'MODERATE_INCREASE'
+    ELSE 'STABLE'
+  END as risk_assessment
+FROM historical_portfolio h
+JOIN current_portfolio c 
+  ON h.portfolio_id = c.portfolio_id 
+  AND h.symbol = c.symbol;
+```
+
+## Data Compaction Strategies
+
+Delta Lake's compaction features are crucial for maintaining optimal performance as data volumes grow. This section covers production-ready compaction strategies.
+
+### Automatic Compaction Configuration
+
+**Enable Auto-Compaction:**
+```sql
+-- Configure automatic compaction for trading data table
+ALTER TABLE trading_data SET TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',    -- Optimize small files during writes
+  'delta.autoOptimize.autoCompact' = 'true',      -- Automatic compaction
+  'delta.targetFileSize' = '1073741824'           -- 1GB target file size
+);
+
+-- Configure for high-frequency market data
+ALTER TABLE market_data SET TBLPROPERTIES (
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true', 
+  'delta.targetFileSize' = '536870912',           -- 512MB for frequent updates
+  'delta.deletedFileRetentionDuration' = '7 days'  -- Compliance retention
+);
+```
+
+**Manual Compaction Operations:**
+```sql
+-- Optimize table to improve query performance
+OPTIMIZE trading_data;
+
+-- Optimize with Z-ordering for better data clustering
+OPTIMIZE market_data 
+ZORDER BY (symbol, date, timestamp);
+
+-- Optimize specific partitions for targeted performance
+OPTIMIZE portfolio_holdings
+WHERE date >= '2024-12-01' AND date < '2025-01-01';
+```
+
+### Advanced Compaction Strategies
+
+**Time-Based Compaction:**
+```typescript
+// Automated compaction scheduling
+const compactionScheduler = {
+  // Real-time data: Compact every 4 hours
+  highFrequency: {
+    tables: ['market_data', 'trading_transactions'],
+    schedule: '0 */4 * * *',  // Every 4 hours
+    strategy: 'optimize',
+    zorderColumns: ['symbol', 'timestamp']
+  },
+  
+  // Historical data: Compact daily
+  batch: {
+    tables: ['historical_prices', 'quarterly_reports'],
+    schedule: '0 2 * * *',    // Daily at 2 AM
+    strategy: 'optimize_zorder',
+    zorderColumns: ['date', 'symbol']
+  },
+  
+  // Archive data: Compact weekly
+  archive: {
+    tables: ['archived_transactions'],
+    schedule: '0 3 * * 0',    // Weekly on Sunday
+    strategy: 'optimize_vacuum',
+    retentionHours: 168       // 1 week retention
+  }
+};
+
+// Execute compaction
+async function executeCompaction(config) {
+  for (const table of config.tables) {
+    console.log(`Starting compaction for ${table}`);
+    
+    if (config.strategy === 'optimize_zorder') {
+      await spark.sql(`
+        OPTIMIZE ${table} 
+        ZORDER BY (${config.zorderColumns.join(', ')})
+      `);
+    } else if (config.strategy === 'optimize_vacuum') {
+      await spark.sql(`OPTIMIZE ${table}`);
+      await spark.sql(`VACUUM ${table} RETAIN ${config.retentionHours} HOURS`);
+    } else {
+      await spark.sql(`OPTIMIZE ${table}`);
+    }
+    
+    console.log(`Completed compaction for ${table}`);
+  }
+}
+```
+
+**Performance Impact Analysis:**
+```sql
+-- Analyze table health before compaction
+DESCRIBE DETAIL market_data;
+
+-- Check file statistics
+SELECT 
+  COUNT(*) as total_files,
+  AVG(size_in_bytes) as avg_file_size_bytes,
+  AVG(size_in_bytes) / 1024 / 1024 as avg_file_size_mb,
+  MIN(size_in_bytes) / 1024 / 1024 as min_file_size_mb,
+  MAX(size_in_bytes) / 1024 / 1024 as max_file_size_mb,
+  SUM(size_in_bytes) / 1024 / 1024 / 1024 as total_size_gb
+FROM (
+  DESCRIBE DETAIL market_data
+) WHERE format = 'delta';
+
+-- Query performance before and after compaction
+EXPLAIN COST SELECT * FROM market_data 
+WHERE symbol = 'AAPL' 
+  AND date BETWEEN '2024-12-01' AND '2024-12-15';
+```
+
+### Vacuum Operations for Storage Management
+
+**Storage Cleanup:**
+```sql
+-- Remove old files beyond retention period
+VACUUM trading_data RETAIN 168 HOURS;  -- Retain 7 days of history
+
+-- Dry run to see what would be deleted
+VACUUM trading_data RETAIN 168 HOURS DRY RUN;
+
+-- Vacuum with custom retention for compliance
+VACUUM market_data RETAIN 2160 HOURS;  -- 90 days for regulatory requirements
+```
+
+**Storage Cost Optimization:**
+```typescript
+// Automated vacuum scheduling for cost optimization
+const vacuumSchedule = {
+  // Production tables: Weekly vacuum
+  production: {
+    tables: ['trading_data', 'market_data'],
+    retentionHours: 168,    // 7 days
+    schedule: '0 4 * * 1'   // Monday at 4 AM
+  },
+  
+  // Archive tables: Monthly vacuum with longer retention
+  archive: {
+    tables: ['historical_data', 'compliance_archive'],
+    retentionHours: 2160,   // 90 days for compliance
+    schedule: '0 5 1 * *'   // First day of month at 5 AM
+  }
+};
+
+// Monitor storage savings
+async function monitorStorageSavings(tableName) {
+  const beforeVacuum = await getTableSize(tableName);
+  await vacuumTable(tableName);
+  const afterVacuum = await getTableSize(tableName);
+  
+  const savings = beforeVacuum - afterVacuum;
+  const savingsPercent = (savings / beforeVacuum) * 100;
+  
+  console.log(`Storage savings for ${tableName}:`);
+  console.log(`  Before: ${beforeVacuum.toFixed(2)} GB`);
+  console.log(`  After: ${afterVacuum.toFixed(2)} GB`); 
+  console.log(`  Saved: ${savings.toFixed(2)} GB (${savingsPercent.toFixed(1)}%)`);
+  
+  return { beforeVacuum, afterVacuum, savings, savingsPercent };
+}
 ```
 
 ## Performance Architecture
@@ -218,18 +563,118 @@ search.subscribe('market_data', (changes) => {
 - **Audit Logging**: Complete audit trail for regulatory compliance
 - **Data Retention**: Automated archival and deletion policies
 
+## 📊 Multi-Strategy Analytics Search Comparison
+
+Smart Search's four distinct strategies are perfectly optimized for different big data analytics scenarios. Below we demonstrate how each strategy performs with real financial datasets in Delta Lake.
+
+### Analytics Strategy Overview
+
+| **Strategy** | **Best For** | **Response Time** | **Visual Indicator** | **Analytics Use Case** |
+|--------------|-------------|------------------|---------------------|------------------------|
+| **⚡ Cache-First** | Popular metrics, frequent queries | 10-30ms | Green borders, lightning icons | Stock prices, popular market indicators, common reports |
+| **🗄️ Database-Only** | Time travel, audit compliance | 100-500ms | Blue borders, database icons | Historical analysis, regulatory reports, data lineage |
+| **🔧 Circuit Breaker** | System reliability, fail-safe analytics | 200-800ms | Orange warnings, repair icons | Mission-critical reports, disaster recovery |
+| **🤖 Hybrid** | AI analytics, smart routing | 20-400ms | Purple accents, robot icons | Machine learning pipelines, adaptive queries |
+
+### Big Data Analytics Examples
+
+#### Strategy 1: ⚡ Cache-First - Real-Time Market Analytics
+
+**Best for:** Lightning-fast access to frequently requested financial metrics and popular analytics
+
+```bash
+# Generate screenshots showing cache-optimized analytics search
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh deltalake-redis
+# → Creates: screenshots/blog/deltalake-redis/medium/cache-first/
+```
+
+**Performance Characteristics:**
+- **Response Time:** 10-30ms (instant analytics results)
+- **Cache Hit Rate:** 85-95% for popular stocks and common metrics
+- **Visual Indicators:** Green performance badges, lightning icons
+- **Analytics Context:** "AAPL price", "S&P 500 index", "market volatility", "sector performance"
+
+*Perfect for financial dashboards where analysts need instant access to popular market data, trending stocks, and frequently-used analytics reports during trading hours.*
+
+#### Strategy 2: 🗄️ Database-Only - Time Travel & Compliance Analytics
+
+**Best for:** Historical analysis requiring ACID guarantees and complete audit trails
+
+```bash
+# Generate screenshots showing database-direct analytics search  
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh deltalake-redis
+# → Creates: screenshots/blog/deltalake-redis/medium/database-only/
+```
+
+**Performance Characteristics:**
+- **Response Time:** 100-500ms (comprehensive Delta Lake queries with time travel)
+- **Data Integrity:** 100% ACID compliance with full audit trails
+- **Visual Indicators:** Blue performance badges, database icons
+- **Analytics Context:** "historical analysis", "regulatory compliance", "audit reports", "time travel queries"
+
+*Essential for compliance teams and risk analysts who need precise historical data with complete audit trails - critical for regulatory reporting and forensic financial analysis.*
+
+#### Strategy 3: 🔧 Circuit Breaker - Mission-Critical Analytics Resilience
+
+**Best for:** Ensuring analytics availability during system stress and infrastructure failures
+
+```bash
+# Generate screenshots showing failover scenarios in analytics systems
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh deltalake-redis  
+# → Creates: screenshots/blog/deltalake-redis/medium/circuit-breaker/
+```
+
+**Performance Characteristics:**
+- **Response Time:** 200-800ms (includes failover handling and recovery)
+- **Reliability:** Automatic failover when cache or processing systems fail
+- **Visual Indicators:** Orange warning badges, circuit breaker icons
+- **Analytics Context:** System failures handled gracefully with Delta Lake fallback
+
+*Critical for mission-critical financial reporting where analytics must remain available during infrastructure failures, market volatility events, or system maintenance windows.*
+
+#### Strategy 4: 🤖 Hybrid - AI-Powered Analytics Intelligence
+
+**Best for:** Machine learning pipelines and intelligent analytics that adapt to data patterns
+
+```bash
+# Generate screenshots showing intelligent routing in analytics search
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh deltalake-redis
+# → Creates: screenshots/blog/deltalake-redis/medium/hybrid/
+```
+
+**Performance Characteristics:**
+- **Response Time:** 20-400ms (varies based on query complexity and data freshness requirements)
+- **Adaptability:** Routes queries based on data age, complexity, and system performance
+- **Visual Indicators:** Purple performance badges, robot/AI icons
+- **Analytics Context:** ML-driven analytics that optimize based on data patterns and usage
+
+*Perfect for AI-driven financial platforms that provide intelligent analytics routing, machine learning model inference, and adaptive query optimization based on data characteristics and user behavior.*
+
 ## Getting Started
+
+### Multi-Strategy Analytics Testing Scenarios
+
+```bash
+# Compare all strategies with medium financial analytics dataset
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh deltalake-redis
+
+# This generates 4 strategy-specific folders:
+# screenshots/blog/deltalake-redis/medium/cache-first/     ⚡ Green-themed rapid analytics results
+# screenshots/blog/deltalake-redis/medium/database-only/   🗄️ Blue-themed time-travel results  
+# screenshots/blog/deltalake-redis/medium/circuit-breaker/ 🔧 Orange-themed failover results
+# screenshots/blog/deltalake-redis/medium/hybrid/         🤖 Purple-themed intelligent results
+```
 
 ### 1. Quick Demo Setup
 ```bash
-# 🚀 One-command demo with automatic data and screenshots
+# 🚀 One-command multi-strategy demo with automatic data and screenshots
 ./scripts/generate-screenshots-docker.sh deltalake-redis
 
 # This automatically:
 # ✅ Downloads financial datasets (1M+ records)
 # ✅ Starts Delta Lake + Spark + Redis services  
 # ✅ Converts data to optimized Parquet/Delta format
-# ✅ Generates professional screenshots for documentation
+# ✅ Generates strategy-specific screenshots for documentation
 # ✅ Exposes showcase at http://localhost:3005
 ```
 
@@ -414,6 +859,235 @@ Once services are running, explore these key features:
 
 This comprehensive setup demonstrates Delta Lake's capabilities at production scale while providing the tooling needed for development, testing, and documentation.
 
+## Advanced Time Travel Operations
+
+Delta Lake's time travel goes beyond basic historical queries. This section demonstrates advanced time travel patterns for production financial systems.
+
+### Time Travel Screenshot Generation
+
+Generate screenshots that showcase Delta Lake's time travel capabilities:
+
+```bash
+# Generate time travel specific screenshots
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh deltalake-redis --time-travel-demo
+
+# This creates additional screenshots showcasing:
+# time-travel-version-query.png     - Version-based time travel queries
+# time-travel-timestamp-query.png   - Timestamp-based historical analysis
+# time-travel-audit-trail.png       - Complete audit trail visualization
+# time-travel-risk-analysis.png     - Historical risk comparison
+# compaction-before-after.png       - Compaction performance comparison
+# data-versioning-timeline.png      - Data version timeline visualization
+```
+
+### Production Time Travel Patterns
+
+**Automated Historical Analysis:**
+```typescript
+// Automated daily historical analysis for risk management
+class HistoricalAnalyzer {
+  async generateDailyRiskReport(date: string) {
+    const reports = [];
+    
+    // Compare risk metrics from 1 week ago
+    const weekAgoData = await this.deltaProvider.query(`
+      SELECT 
+        portfolio_id,
+        SUM(risk_score * market_value) / SUM(market_value) as weighted_risk,
+        SUM(market_value) as total_value
+      FROM portfolio_holdings 
+      TIMESTAMP AS OF '${date}T16:00:00.000Z'
+      GROUP BY portfolio_id
+    `);
+    
+    // Get current risk metrics
+    const currentData = await this.deltaProvider.query(`
+      SELECT 
+        portfolio_id,
+        SUM(risk_score * market_value) / SUM(market_value) as weighted_risk,
+        SUM(market_value) as total_value
+      FROM portfolio_holdings
+      GROUP BY portfolio_id
+    `);
+    
+    // Calculate risk changes
+    const riskAnalysis = this.compareRiskMetrics(weekAgoData, currentData);
+    
+    return {
+      analysisDate: date,
+      riskChanges: riskAnalysis,
+      recommendedActions: this.generateRecommendations(riskAnalysis)
+    };
+  }
+
+  async performBacktest(strategy: string, startDate: string, endDate: string) {
+    const backtestResults = [];
+    const tradingDays = this.getBusinessDays(startDate, endDate);
+    
+    for (const day of tradingDays) {
+      // Use time travel to get market state at market close
+      const marketData = await this.deltaProvider.query(`
+        SELECT symbol, close_price, volume, volatility
+        FROM market_data 
+        TIMESTAMP AS OF '${day}T16:00:00.000Z'
+        WHERE symbol IN (${this.getStrategySymbols(strategy)})
+      `);
+      
+      const strategyReturns = this.calculateStrategyReturns(marketData, strategy);
+      backtestResults.push({ date: day, returns: strategyReturns });
+    }
+    
+    return {
+      strategy,
+      period: { start: startDate, end: endDate },
+      totalReturn: this.calculateTotalReturn(backtestResults),
+      sharpeRatio: this.calculateSharpeRatio(backtestResults),
+      maxDrawdown: this.calculateMaxDrawdown(backtestResults)
+    };
+  }
+}
+```
+
+**Compliance Automation with Time Travel:**
+```typescript
+// Automated compliance reporting using time travel
+class ComplianceReporter {
+  async generateQuarterlyReport(quarter: string, year: number) {
+    const startDate = this.getQuarterStart(quarter, year);
+    const endDate = this.getQuarterEnd(quarter, year);
+    
+    // Get all transactions in the quarter
+    const transactions = await this.deltaProvider.query(`
+      SELECT 
+        transaction_id,
+        symbol,
+        transaction_type,
+        quantity,
+        price,
+        transaction_time,
+        trader_id,
+        _commit_version,
+        _commit_timestamp
+      FROM trading_transactions 
+      WHERE transaction_time BETWEEN '${startDate}' AND '${endDate}'
+      ORDER BY transaction_time, _commit_version
+    `);
+    
+    // Analyze position changes using time travel
+    const positionAnalysis = await this.analyzePositionChanges(startDate, endDate);
+    
+    // Generate regulatory forms
+    const form10Q = await this.generateForm10Q(transactions, positionAnalysis);
+    const form13F = await this.generateForm13F(endDate);
+    
+    return {
+      period: `${quarter} ${year}`,
+      transactionCount: transactions.length,
+      forms: { form10Q, form13F },
+      auditTrail: this.generateAuditTrail(transactions),
+      compliance: await this.checkComplianceViolations(transactions)
+    };
+  }
+
+  async checkDataIntegrity(tableName: string, days: number = 30) {
+    // Check for data consistency across versions
+    const versions = await this.deltaProvider.query(`
+      DESCRIBE HISTORY ${tableName}
+      WHERE timestamp >= current_timestamp() - interval ${days} days
+    `);
+    
+    const integrityResults = [];
+    
+    for (const version of versions) {
+      const recordCount = await this.deltaProvider.query(`
+        SELECT COUNT(*) as count 
+        FROM ${tableName} 
+        VERSION AS OF ${version.version}
+      `);
+      
+      const checksumData = await this.deltaProvider.query(`
+        SELECT 
+          SUM(HASH(*)) as data_checksum,
+          COUNT(*) as record_count
+        FROM ${tableName} 
+        VERSION AS OF ${version.version}
+      `);
+      
+      integrityResults.push({
+        version: version.version,
+        timestamp: version.timestamp,
+        recordCount: recordCount[0].count,
+        checksum: checksumData[0].data_checksum,
+        integrityStatus: this.validateChecksum(checksumData[0])
+      });
+    }
+    
+    return integrityResults;
+  }
+}
+```
+
+### Advanced Compaction Monitoring
+
+**Real-Time Compaction Metrics:**
+```typescript
+// Monitor compaction effectiveness
+class CompactionMonitor {
+  async analyzeCompactionBenefits(tableName: string) {
+    // Get table statistics before compaction
+    const beforeStats = await this.getTableStats(tableName);
+    
+    // Perform compaction
+    await this.deltaProvider.query(`OPTIMIZE ${tableName} ZORDER BY (symbol, date)`);
+    
+    // Get statistics after compaction
+    const afterStats = await this.getTableStats(tableName);
+    
+    // Measure query performance improvement
+    const performanceTest = await this.runPerformanceTest(tableName);
+    
+    return {
+      storageReduction: {
+        beforeSizeGB: beforeStats.sizeGB,
+        afterSizeGB: afterStats.sizeGB,
+        savedGB: beforeStats.sizeGB - afterStats.sizeGB,
+        reductionPercent: ((beforeStats.sizeGB - afterStats.sizeGB) / beforeStats.sizeGB) * 100
+      },
+      fileOptimization: {
+        beforeFileCount: beforeStats.fileCount,
+        afterFileCount: afterStats.fileCount,
+        fileReduction: beforeStats.fileCount - afterStats.fileCount,
+        avgFileSizeIncrease: afterStats.avgFileSizeMB - beforeStats.avgFileSizeMB
+      },
+      queryPerformance: {
+        beforeAvgMs: performanceTest.before.avgResponseTime,
+        afterAvgMs: performanceTest.after.avgResponseTime,
+        improvementPercent: ((performanceTest.before.avgResponseTime - performanceTest.after.avgResponseTime) / performanceTest.before.avgResponseTime) * 100
+      }
+    };
+  }
+
+  async scheduleOptimalCompaction(tables: string[]) {
+    for (const table of tables) {
+      const metrics = await this.getTableMetrics(table);
+      
+      // Determine if compaction is needed based on metrics
+      const needsCompaction = this.assessCompactionNeed(metrics);
+      
+      if (needsCompaction.required) {
+        console.log(`Scheduling compaction for ${table}: ${needsCompaction.reason}`);
+        
+        const strategy = this.selectCompactionStrategy(metrics);
+        await this.executeCompactionStrategy(table, strategy);
+        
+        // Cache the improved query plans
+        await this.refreshCachedQueries(table);
+      }
+    }
+  }
+}
+```
+
 ## Key Takeaways
 
 ### When to Use Delta Lake + Redis
@@ -442,7 +1116,7 @@ Ready to implement Delta Lake + Redis in your financial analytics platform?
 1. **[Download Smart Search](https://github.com/samas-it-services/smart-search)** - Get the complete implementation
 2. **[Review Configuration Examples](../config-examples/)** - Production-ready configurations
 3. **[Explore Other Showcases](../showcases/)** - Compare with alternative architectures  
-4. **[Join Our Community](https://discord.gg/smart-search)** - Get support and share experiences
+4. **[Join Our Community](https://discord.gg/Da4eagKx)** - Get support and share experiences
 
 ---
 

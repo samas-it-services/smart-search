@@ -429,7 +429,7 @@ Ready to implement automated screenshots in your project?
 1. **[Download Smart Search](https://github.com/samas-it-services/smart-search)** - Get the complete screenshot system
 2. **[Explore the Showcases](../showcases/)** - See live examples with real data
 3. **[Review Integration Examples](../blog/)** - Learn from real-world implementations
-4. **[Join Our Community](https://discord.gg/smart-search)** - Share your screenshot automation experiences
+4. **[Join Our Community](https://discord.gg/Da4eagKx)** - Share your screenshot automation experiences
 
 ---
 

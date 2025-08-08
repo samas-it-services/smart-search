@@ -42,10 +42,13 @@ services:
 
   # Showcase Application
   postgres-redis-showcase:
-    build: ../showcases/postgres-redis
+    build: 
+      context: ../
+      dockerfile: showcases/postgres-redis/Dockerfile
     container_name: smart-search-postgres-redis-showcase
     environment:
       - PORT=3002
+      - NODE_ENV=production
       - DATABASE_URL=postgresql://user:password@postgres:5432/smartsearch
       - REDIS_URL=redis://redis:6379
       - DATA_SIZE=${DATA_SIZE:-medium}
@@ -56,6 +59,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       - smart-search-network
     restart: unless-stopped

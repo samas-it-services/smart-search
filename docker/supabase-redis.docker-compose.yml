@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # Supabase Database (PostgreSQL)
+  supabase-db:
+    image: supabase/postgres:15.1.0.147
+    container_name: smart-search-supabase-db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: supabase_admin
+      POSTGRES_PASSWORD: your-super-secret-jwt-token-with-at-least-32-characters-long
+      POSTGRES_HOST: supabase-db
+      POSTGRES_PORT: 5432
+      JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      JWT_EXP: 3600
+    ports:
+      - "54322:5432"
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+      - ./init/supabase:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U supabase_admin -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - smart-search-network
+
+  # Supabase API
+  supabase-api:
+    image: supabase/gotrue:v2.99.0
+    container_name: smart-search-supabase-api
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:54321
+      GOTRUE_URL: http://localhost:54321
+      GOTRUE_SITE_URL: http://localhost:3003
+      GOTRUE_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_ROLE: anon
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DATABASE_URL: postgres://supabase_admin:your-super-secret-jwt-token-with-at-least-32-characters-long@supabase-db:5432/postgres?sslmode=disable
+      GOTRUE_DISABLE_SIGNUP: false
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: true
+      GOTRUE_MAILER_AUTOCONFIRM: true
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@example.com
+      GOTRUE_SMTP_HOST: localhost
+      GOTRUE_SMTP_PORT: 587
+      GOTRUE_SMTP_USER: 
+      GOTRUE_SMTP_PASS:
+      GOTRUE_RATE_LIMIT_HEADER: X-RateLimit-Limit
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: 30
+    ports:
+      - "54321:9999"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - smart-search-network
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: smart-search-supabase-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_supabase_data:/data
+      - ./config/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smart-search-network
+
+  # Supabase + Redis Showcase Application
+  supabase-redis-showcase:
+    build: 
+      context: ../
+      dockerfile: showcases/supabase-redis/Dockerfile
+    container_name: smart-search-supabase-redis-showcase
+    environment:
+      - PORT=3003
+      - NODE_ENV=production
+      - SUPABASE_URL=http://supabase-api:9999
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsaG9zdCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjQxNzY5MjAwLCJleHAiOjE5NTcxNDUyMDB9.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE
+      - REDIS_URL=redis://redis:6379
+      - DATA_SIZE=${DATA_SIZE:-medium}
+    ports:
+      - "3003:3003"
+    depends_on:
+      supabase-api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - smart-search-network
+    restart: unless-stopped
+
+volumes:
+  supabase_db_data:
+    driver: local
+  redis_supabase_data:
+    driver: local
+
+networks:
+  smart-search-network:
+    driver: bridge

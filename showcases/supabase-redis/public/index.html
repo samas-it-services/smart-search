@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Search - Supabase + Redis Healthcare Showcase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .dataset-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .info-card strong {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .search-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .search-form {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .search-input {
+            padding: 0.75rem 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            backdrop-filter: blur(5px);
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .select {
+            padding: 0.75rem 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            backdrop-filter: blur(5px);
+            cursor: pointer;
+        }
+        
+        .select option {
+            background: #333;
+            color: #fff;
+        }
+        
+        .search-btn {
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #4facfe;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .results-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .result-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #4facfe;
+            transition: transform 0.2s ease;
+        }
+        
+        .result-item:hover {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #4facfe;
+        }
+        
+        .result-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            flex-wrap: wrap;
+        }
+        
+        .result-description {
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        
+        .meta-tag {
+            background: rgba(79, 172, 254, 0.2);
+            color: #4facfe;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.7;
+        }
+        
+        .error {
+            background: rgba(220, 53, 69, 0.2);
+            color: #ff6b7a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Smart Search - Supabase + Redis</h1>
+            <p>Healthcare Research Database with Real-time Caching</p>
+        </div>
+
+        <div class="dataset-info">
+            <div class="info-card">
+                <strong id="dataset-size">Loading...</strong>
+                <span>Dataset Size</span>
+            </div>
+            <div class="info-card">
+                <strong id="record-count">📊 Loading...</strong>
+                <span>Healthcare Records</span>
+            </div>
+            <div class="info-card">
+                <strong id="cache-status">⚡ Connecting...</strong>
+                <span>Cache Status</span>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-form">
+                <input type="text" id="searchQuery" class="search-input" placeholder="Search healthcare research..." value="">
+                <select id="categoryFilter" class="select">
+                    <option value="">All Specialties</option>
+                    <option value="cardiology">Cardiology</option>
+                    <option value="oncology">Oncology</option>
+                    <option value="neurology">Neurology</option>
+                    <option value="endocrinology">Endocrinology</option>
+                    <option value="psychiatry">Psychiatry</option>
+                    <option value="pediatrics">Pediatrics</option>
+                </select>
+                <select id="resultLimit" class="select">
+                    <option value="10">10 results</option>
+                    <option value="20" selected>20 results</option>
+                    <option value="50">50 results</option>
+                </select>
+                <button id="searchBtn" class="search-btn">🔍 Search</button>
+            </div>
+
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="supabase-latency">--ms</div>
+                    <div class="stat-label">Supabase Latency</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="cache-latency">--ms</div>
+                    <div class="stat-label">Cache Latency</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="cache-memory">--MB</div>
+                    <div class="stat-label">Cache Memory</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="search-strategy">CACHE</div>
+                    <div class="stat-label">Strategy</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <h2 style="margin-bottom: 1.5rem;">Search Results</h2>
+            <div id="results">
+                <div class="no-results">
+                    <h3>👋 Welcome to Smart Search</h3>
+                    <p>Enter a search term above to find healthcare research articles.</p>
+                    <p style="margin-top: 1rem; opacity: 0.7;">Try searching for: "diabetes", "heart disease", "cancer treatment", or "mental health"</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isSearching = false;
+
+        // DOM elements
+        const searchQuery = document.getElementById('searchQuery');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const resultLimit = document.getElementById('resultLimit');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsContainer = document.getElementById('results');
+        const statsContainer = document.getElementById('stats');
+
+        // Load initial stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.data;
+                    document.getElementById('dataset-size').textContent = stats.dataset?.name || 'Unknown Dataset';
+                    document.getElementById('record-count').textContent = `📊 ${stats.dataset?.counts?.display || 'Unknown'} Healthcare Records`;
+                    
+                    // Update connection status
+                    const cacheConnected = stats.cacheHealth?.isConnected;
+                    document.getElementById('cache-status').textContent = cacheConnected ? 
+                        `⚡ Connected (${stats.cacheHealth?.keyCount || 0} items)` : 
+                        '❌ Disconnected';
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Perform search
+        async function performSearch() {
+            if (isSearching) return;
+            
+            const query = searchQuery.value.trim();
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+
+            isSearching = true;
+            searchBtn.textContent = '⏳ Searching...';
+            
+            try {
+                // Show loading state
+                resultsContainer.innerHTML = '<div class="loading">🔍 Searching healthcare database...</div>';
+
+                const params = new URLSearchParams({
+                    q: query,
+                    limit: resultLimit.value
+                });
+
+                if (categoryFilter.value) {
+                    params.append('category', categoryFilter.value);
+                }
+
+                const response = await fetch(`/api/search?${params}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.data);
+                    updateStats(data.data.performance, data.data.strategy);
+                } else {
+                    showError(data.error || 'Search failed');
+                }
+
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('Failed to connect to search service');
+            } finally {
+                isSearching = false;
+                searchBtn.textContent = '🔍 Search';
+            }
+        }
+
+        // Display search results
+        function displayResults(data) {
+            const { results, performance, strategy } = data;
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="no-results">
+                        <h3>No results found</h3>
+                        <p>Try different keywords or check your spelling.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const resultsHtml = results.map(result => `
+                <div class="result-item">
+                    <div class="result-title">${escapeHtml(result.title)}</div>
+                    <div class="result-meta">
+                        ${result.author ? `<span>👨‍⚕️ ${escapeHtml(result.author)}</span>` : ''}
+                        ${result.category ? `<span class="meta-tag">${escapeHtml(result.category)}</span>` : ''}
+                        ${result.language ? `<span class="meta-tag">${result.language}</span>` : ''}
+                        <span class="meta-tag">⭐ ${result.relevanceScore}</span>
+                        <span class="meta-tag">${result.metadata?.source || 'database'}</span>
+                        ${result.metadata?.cached ? '<span class="meta-tag">⚡ Cached</span>' : '<span class="meta-tag">🔍 Fresh</span>'}
+                        <span class="meta-tag">Strategy: ${result.metadata?.strategy || 'unknown'}</span>
+                    </div>
+                    <div class="result-description">${escapeHtml(result.description)}</div>
+                </div>
+            `).join('');
+
+            resultsContainer.innerHTML = `
+                <div style="margin-bottom: 1.5rem; opacity: 0.8;">
+                    Found ${results.length} results for "${escapeHtml(searchQuery.value)}"
+                    ${performance ? ` in ${performance.searchTime?.toFixed(1)}ms` : ''}
+                </div>
+                ${resultsHtml}
+            `;
+        }
+
+        // Update performance stats
+        function updateStats(performance, strategy) {
+            if (performance) {
+                document.getElementById('supabase-latency').textContent = 
+                    performance.databaseTime ? `${performance.databaseTime.toFixed(1)}ms` : '--ms';
+                document.getElementById('cache-latency').textContent = 
+                    performance.cacheTime ? `${performance.cacheTime.toFixed(1)}ms` : '--ms';
+            }
+
+            if (strategy) {
+                document.getElementById('search-strategy').textContent = 
+                    strategy.primary?.toUpperCase() || 'CACHE';
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            resultsContainer.innerHTML = `
+                <div class="error">
+                    <strong>Search Error:</strong> ${escapeHtml(message)}
+                </div>
+            `;
+        }
+
+        // Utility function to escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        searchBtn.addEventListener('click', performSearch);
+        searchQuery.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Load initial data
+        loadStats();
+        
+        // Auto-refresh stats every 30 seconds
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+</html>

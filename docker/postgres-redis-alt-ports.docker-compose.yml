@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: smart-search-postgres-alt
+    environment:
+      POSTGRES_DB: smartsearch
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "15432:5432"  # Use alternative port 15432 instead of 5432
+    volumes:
+      - postgres_alt_data:/var/lib/postgresql/data
+      - ./init/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d smartsearch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - smart-search-alt-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: smart-search-redis-alt
+    ports:
+      - "16379:6379"  # Use alternative port 16379 instead of 6379
+    volumes:
+      - redis_alt_data:/data
+      - ./config/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smart-search-alt-network
+
+  # Showcase Application
+  postgres-redis-showcase:
+    build: 
+      context: ../
+      dockerfile: showcases/postgres-redis/Dockerfile
+    container_name: smart-search-postgres-redis-showcase-alt
+    environment:
+      - PORT=13002
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:password@postgres:5432/smartsearch
+      - REDIS_URL=redis://redis:6379
+      - DATA_SIZE=${DATA_SIZE:-tiny}
+    ports:
+      - "13002:13002"  # Use alternative port 13002 instead of 3002
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:13002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - smart-search-alt-network
+    restart: unless-stopped
+
+volumes:
+  postgres_alt_data:
+    driver: local
+  redis_alt_data:
+    driver: local
+
+networks:
+  smart-search-alt-network:
+    driver: bridge

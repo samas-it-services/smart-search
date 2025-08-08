@@ -4,11 +4,32 @@
 
 ---
 
-## Introduction
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Why MongoDB + Memcached?](#why-mongodb--memcached)
+3. [Architecture Overview](#architecture-overview)
+4. [Document Search Capabilities](#document-search-capabilities)
+5. [Multi-Strategy E-commerce Search Comparison](#-multi-strategy-e-commerce-search-comparison)
+6. [Getting Started](#getting-started)
+7. [Production Setup Guide](#production-setup-guide)
+8. [Advanced Use Cases](#advanced-use-cases)
+9. [Monitoring and Observability](#monitoring-and-observability)
+
+## Overview
 
 Modern applications often need to search across complex, semi-structured documents while serving millions of users globally. The combination of **MongoDB's powerful aggregation pipelines** with **Memcached's distributed caching architecture** creates a search solution that scales horizontally and handles document complexity with ease.
 
-In this showcase, we'll explore how MongoDB's Atlas Search and text indexing capabilities, combined with Memcached's proven distributed caching, delivers enterprise-scale search performance through our Smart Search library.
+This comprehensive showcase explores how MongoDB's Atlas Search and text indexing capabilities, combined with Memcached's proven distributed caching, delivers enterprise-scale search performance through our Smart Search library.
+
+**Key Features Demonstrated:**
+- ✅ **Flexible Document Schema** handling evolving data structures
+- ✅ **Aggregation Pipelines** for complex search queries with transformations
+- ✅ **Atlas Search** with Elasticsearch-powered full-text capabilities
+- ✅ **Distributed Caching** with linear scalability across multiple nodes
+- ✅ **Geospatial Search** with location-based queries and indexing
+- ✅ **Multi-Strategy Search** with intelligent routing
+
 
 ## Why MongoDB + Memcached?
 
@@ -534,17 +555,122 @@ mongosh --eval "load('scripts/setup-atlas-search.js')"
 ./scripts/setup-memcached-cluster.sh
 ```
 
+## 🛒 Multi-Strategy E-commerce Search Comparison
+
+Smart Search's four distinct strategies are optimized for different e-commerce scenarios. Below we demonstrate how each strategy performs with real retail data including product catalogs, customer analytics, and inventory management.
+
+### E-commerce Strategy Overview
+
+| **Strategy** | **Best For** | **Response Time** | **Visual Indicator** | **E-commerce Use Case** |
+|--------------|-------------|------------------|---------------------|------------------------|
+| **⚡ Cache-First** | Popular products, frequent searches | 10-30ms | Green borders, lightning icons | Product listings, bestsellers, seasonal items |
+| **🗄️ Database-Only** | Inventory updates, real-time pricing | 40-80ms | Blue borders, database icons | Live inventory, price changes, new product launches |
+| **🔧 Circuit Breaker** | Peak traffic, system reliability | 100-180ms | Orange warnings, repair icons | Black Friday sales, flash sales, high-traffic periods |
+| **🤖 Hybrid** | Personalized recommendations, AI search | 8-80ms | Purple accents, robot icons | Smart product discovery, personalized shopping |
+
+### E-commerce Search Examples
+
+#### Strategy 1: ⚡ Cache-First - Popular Product Discovery
+
+**Best for:** Rapid access to frequently searched products and popular categories
+
+```bash
+# Generate screenshots showing cache-optimized e-commerce search
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh mongodb-memcached
+# → Creates: screenshots/blog/mongodb-memcached/medium/cache-first/
+```
+
+**Performance Characteristics:**
+- **Response Time:** 10-30ms (instant product results)
+- **Cache Hit Rate:** 88-94% for popular products and categories
+- **Visual Indicators:** Green performance badges, lightning icons
+- **E-commerce Context:** "iPhone 15", "Nike shoes", "gaming laptop", "bestsellers"
+
+*Perfect for e-commerce platforms where customers need instant access to popular products, trending items, and frequently browsed categories during normal shopping periods.*
+
+#### Strategy 2: 🗄️ Database-Only - Real-Time Inventory
+
+**Best for:** Ensuring accurate inventory levels and current pricing information
+
+```bash
+# Generate screenshots showing database-direct e-commerce search  
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh mongodb-memcached
+# → Creates: screenshots/blog/mongodb-memcached/medium/database-only/
+```
+
+**Performance Characteristics:**
+- **Response Time:** 40-80ms (comprehensive product queries)
+- **Data Accuracy:** 100% current (no stale cache data)
+- **Visual Indicators:** Blue performance badges, database icons
+- **E-commerce Context:** "in stock items", "price drops", "new arrivals", "limited edition"
+
+*Essential for inventory-sensitive searches where customers need the most current stock levels and pricing - critical for preventing overselling and ensuring accurate product availability.*
+
+#### Strategy 3: 🔧 Circuit Breaker - Peak Traffic Resilience
+
+**Best for:** Maintaining search functionality during high-traffic events and system stress
+
+```bash
+# Generate screenshots showing failover scenarios in e-commerce systems
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh mongodb-memcached  
+# → Creates: screenshots/blog/mongodb-memcached/medium/circuit-breaker/
+```
+
+**Performance Characteristics:**
+- **Response Time:** 100-180ms (includes failover handling)
+- **Reliability:** Automatic failover during traffic spikes and cache failures
+- **Visual Indicators:** Orange warning badges, circuit breaker icons
+- **E-commerce Context:** System failures handled gracefully during peak sales events
+
+*Critical for e-commerce platforms during Black Friday, flash sales, and viral product launches where cache systems may fail under extreme load - ensures customers can still search and purchase.*
+
+#### Strategy 4: 🤖 Hybrid - AI-Powered Shopping
+
+**Best for:** Intelligent product discovery systems that adapt to customer behavior and preferences
+
+```bash
+# Generate screenshots showing intelligent routing in e-commerce search
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh mongodb-memcached
+# → Creates: screenshots/blog/mongodb-memcached/medium/hybrid/
+```
+
+**Performance Characteristics:**
+- **Response Time:** 8-80ms (varies based on personalization complexity)
+- **Adaptability:** Routes queries based on customer profile and product popularity
+- **Visual Indicators:** Purple performance badges, robot/AI icons
+- **E-commerce Context:** Personalized product recommendations, smart search suggestions
+
+*Perfect for AI-powered shopping platforms that provide personalized product discovery, recommendation engines, and smart search that adapts to individual customer preferences and shopping patterns.*
+
 ## Testing and Screenshots
+
+### Multi-Strategy E-commerce Testing Scenarios
+
+```bash
+# Compare all strategies with medium e-commerce dataset
+DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh mongodb-memcached
+
+# This generates 4 strategy-specific folders:
+# screenshots/blog/mongodb-memcached/medium/cache-first/     ⚡ Green-themed rapid product results
+# screenshots/blog/mongodb-memcached/medium/database-only/   🗄️ Blue-themed inventory results  
+# screenshots/blog/mongodb-memcached/medium/circuit-breaker/ 🔧 Orange-themed failover results
+# screenshots/blog/mongodb-memcached/medium/hybrid/         🤖 Purple-themed personalized results
+```
+
+### Generate Screenshots and Test Results
 
 ```bash
 # Generate comprehensive test screenshots
 ./scripts/test-showcase.sh screenshots mongodb-memcached
 
-# Performance benchmarking with document complexity
+# Performance benchmarking with document complexity across all strategies
 ./scripts/benchmark.sh single mongodb memcached
 
-# Load testing across multiple regions  
+# Load testing across multiple regions with strategy comparison 
 DISTRIBUTED_TESTING=true ./scripts/benchmark.sh single mongodb memcached
+
+# E-commerce specific load testing during peak traffic simulation
+PEAK_TRAFFIC_SIMULATION=true ./scripts/benchmark.sh single mongodb memcached
 ```
 
 ## Conclusion

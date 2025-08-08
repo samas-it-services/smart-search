@@ -21,6 +21,7 @@ export interface DragonflyConfig {
 
 export class DragonflyProvider implements CacheProvider {
   name = 'DragonflyDB';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   private _client: any; // We'll use any for now to avoid requiring ioredis as dependency
   private isConnectedFlag = false;
   private config: DragonflyConfig;
@@ -321,7 +322,8 @@ export class DragonflyProvider implements CacheProvider {
     }
   }
 
-  private parseMemoryInfo(info: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _parseMemoryInfo(info: string): string {
     // Parse Redis INFO memory output
     const lines = info.split('\r\n');
     for (const line of lines) {

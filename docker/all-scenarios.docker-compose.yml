@@ -1,0 +1,376 @@
+version: '3.8'
+
+name: docker-saMas-smart-search
+
+services:
+  # PostgreSQL + Redis Stack (Healthcare Platform - Port 3001)
+  postgres-main:
+    image: postgres:15-alpine
+    container_name: docker-saMas-smart-search-postgres-main
+    environment:
+      POSTGRES_DB: smartsearch_healthcare
+      POSTGRES_USER: search_user
+      POSTGRES_PASSWORD: search_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_main:/var/lib/postgresql/data
+      - ./init/postgres-healthcare.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U search_user -d smartsearch_healthcare"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-search-network
+
+  redis-main:
+    image: redis:7-alpine
+    container_name: docker-saMas-smart-search-redis-main
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data_main:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-search-network
+
+  postgres-redis-showcase:
+    build: ../showcases/postgres-redis
+    container_name: docker-saMas-smart-search-postgres-redis-showcase
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://search_user:search_pass@postgres-main:5432/smartsearch_healthcare
+      - REDIS_URL=redis://redis-main:6379
+      - SHOWCASE_TITLE=Healthcare Research Platform
+      - SHOWCASE_DESCRIPTION=PostgreSQL + Redis for Medical Data Search
+    depends_on:
+      postgres-main:
+        condition: service_healthy
+      redis-main:
+        condition: service_healthy
+    networks:
+      - smart-search-network
+
+  # MySQL + DragonflyDB Stack (Financial Platform - Port 3002)
+  mysql-main:
+    image: mysql:8.0
+    container_name: docker-saMas-smart-search-mysql-main
+    environment:
+      MYSQL_ROOT_PASSWORD: root_pass
+      MYSQL_DATABASE: smartsearch_finance
+      MYSQL_USER: search_user
+      MYSQL_PASSWORD: search_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_main:/var/lib/mysql
+      - ./init/mysql-finance.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password --innodb_ft_min_token_size=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "search_user", "-psearch_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-search-network
+
+  dragonfly-main:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+    container_name: docker-saMas-smart-search-dragonfly-main
+    ports:
+      - "6380:6379"
+    command: dragonfly --maxmemory=1gb --cache_mode=true --proactor_threads=4
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-search-network
+
+  mysql-dragonfly-showcase:
+    build: ../showcases/mysql-dragonfly
+    container_name: docker-saMas-smart-search-mysql-dragonfly-showcase
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://search_user:search_pass@mysql-main:3306/smartsearch_finance
+      - CACHE_URL=redis://dragonfly-main:6379
+      - SHOWCASE_TITLE=Financial Analytics Platform
+      - SHOWCASE_DESCRIPTION=MySQL + DragonflyDB for Financial Data Search
+    depends_on:
+      mysql-main:
+        condition: service_healthy
+      dragonfly-main:
+        condition: service_healthy
+    networks:
+      - smart-search-network
+
+  # MongoDB + Memcached Stack (E-commerce Platform - Port 3003)
+  mongodb-main:
+    image: mongo:6.0
+    container_name: docker-saMas-smart-search-mongodb-main
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin_pass
+      MONGO_INITDB_DATABASE: smartsearch_ecommerce
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_main:/data/db
+      - ./init/mongodb-ecommerce.js:/docker-entrypoint-initdb.d/init.js
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/smartsearch_ecommerce --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-search-network
+
+  memcached-main:
+    image: memcached:1.6-alpine
+    container_name: docker-saMas-smart-search-memcached-main
+    ports:
+      - "11211:11211"
+    command: memcached -m 512 -c 1024 -t 8
+    healthcheck:
+      test: ["CMD", "timeout", "5", "bash", "-c", "cat < /dev/null > /dev/tcp/localhost/11211"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-search-network
+
+  mongodb-memcached-showcase:
+    build: ../showcases/mongodb-memcached
+    container_name: docker-saMas-smart-search-mongodb-memcached-showcase
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mongodb://admin:admin_pass@mongodb-main:27017/smartsearch_ecommerce?authSource=admin
+      - CACHE_URL=memcached://memcached-main:11211
+      - SHOWCASE_TITLE=E-commerce Search Platform
+      - SHOWCASE_DESCRIPTION=MongoDB + Memcached for Product Search
+    depends_on:
+      mongodb-main:
+        condition: service_healthy
+      memcached-main:
+        condition: service_healthy
+    networks:
+      - smart-search-network
+
+  # Delta Lake + Redis Stack (Big Data Analytics Platform - Port 3004)
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: docker-saMas-smart-search-spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - spark_data:/opt/bitnami/spark/data
+      - ./delta-lake:/opt/delta-lake
+    networks:
+      - smart-search-network
+
+  spark-worker:
+    image: bitnami/spark:3.5
+    container_name: docker-saMas-smart-search-spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+    volumes:
+      - spark_data:/opt/bitnami/spark/data
+      - ./delta-lake:/opt/delta-lake
+    networks:
+      - smart-search-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: docker-saMas-smart-search-minio
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123456
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - smart-search-network
+
+  redis-deltalake:
+    image: redis:7-alpine
+    container_name: docker-saMas-smart-search-redis-deltalake
+    ports:
+      - "6381:6379"
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_deltalake_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-search-network
+
+  deltalake-processor:
+    image: bitnami/spark:3.5
+    container_name: docker-saMas-smart-search-deltalake-processor
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=admin123456
+      - REDIS_URL=redis://redis-deltalake:6379
+    ports:
+      - "8081:8080"
+    depends_on:
+      - spark-master
+      - minio
+      - redis-deltalake
+    volumes:
+      - ./delta-lake:/app/delta-lake
+      - spark_data:/opt/bitnami/spark/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - smart-search-network
+
+  deltalake-redis-showcase:
+    build: ../showcases/deltalake-redis
+    container_name: docker-saMas-smart-search-deltalake-redis-showcase
+    ports:
+      - "3004:3000"
+    environment:
+      - NODE_ENV=production
+      - DELTALAKE_PROCESSOR_URL=http://deltalake-processor:8080
+      - REDIS_URL=redis://redis-deltalake:6379
+      - SHOWCASE_TITLE=Big Data Analytics Platform
+      - SHOWCASE_DESCRIPTION=Delta Lake + Redis for Financial Analytics
+    depends_on:
+      deltalake-processor:
+        condition: service_healthy
+      redis-deltalake:
+        condition: service_healthy
+    networks:
+      - smart-search-network
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: docker-saMas-smart-search-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - smart-search-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: docker-saMas-smart-search-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - smart-search-network
+
+  # Load Balancer and API Gateway
+  nginx:
+    image: nginx:alpine
+    container_name: docker-saMas-smart-search-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - postgres-redis-showcase
+      - mysql-dragonfly-showcase
+      - mongodb-memcached-showcase
+      - deltalake-redis-showcase
+      - grafana
+    networks:
+      - smart-search-network
+
+volumes:
+  postgres_data_main:
+    driver: local
+  redis_data_main:
+    driver: local
+  mysql_data_main:
+    driver: local
+  mongodb_data_main:
+    driver: local
+  redis_deltalake_data:
+    driver: local
+  spark_data:
+    driver: local
+  minio_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  smart-search-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

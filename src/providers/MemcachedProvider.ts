@@ -29,6 +29,7 @@ export interface MemcachedConfig {
 
 export class MemcachedProvider implements CacheProvider {
   name = 'Memcached';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   private _client: any; // We'll use any for now to avoid requiring memcached as dependency
   private isConnectedFlag = false;
   private config: MemcachedConfig;
@@ -420,7 +421,9 @@ export class MemcachedProvider implements CacheProvider {
       }
 
       // Get cache statistics
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       let _memoryUsage = 'Unknown';
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       let _keyCount = 0;
       try {
         // In real implementation:
@@ -461,6 +464,7 @@ export class MemcachedProvider implements CacheProvider {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _parseMemoryUsage(stats: any): string {
     // Parse Memcached stats for memory usage
     for (const server in stats) {
@@ -472,6 +476,7 @@ export class MemcachedProvider implements CacheProvider {
     return 'Unknown';
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _parseKeyCount(stats: any): number {
     // Parse Memcached stats for current item count
     for (const server in stats) {

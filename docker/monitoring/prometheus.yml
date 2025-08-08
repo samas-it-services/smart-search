@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'smart-search-showcases'
+    static_configs:
+      - targets: ['postgres-redis-showcase:3000', 'mysql-dragonfly-showcase:3000', 'mongodb-memcached-showcase:3000', 'deltalake-redis-showcase:3000']
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+
+  - job_name: 'databases'
+    static_configs:
+      - targets: ['postgres-main:5432', 'mysql-main:3306', 'mongodb-main:27017']
+    scrape_interval: 10s
+    
+  - job_name: 'caches'
+    static_configs:
+      - targets: ['redis-main:6379', 'dragonfly-main:6379', 'memcached-main:11211', 'redis-deltalake:6379']
+    scrape_interval: 10s
+
+  - job_name: 'big-data'
+    static_configs:
+      - targets: ['spark-master:8080', 'minio:9000', 'deltalake-processor:8080']
+    scrape_interval: 15s

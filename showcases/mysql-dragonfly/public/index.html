@@ -83,6 +83,21 @@
         .search-btn:hover {
             background: #5a6fd8;
         }
+        
+        /* Strategy Selector Styles */
+        .strategy-selector {
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            outline: none;
+            transition: border-color 0.3s;
+            min-width: 200px;
+        }
+        .strategy-selector:focus {
+            border-color: #667eea;
+        }
 
         .search-btn:disabled {
             background: #ccc;
@@ -303,6 +318,12 @@
                     placeholder="Search investment strategies, risk analysis, market research..."
                     value="portfolio"
                 >
+                <select class="strategy-selector" id="strategySelector">
+                    <option value="cache-first">⚡ Cache-First (Fast)</option>
+                    <option value="database-only">🗄️ Database-Only (Accurate)</option>
+                    <option value="circuit-breaker">🔧 Circuit Breaker (Failover)</option>
+                    <option value="hybrid">🤖 Hybrid (Intelligent)</option>
+                </select>
                 <button type="submit" class="search-btn" id="searchBtn">
                     🔍 Search
                 </button>
@@ -411,6 +432,7 @@
             }
 
             const searchInput = document.getElementById('searchInput');
+            const strategySelector = document.getElementById('strategySelector');
             const categoryFilter = document.getElementById('categoryFilter');
             const limitFilter = document.getElementById('limitFilter');
             const searchBtn = document.getElementById('searchBtn');
@@ -430,7 +452,8 @@
                 // Build query parameters
                 const params = new URLSearchParams({
                     q: query,
-                    limit: limitFilter.value
+                    limit: limitFilter.value,
+                    strategy: strategySelector.value
                 });
 
                 if (categoryFilter.value) {

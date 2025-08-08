@@ -255,7 +255,7 @@ class PackageValidator {
 
       const isApache2 = licenseContent.includes('Apache License') && 
                        licenseContent.includes('Version 2.0') &&
-                       licenseContent.includes('Samas Bilgrami');
+                       licenseContent.includes('Syed A Bilgrami (saMas IT Services Inc.)');
 
       this.results.push({
         category: 'License',

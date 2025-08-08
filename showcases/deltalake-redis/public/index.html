@@ -129,6 +129,25 @@
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+        
+        /* Strategy Selector Styles */
+        .strategy-selector {
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 16px;
+            background: white;
+            outline: none;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+            min-width: 180px;
+            cursor: pointer;
+        }
+        
+        .strategy-selector:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
 
         #searchBtn {
             padding: 15px 30px;
@@ -419,6 +438,12 @@
         <div class="search-section">
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Search financial data, companies, sectors, or analytics terms..." />
+                <select id="strategySelector" class="strategy-selector">
+                    <option value="cache-first">⚡ Cache-First (Fast)</option>
+                    <option value="database-only">🗄️ Database-Only (Accurate)</option>
+                    <option value="circuit-breaker">🔧 Circuit Breaker (Failover)</option>
+                    <option value="hybrid">🤖 Hybrid (Intelligent)</option>
+                </select>
                 <button id="searchBtn">🔍 Search</button>
             </div>
             
@@ -534,6 +559,8 @@
             const resultsSection = document.getElementById('resultsSection');
             const searchBtn = document.getElementById('searchBtn');
             const dataSize = document.getElementById('dataSizeSelect').value;
+            const strategySelector = document.getElementById('strategySelector');
+            const strategy = strategySelector ? strategySelector.value : 'cache-first';
 
             // Show loading state
             loadingIndicator.style.display = 'block';
@@ -542,7 +569,7 @@
             searchBtn.textContent = '🔄 Searching...';
 
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=20&data_size=${dataSize}`);
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=20&data_size=${dataSize}&strategy=${strategy}`);
                 const data = await response.json();
 
                 if (response.ok) {

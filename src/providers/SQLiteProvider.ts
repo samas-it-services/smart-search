@@ -44,6 +44,7 @@ export interface SQLiteSearchConfig {
 
 export class SQLiteProvider implements DatabaseProvider {
   name = 'SQLite';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   private _db: any; // We'll use any for now to avoid requiring better-sqlite3 as dependency
   private isConnectedFlag = false;
   private config: SQLiteConfig;

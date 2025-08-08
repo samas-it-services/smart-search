@@ -20,7 +20,7 @@
     "universal"
   ],
   "author": {
-    "name": "Samas Bilgrami",
+    "name": "Syd A Bilgrami",
     "url": "https://github.com/bilgrami"
   },
   "funding": [
@@ -73,7 +73,15 @@
     "examples:advanced": "tsx examples/advanced-configuration.ts",
     "examples:multi-db": "tsx examples/multiple-databases.ts",
     "examples:all": "npm run examples:basic && npm run examples:advanced && npm run examples:multi-db",
-    "prepublishOnly": "npm run type-check && npm run test:unit && npm run build"
+    "prepublishOnly": "npm run type-check && npm run test:unit && npm run build",
+    "version:patch": "./scripts/publish-to-npm.sh patch",
+    "version:minor": "./scripts/publish-to-npm.sh minor", 
+    "version:major": "./scripts/publish-to-npm.sh major",
+    "publish:patch": "./scripts/publish-to-npm.sh patch",
+    "publish:minor": "./scripts/publish-to-npm.sh minor",
+    "publish:major": "./scripts/publish-to-npm.sh major",
+    "publish:test": "./scripts/test-publish.sh",
+    "publish:dry-run": "./scripts/publish-to-npm.sh patch --dry-run"
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"
@@ -81,6 +89,8 @@
   "devDependencies": {
     "@playwright/test": "^1.40.0",
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.10.0",
+    "@types/memcached": "^2.2.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitest/coverage-v8": "^1.0.0",
@@ -90,7 +100,15 @@
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "pg": "^8.11.0",
+    "mysql2": "^3.6.0",
+    "mongodb": "^6.0.0",
+    "ioredis": "^5.3.0",
+    "memcached": "^2.2.2",
+    "@supabase/supabase-js": "^2.38.0",
+    "yaml": "^2.3.0"
+  },
   "engines": {
     "node": ">=16.0.0"
   }

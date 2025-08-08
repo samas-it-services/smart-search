@@ -104,13 +104,42 @@ seed_postgres() {
     
     print_step "Seeding PostgreSQL with $industry data ($size)..."
     
-    # Wait for PostgreSQL to be ready
-    wait_for_service postgres 5432
+    # Determine container name based on whether alt ports are used
+    local container_name="smart-search-postgres"
+    if [ "$USE_ALT_PORTS" = "true" ] || [ -n "$CONTAINER_SUFFIX" ]; then
+        container_name="smart-search-postgres${CONTAINER_SUFFIX:-}"
+    fi
+    
+    print_status "Using PostgreSQL container: $container_name"
+    
+    # Wait for PostgreSQL to be ready using the correct container name
+    local max_attempts=30
+    local attempt=1
+    
+    print_status "Waiting for PostgreSQL to be ready..."
+    while [ $attempt -le $max_attempts ]; do
+        if docker exec "$container_name" pg_isready -U user -d smartsearch >/dev/null 2>&1; then
+            print_status "PostgreSQL is ready! ✓"
+            break
+        fi
+        
+        if [ $((attempt % 5)) -eq 0 ]; then
+            print_status "Still waiting for PostgreSQL... (attempt $attempt/$max_attempts)"
+        fi
+        
+        sleep 2
+        ((attempt++))
+    done
+    
+    if [ $attempt -gt $max_attempts ]; then
+        print_error "PostgreSQL failed to become ready within $((max_attempts * 2)) seconds"
+        return 1
+    fi
     
     # Create tables and seed data based on industry
     case $industry in
         healthcare)
-            docker exec smart-search-postgres psql -U user -d smartsearch -c "
+            docker exec "$container_name" psql -U user -d smartsearch -c "
             CREATE TABLE IF NOT EXISTS healthcare_data (
                 id VARCHAR(255) PRIMARY KEY,
                 title TEXT,
@@ -126,56 +155,89 @@ seed_postgres() {
             CREATE INDEX IF NOT EXISTS idx_healthcare_fts ON healthcare_data USING gin(search_vector);
             "
             
-            # Import JSON data
+            # Check if data already exists and handle accordingly FIRST
+            local existing_count=$(docker exec "$container_name" psql -U user -d smartsearch -t -c "SELECT COUNT(*) FROM healthcare_data;" | tr -d ' ')
+            
+            if [ "$existing_count" -gt 0 ]; then
+                print_warning "Found $existing_count existing records."
+                if [ "${SKIP_IF_EXISTS:-false}" = "true" ]; then
+                    print_status "SKIP_IF_EXISTS=true, using existing data..."
+                    return 0
+                else
+                    print_status "Clearing table for fresh data..."
+                    docker exec "$container_name" psql -U user -d smartsearch -c "TRUNCATE TABLE healthcare_data;"
+                fi
+            fi
+            
+            # Import JSON data using psql directly (no Python dependencies)
             if [ -f "$data_file"/*.json ]; then
                 for json_file in "$data_file"/*.json; do
                     filename=$(basename "$json_file" .json)
-                    python3 -c "
-import json
-import psycopg2
-import sys
-
-# Read JSON data
-with open('$json_file', 'r') as f:
-    data = json.load(f)
-
-# Connect to PostgreSQL
-conn = psycopg2.connect(
-    host='localhost',
-    database='smartsearch',
-    user='user',
-    password='password'
-)
-cur = conn.cursor()
-
-# Insert data
-for record in data:
-    try:
-        cur.execute('''
-            INSERT INTO healthcare_data (id, title, description, condition_name, treatment, specialty, date_created, type, search_vector)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, to_tsvector('english', %s || ' ' || %s))
-            ON CONFLICT (id) DO NOTHING
-        ''', (
-            record.get('id', ''),
-            record.get('title', record.get('generic_name', record.get('name', ''))),
-            record.get('description', record.get('event_description', '')),
-            record.get('condition', ''),
-            record.get('treatment', ''),
-            record.get('specialty', ''),
-            record.get('date', record.get('date_of_event', '2024-01-01')),
-            record.get('type', 'unknown'),
-            record.get('title', record.get('generic_name', record.get('name', ''))),
-            record.get('description', record.get('event_description', ''))
-        ))
-    except Exception as e:
-        continue
-
-conn.commit()
-cur.close()
-conn.close()
-print('Seeded healthcare data into PostgreSQL')
-"
+                    print_status "Processing $filename..."
+                    
+                    # Convert JSON to CSV with deduplication for fast bulk loading
+                    print_status "Converting JSON to CSV with deduplication for fast bulk insert..."
+                    
+                    # Create temporary files
+                    local temp_csv="/tmp/healthcare_data_$$.csv"
+                    local temp_deduped="/tmp/healthcare_deduped_$$.csv"
+                    
+                    # First, convert JSON to CSV
+                    cat "$json_file" | jq -r '.[] | [
+                        (.id // ""),
+                        (.title // .generic_name // .name // ""),
+                        (.description // .event_description // ""),
+                        (.condition_name // .condition // ""),
+                        (.treatment // ""),
+                        (.specialty // ""),
+                        (.date_created // .date // .date_of_event // "2024-01-01"),
+                        (.type // "unknown")
+                    ] | @csv' > "$temp_csv"
+                    
+                    # Remove duplicates based on first column (ID) using awk
+                    print_status "Removing duplicates by ID..."
+                    awk -F, '!seen[$1]++' "$temp_csv" > "$temp_deduped"
+                    
+                    # Report deduplication results
+                    original_count=$(wc -l < "$temp_csv")
+                    deduped_count=$(wc -l < "$temp_deduped")
+                    removed_count=$((original_count - deduped_count))
+                    if [ $removed_count -gt 0 ]; then
+                        print_status "Removed $removed_count duplicate records (kept $deduped_count unique records)"
+                    fi
+                    
+                    # Copy deduplicated CSV to container and use PostgreSQL COPY for fast bulk insert
+                    docker cp "$temp_deduped" "$container_name:/tmp/data.csv"
+                    
+                    # Use COPY command for fast bulk insert
+                    docker exec "$container_name" psql -U user -d smartsearch -c "
+                        COPY healthcare_data (id, title, description, condition_name, treatment, specialty, date_created, type) 
+                        FROM '/tmp/data.csv' WITH CSV;
+                        
+                        -- Update search vectors after bulk insert
+                        UPDATE healthcare_data 
+                        SET search_vector = to_tsvector('english', COALESCE(title, '') || ' ' || COALESCE(description, ''))
+                        WHERE search_vector IS NULL;
+                    "
+                    
+                    # Cleanup
+                    rm -f "$temp_csv" "$temp_deduped"
+                    docker exec "$container_name" rm -f /tmp/data.csv
+                    
+                    print_status "Processed $filename successfully"
                 done
+            else
+                print_warning "No JSON files found in $data_file, creating sample data..."
+                # Create sample healthcare data if no files exist
+                docker exec "$container_name" psql -U user -d smartsearch -c "
+                INSERT INTO healthcare_data (id, title, description, condition_name, treatment, specialty, date_created, type, search_vector) VALUES
+                ('1', 'Diabetes Management', 'Comprehensive care for Type 1 and Type 2 diabetes patients', 'Diabetes', 'Insulin therapy and lifestyle management', 'Endocrinology', '2024-01-01', 'healthcare', to_tsvector('english', 'Diabetes Management Comprehensive care for Type 1 and Type 2 diabetes patients')),
+                ('2', 'Cardiac Surgery', 'Advanced surgical procedures for heart conditions', 'Heart Disease', 'Surgical intervention', 'Cardiology', '2024-01-02', 'healthcare', to_tsvector('english', 'Cardiac Surgery Advanced surgical procedures for heart conditions')),
+                ('3', 'Cancer Immunotherapy', 'Cutting-edge treatment using immune system', 'Cancer', 'Immunotherapy', 'Oncology', '2024-01-03', 'healthcare', to_tsvector('english', 'Cancer Immunotherapy Cutting-edge treatment using immune system')),
+                ('4', 'Mental Health Support', 'Comprehensive mental health services and therapy', 'Depression, Anxiety', 'Therapy and medication', 'Psychiatry', '2024-01-04', 'healthcare', to_tsvector('english', 'Mental Health Support Comprehensive mental health services and therapy')),
+                ('5', 'Pediatric Care', 'Specialized healthcare for children and infants', 'Various pediatric conditions', 'Age-appropriate treatments', 'Pediatrics', '2024-01-05', 'healthcare', to_tsvector('english', 'Pediatric Care Specialized healthcare for children and infants'))
+                ON CONFLICT (id) DO NOTHING;
+                "
             fi
             ;;
             
@@ -301,7 +363,7 @@ conn.close()
     esac
     
     # Get record count
-    count=$(docker exec smart-search-postgres psql -U user -d smartsearch -t -c "SELECT COUNT(*) FROM ${industry}_data;" | tr -d ' ')
+    count=$(docker exec "$container_name" psql -U user -d smartsearch -t -c "SELECT COUNT(*) FROM ${industry}_data;" | tr -d ' ')
     print_status "PostgreSQL seeded with $count records"
 }
 
@@ -467,10 +529,14 @@ show_usage() {
     echo "Sizes: tiny, small, medium, large, all"
     echo "Databases: postgres, mysql, mongodb, redis, all"
     echo ""
+    echo "Environment Variables:"
+    echo "  SKIP_IF_EXISTS=true   - Skip seeding if data already exists"
+    echo ""
     echo "Examples:"
     echo "  $0 healthcare tiny postgres"
     echo "  $0 finance all mysql"
     echo "  $0 all medium all"
+    echo "  SKIP_IF_EXISTS=true $0 healthcare medium postgres"
 }
 
 # Main execution

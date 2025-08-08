@@ -3,6 +3,7 @@
  * Universal Supabase integration for @samas/smart-search
  */
 
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import {
   DatabaseProvider,
   SearchResult,
@@ -43,22 +44,30 @@ export interface SupabaseSearchConfig {
 
 export class SupabaseProvider implements DatabaseProvider {
   name = 'Supabase';
-  private supabase: any; // We'll use any for now to avoid requiring @supabase/supabase-js as dependency
+  private supabase: SupabaseClient;
   private isConnectedFlag = false;
   private searchConfig: SupabaseSearchConfig;
 
-  constructor(_config: SupabaseConfig, searchConfig: SupabaseSearchConfig) {
-    // Note: In real implementation, this would be:
-    // this.supabase = createClient(config.url, config.key, config.options);
+  constructor(config: SupabaseConfig, searchConfig: SupabaseSearchConfig) {
+    this.supabase = createClient(config.url, config.key, config.options);
     this.searchConfig = searchConfig;
   }
 
   async connect(): Promise<void> {
     try {
-      // Test connection with a simple query
-      const { error } = await this.supabase.from('profiles').select('id').limit(1);
+      // Test connection by checking if we can access the database
+      // Try to query the first configured table, or use a system table if none configured
+      const tableNames = Object.keys(this.searchConfig.tables);
+      let testTable = tableNames.length > 0 ? tableNames[0] : 'information_schema.tables';
       
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned, which is OK
+      const { error } = await this.supabase
+        .from(testTable)
+        .select('*')
+        .limit(1);
+      
+      // PGRST116 = no rows returned (table exists but empty) - this is OK
+      // PGRST106 = table not found - this is OK for testing connection
+      if (error && !['PGRST116', 'PGRST106'].includes(error.code)) {
         throw error;
       }
       
@@ -259,12 +268,19 @@ export class SupabaseProvider implements DatabaseProvider {
     const startTime = Date.now();
     
     try {
-      // Test basic connectivity with a simple query
-      const { error } = await this.supabase.from('profiles').select('id').limit(1);
+      // Test basic connectivity using the same approach as connect()
+      const tableNames = Object.keys(this.searchConfig.tables);
+      let testTable = tableNames.length > 0 ? tableNames[0] : 'information_schema.tables';
+      
+      const { error } = await this.supabase
+        .from(testTable)
+        .select('*')
+        .limit(1);
       
       const latency = Date.now() - startTime;
       
-      if (error && error.code !== 'PGRST116') {
+      // PGRST116 = no rows returned, PGRST106 = table not found - both OK for health check
+      if (error && !['PGRST116', 'PGRST106'].includes(error.code)) {
         return {
           isConnected: false,
           isSearchAvailable: false,
