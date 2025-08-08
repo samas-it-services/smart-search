@@ -38,6 +38,7 @@ const PORT = process.env.PORT || 3002;
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/smartsearch';
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const DATA_SIZE = process.env.DATA_SIZE || 'tiny';
+const SMART_SEARCH_CONFIG = process.env.SMART_SEARCH_CONFIG || '/app/config/providers/postgres-redis-healthcare.yaml';
 
 // Parse database URL
 const dbUrl = new URL(DATABASE_URL);
@@ -177,15 +178,27 @@ function createHealthcareConfig() {
 
 async function waitForDatabaseConnection(maxAttempts = 30) {
     console.log('🔄 Waiting for database connection...');
+    console.log('🔍 DEBUG: SMART_SEARCH_CONFIG in waitForDatabaseConnection:', SMART_SEARCH_CONFIG);
+    
+    // Verify config file exists
+    const fs = require('fs');
+    const configExists = fs.existsSync(SMART_SEARCH_CONFIG);
+    console.log(`🔍 DEBUG: Config file exists in waitForDatabaseConnection: ${configExists}`);
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-            const testConfig = createHealthcareConfig();
-            const testSearch = SmartSearchFactory.fromConfig(testConfig);
+            console.log('🔍 DEBUG: About to call SmartSearchFactory.fromConfig in waitForDatabaseConnection');
+            let testSearch;
+            try {
+                testSearch = SmartSearchFactory.fromConfig(SMART_SEARCH_CONFIG);
+                console.log('🔍 DEBUG: SmartSearch factory succeeded');
+            } catch (factoryError) {
+                console.error('🔍 DEBUG: SmartSearch factory failed:', factoryError.message);
+                throw factoryError;
+            }
             
-            // Try to connect
-            await testSearch.connect();
-            await testSearch.disconnect();
+            // Test the search functionality instead of connect/disconnect
+            await testSearch.getSearchStats();
             
             console.log('✅ Database connection verified');
             return true;
@@ -204,18 +217,28 @@ async function waitForDatabaseConnection(maxAttempts = 30) {
 async function initializeSmartSearch() {
     try {
         console.log('🚀 Initializing SmartSearch with real PostgreSQL + Redis...');
+        console.log('📋 Using config file:', SMART_SEARCH_CONFIG);
+        
+        // Verify config file exists before loading
+        try {
+            const fs = require('fs');
+            const configExists = fs.existsSync(SMART_SEARCH_CONFIG);
+            console.log(`🔍 Config file exists: ${configExists}`);
+            if (configExists) {
+                const configContent = fs.readFileSync(SMART_SEARCH_CONFIG, 'utf8');
+                console.log(`🔍 Config file size: ${configContent.length} bytes`);
+                console.log(`🔍 Config file preview: ${configContent.substring(0, 200)}...`);
+            }
+        } catch (error) {
+            console.error('🔍 Error checking config file:', error.message);
+        }
         
         // Wait for database to be ready (reduced attempts for faster testing)
         await waitForDatabaseConnection();
         
-        // Create configuration
-        const config = createHealthcareConfig();
-        console.log('📋 Database config type:', config.database.type);
-        console.log('📋 Database connection:', config.database.connection);
-        
-        // Initialize SmartSearch using factory
-        smartSearch = SmartSearchFactory.fromConfig(config);
-        await smartSearch.connect();
+        // Initialize SmartSearch using factory with config file
+        console.log('🔍 DEBUG: About to call SmartSearchFactory.fromConfig with:', SMART_SEARCH_CONFIG);
+        smartSearch = SmartSearchFactory.fromConfig(SMART_SEARCH_CONFIG);
         
         // Verify we can perform basic operations
         const stats = await smartSearch.getSearchStats();
@@ -444,6 +467,8 @@ app.use('*', (req, res) => {
 async function startServer() {
     try {
         console.log('🏥 Starting PostgreSQL + Redis Healthcare Showcase...');
+        console.log('🔍 DEBUG: SMART_SEARCH_CONFIG at startServer:', SMART_SEARCH_CONFIG);
+        console.log('🔍 DEBUG: About to call initializeSmartSearch');
         
         // Initialize SmartSearch
         await initializeSmartSearch();
@@ -490,8 +515,8 @@ async function gracefulShutdown(signal) {
     
     try {
         if (smartSearch) {
-            await smartSearch.disconnect();
-            console.log('✅ SmartSearch disconnected');
+            // SmartSearch doesn't have explicit disconnect, connections are managed internally
+            console.log('✅ SmartSearch shutdown initiated');
         }
     } catch (error) {
         console.error('❌ Error during shutdown:', error.message);

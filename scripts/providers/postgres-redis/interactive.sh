@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# @samas/smart-search - PostgreSQL + Redis Interactive Launcher
-# Interactive script to choose dataset size and launch the showcase
+# @samas/smart-search - PostgreSQL + Redis Launcher
+# Non-interactive automation-ready script with comprehensive CLI support
+# This script is now non-interactive by default - use environment variables or CLI args
 
 set -e
 
@@ -17,9 +18,27 @@ source "$COMMON_DIR/dataset-helpers.sh"
 PROVIDER="postgres-redis"
 DOCKER_DIR="$PROJECT_ROOT/docker"
 
-# Main function
+# Main function (now non-interactive)
 main() {
-    print_header "PostgreSQL + Redis Interactive Launcher"
+    # Parse command line arguments
+    parse_dataset_args "$@"
+    
+    # Handle help request
+    if [ "$HELP" = true ]; then
+        show_dataset_help "$(basename "$0")" "PostgreSQL + Redis Provider Launcher"
+        exit 0
+    fi
+    
+    # Set defaults if not specified
+    export DATA_SIZE=${DATA_SIZE:-tiny}
+    export INDUSTRY=${INDUSTRY:-healthcare}
+    
+    # Validate dataset size
+    if ! validate_dataset_size "$DATA_SIZE"; then
+        exit 1
+    fi
+    
+    print_header "PostgreSQL + Redis $DATA_SIZE Launcher"
     
     # Check Docker
     check_docker
@@ -28,44 +47,40 @@ main() {
     configure_provider_ports "$PROVIDER"
     show_port_info "$PROVIDER"
     
-    # Interactive dataset selection
-    prompt_dataset_size
+    # Get dataset size (non-interactive)
+    get_dataset_size "$DATA_SIZE"
     show_dataset_info
     
     # Check if dataset is available
-    ensure_dataset_available "$PROVIDER" "$DATA_SIZE" "healthcare"
+    ensure_dataset_available "$PROVIDER" "$DATA_SIZE" "$INDUSTRY"
     
-    # Confirmation
+    # Show launch information
     echo ""
-    print_step "🚀 Ready to launch PostgreSQL + Redis Healthcare Showcase"
+    print_step "🚀 Launching PostgreSQL + Redis $INDUSTRY Showcase"
     echo "   • Dataset: $DATA_SIZE"
+    echo "   • Industry: $INDUSTRY"
     echo "   • Showcase URL: http://localhost:$SHOWCASE_PORT"
     echo "   • PostgreSQL: localhost:$POSTGRES_PORT"
     echo "   • Redis: localhost:$REDIS_PORT"
-    echo ""
     
-    read -p "Continue with launch? [Y/n]: " -n 1 -r
-    echo ""
-    
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        # Launch the appropriate script
-        case $DATA_SIZE in
-            tiny)
-                "$SCRIPT_DIR/start-tiny.sh"
-                ;;
-            small)
-                "$SCRIPT_DIR/start-small.sh"
-                ;;
-            medium)
-                "$SCRIPT_DIR/start-medium.sh"
-                ;;
-            large)
-                "$SCRIPT_DIR/start-large.sh"
-                ;;
-        esac
-    else
-        print_status "Launch cancelled by user"
+    # Handle dry run mode
+    if [ "$DRY_RUN" = true ]; then
+        print_status "DRY RUN: Would launch $target_script"
+        exit 0
     fi
+    
+    # Find and execute the appropriate script
+    local target_script="$SCRIPT_DIR/start-$DATA_SIZE.sh"
+    if [[ ! -f "$target_script" ]]; then
+        print_error "Script not found: $target_script"
+        print_status "Available scripts in $SCRIPT_DIR:"
+        ls -la "$SCRIPT_DIR"/start-*.sh 2>/dev/null || print_error "No start scripts found"
+        exit 1
+    fi
+    
+    # Launch the appropriate script
+    print_status "Executing: $target_script"
+    exec "$target_script"
 }
 
 # Run main function

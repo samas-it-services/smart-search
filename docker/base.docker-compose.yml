@@ -1,0 +1,56 @@
+# Base Docker Compose configuration for SmartSearch Showcases
+# Use with provider-specific override files
+version: '3.8'
+
+services:
+  # Database services (will be overridden by provider-specific files)
+  database:
+    networks:
+      - smart-search
+
+  # Cache services (will be overridden by provider-specific files)  
+  cache:
+    networks:
+      - smart-search
+
+  # Universal showcase service
+  showcase:
+    build:
+      context: ../
+      dockerfile: docker/showcase.Dockerfile
+    container_name: smart-search-showcase-${PROVIDER_COMBO:-default}
+    environment:
+      - PORT=${SHOWCASE_PORT:-3000}
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - CACHE_URL=${CACHE_URL}
+      - DATA_SIZE=${DATA_SIZE:-medium}
+      - DATASET=${DATASET:-healthcare}
+      - SMART_SEARCH_CONFIG=/app/config/providers/${SHOWCASE_TYPE:-postgres-redis}-${DATASET:-healthcare}.json
+    volumes:
+      # Mount showcase source code (enables live editing)
+      - ../showcases/${SHOWCASE_TYPE:-postgres-redis}:/app/showcase:ro
+      # Mount configuration files
+      - ../config:/app/config:ro
+      # Mount built library for latest changes
+      - ../dist:/app/dist:ro
+    ports:
+      - "${SHOWCASE_PORT:-3000}:${SHOWCASE_PORT:-3000}"
+    depends_on:
+      database:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${SHOWCASE_PORT:-3000}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - smart-search
+    restart: unless-stopped
+
+networks:
+  smart-search:
+    driver: bridge

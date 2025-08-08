@@ -1,0 +1,188 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-search"
+version = "1.0.0"
+description = "Universal search with intelligent fallback for any database + cache combination"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Syd A Bilgrami", email = "syd@samas.it"},
+]
+keywords = [
+    "search",
+    "database", 
+    "cache",
+    "redis",
+    "postgresql",
+    "mysql",
+    "mongodb",
+    "supabase",
+    "fallback",
+    "performance",
+    "universal"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+requires-python = ">=3.8"
+dependencies = [
+    # Database drivers
+    "asyncpg>=0.29.0",          # PostgreSQL async driver
+    "motor>=3.3.0",             # MongoDB async driver  
+    "redis[hiredis]>=5.0.0",    # Redis with hiredis for performance
+    "aiomysql>=0.2.0",          # MySQL async driver
+    "aiosqlite>=0.19.0",        # SQLite async driver
+    
+    # HTTP clients for external APIs
+    "httpx>=0.25.0",            # Modern async HTTP client
+    "aiohttp>=3.9.0",           # Alternative async HTTP client
+    
+    # Data processing
+    "pydantic>=2.5.0",          # Data validation and serialization
+    "typing-extensions>=4.8.0", # Enhanced typing support
+    "python-dateutil>=2.8.0",  # Date parsing utilities
+    
+    # Configuration and environment
+    "pyyaml>=6.0.1",           # YAML configuration support
+    "python-dotenv>=1.0.0",    # Environment variable loading
+    
+    # Monitoring and logging
+    "prometheus-client>=0.19.0", # Metrics collection
+    "structlog>=23.2.0",        # Structured logging
+    
+    # Security and hashing
+    "cryptography>=41.0.0",     # Encryption and hashing
+    "passlib>=1.7.4",          # Password hashing utilities
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.4.0",
+]
+
+web = [
+    "fastapi>=0.104.0",        # Web framework for showcases
+    "uvicorn[standard]>=0.24.0", # ASGI server
+    "jinja2>=3.1.0",           # Template engine
+]
+
+monitoring = [
+    "prometheus-client>=0.19.0",
+    "opentelemetry-api>=1.21.0",
+    "opentelemetry-sdk>=1.21.0",
+    "opentelemetry-instrumentation-psycopg2>=0.42b0",
+]
+
+all = [
+    "smart-search[dev,web,monitoring]"
+]
+
+[project.urls]
+Homepage = "https://github.com/samas-it-services/smart-search"
+Documentation = "https://github.com/samas-it-services/smart-search#readme"
+Repository = "https://github.com/samas-it-services/smart-search.git"
+"Bug Reports" = "https://github.com/samas-it-services/smart-search/issues"
+Funding = "https://github.com/sponsors/bilgrami"
+
+[project.scripts]
+smart-search = "smart_search.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+include = ["smart_search*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+strict_optional = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = [
+    "tests",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["smart_search"]
+omit = [
+    "*/tests/*",
+    "*/examples/*",
+    "*/docs/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\bProtocol\):",
+    "@(abc\.)?abstractmethod",
+]

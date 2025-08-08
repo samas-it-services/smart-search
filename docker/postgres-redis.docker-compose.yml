@@ -52,6 +52,9 @@ services:
       - DATABASE_URL=postgresql://user:password@postgres:5432/smartsearch
       - REDIS_URL=redis://redis:6379
       - DATA_SIZE=${DATA_SIZE:-medium}
+      - SMART_SEARCH_CONFIG=/app/config/providers/postgres-redis-${INDUSTRY:-healthcare}.json
+    volumes:
+      - ../config:/app/config
     ports:
       - "3002:3002"
     depends_on:

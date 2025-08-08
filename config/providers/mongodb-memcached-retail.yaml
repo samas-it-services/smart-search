@@ -1,0 +1,97 @@
+# SmartSearch Configuration - MongoDB + Memcached Retail
+# Optimized for retail/e-commerce data with MongoDB + Memcached infrastructure
+
+database:
+  type: mongodb
+  connection:
+    uri: mongodb://mongodb:27017/smartsearch
+    host: mongodb
+    port: 27017
+    database: smartsearch
+  options:
+    maxPoolSize: 20
+    minPoolSize: 5
+    maxIdleTimeMS: 30000
+    serverSelectionTimeoutMS: 5000
+    socketTimeoutMS: 45000
+
+cache:
+  type: memcached
+  connection:
+    servers:
+      - memcached:11211
+  options:
+    maxExpiration: 2592000
+    poolSize: 10
+    retries: 3
+    retry: 10000
+
+search:
+  fallback: database
+  tables:
+    retail_data:
+      columns:
+        id: _id
+        title: title
+        subtitle: brand
+        description: description
+        category: category
+        language: language
+        visibility: visibility
+        createdAt: date_created
+      searchColumns:
+        - title
+        - description
+        - brand
+        - model
+        - category
+      type: retail
+      searchConfig: text
+      weightConfig:
+        title: 10
+        brand: 8
+        model: 6
+        description: 4
+        category: 2
+      autoCreateIndexes: true
+      indexStrategy: text_compound
+
+circuitBreaker:
+  failureThreshold: 6
+  recoveryTimeout: 90000
+  healthCacheTTL: 45000
+  maxConsecutiveFailures: 10
+  resetTimeout: 180000
+
+cacheConfig:
+  enabled: true
+  defaultTTL: 900000  # Longer TTL for product catalog data
+  maxSize: 50000
+  keyPrefix: "retail:"
+  compressionThreshold: 4096
+  strategies:
+    - type: cache-first
+      ttl: 1800000  # 30 minutes for product data
+    - type: database-first
+      ttl: 600000   # 10 minutes for real-time inventory
+    - type: hybrid
+      ttl: 900000   # 15 minutes for mixed queries
+
+performance:
+  enableMetrics: true
+  logQueries: false
+  slowQueryThreshold: 2000
+  maxConcurrentQueries: 30
+  queryTimeout: 45000
+  connectionTimeout: 10000
+
+# MongoDB + Retail optimizations
+mongoRetailOptimizations:
+  textIndexLocale: "en"
+  compoundIndexStrategy: true
+  geospatialIndexing: false
+  productCatalogOptimization: true
+  inventoryTrackingIndexes: true
+  brandModelCompoundIndex: true
+  priceRangeIndexing: true
+  categoryHierarchyOptimization: true

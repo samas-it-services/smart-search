@@ -4,8 +4,122 @@
 # Handles dataset size validation, prompting, and information display
 
 # Source docker helpers for consistent logging
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/docker-helpers.sh"
+HELPERS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HELPERS_DIR/docker-helpers.sh"
+
+# Function to parse command line arguments for dataset scripts
+parse_dataset_args() {
+    # Initialize with environment variables or defaults
+    export DATA_SIZE=${DATA_SIZE:-}
+    export PROVIDER=${PROVIDER:-}
+    export INDUSTRY=${INDUSTRY:-healthcare}
+    export PORT_OFFSET=${PORT_OFFSET:-}
+    export VERBOSE=${VERBOSE:-false}
+    export DRY_RUN=${DRY_RUN:-false}
+    export FORCE=${FORCE:-false}
+    export HELP=${HELP:-false}
+    
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --size|-s)
+                export DATA_SIZE="$2"
+                shift 2
+                ;;
+            --provider|-p)
+                export PROVIDER="$2"
+                shift 2
+                ;;
+            --industry|-i)
+                export INDUSTRY="$2"
+                shift 2
+                ;;
+            --port-offset)
+                export PORT_OFFSET="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                export VERBOSE=true
+                shift
+                ;;
+            --dry-run)
+                export DRY_RUN=true
+                shift
+                ;;
+            --force|-f)
+                export FORCE=true
+                shift
+                ;;
+            --help|-h)
+                export HELP=true
+                shift
+                ;;
+            --*)
+                print_warning "Unknown option: $1"
+                shift
+                ;;
+            *)
+                # Handle positional arguments
+                if [ -z "$PROVIDER" ] && [[ "$1" =~ ^(postgres-redis|mysql-dragonfly|mongodb-memcached|supabase-redis|deltalake-redis|sqlite-inmemory)$ ]]; then
+                    export PROVIDER="$1"
+                elif [ -z "$INDUSTRY" ] && [[ "$1" =~ ^(healthcare|finance|retail|education|real_estate)$ ]]; then
+                    export INDUSTRY="$1"  
+                elif [ -z "$DATA_SIZE" ] && [[ "$1" =~ ^(tiny|small|medium|large)$ ]]; then
+                    export DATA_SIZE="$1"
+                else
+                    print_warning "Unknown positional argument: $1"
+                fi
+                shift
+                ;;
+        esac
+    done
+}
+
+# Function to show standardized help for dataset scripts
+show_dataset_help() {
+    local script_name=${1:-"script"}
+    local script_description=${2:-"Dataset management script"}
+    
+    echo ""
+    echo "$script_description"
+    echo ""
+    echo "Usage:"
+    echo "  $script_name [OPTIONS] [POSITIONAL_ARGS]"
+    echo ""
+    echo "Options:"
+    echo "  --size, -s SIZE        Dataset size (tiny, small, medium, large)"
+    echo "  --provider, -p PROV    Provider combination (postgres-redis, mysql-dragonfly, etc.)"
+    echo "  --industry, -i IND     Industry dataset (healthcare, finance, retail, education, real_estate)"
+    echo "  --port-offset OFFSET   Port offset for service ports"
+    echo "  --verbose, -v          Enable verbose output"
+    echo "  --dry-run             Show what would be done without executing"
+    echo "  --force, -f           Force operation without confirmations"
+    echo "  --help, -h            Show this help message"
+    echo ""
+    echo "Environment Variables:"
+    echo "  DATA_SIZE             Dataset size (overridden by --size)"
+    echo "  PROVIDER              Provider combination (overridden by --provider)"  
+    echo "  INDUSTRY              Industry dataset (overridden by --industry)"
+    echo "  PORT_OFFSET           Port offset (overridden by --port-offset)"
+    echo "  VERBOSE               Enable verbose mode (true/false)"
+    echo "  DRY_RUN               Enable dry run mode (true/false)"
+    echo "  FORCE                 Force mode (true/false)"
+    echo ""
+    echo "Examples:"
+    echo "  # Using environment variables"
+    echo "  DATA_SIZE=large PROVIDER=postgres-redis $script_name"
+    echo ""
+    echo "  # Using command line flags" 
+    echo "  $script_name --size medium --provider mysql-dragonfly --industry finance"
+    echo ""
+    echo "  # Using positional arguments"
+    echo "  $script_name postgres-redis healthcare large"
+    echo ""
+    echo "Available dataset sizes: tiny (1K), small (10K), medium (100K), large (1M+)"
+    echo "Available providers: postgres-redis, mysql-dragonfly, mongodb-memcached, supabase-redis"
+    echo "Available industries: healthcare, finance, retail, education, real_estate"
+    echo ""
+}
 
 # Function to validate dataset size
 validate_dataset_size() {
@@ -63,54 +177,53 @@ get_dataset_info() {
     esac
 }
 
-# Function to prompt for dataset size interactively
-prompt_dataset_size() {
+# Function to get dataset size from various sources (non-interactive)
+get_dataset_size() {
+    local size_arg=${1:-}
     local current_size=${DATA_SIZE:-}
     
-    if [ -n "$current_size" ]; then
-        print_status "Using pre-selected dataset size: $current_size"
+    # Priority: 1. Function argument, 2. Environment variable, 3. Default
+    if [ -n "$size_arg" ]; then
+        current_size="$size_arg"
+    elif [ -z "$current_size" ]; then
+        current_size="tiny"  # Default to tiny for automation
+    fi
+    
+    # Validate the size
+    if ! validate_dataset_size "$current_size"; then
+        print_error "Invalid dataset size: $current_size"
+        print_status "Valid sizes: tiny, small, medium, large"
+        return 1
+    fi
+    
+    export DATA_SIZE="$current_size"
+    print_status "Using dataset size: $current_size"
+    return 0
+}
+
+# Legacy interactive function - deprecated but kept for backward compatibility
+prompt_dataset_size() {
+    print_warning "prompt_dataset_size() is deprecated. Use get_dataset_size() instead."
+    print_status "Set DATA_SIZE environment variable or pass size as argument to avoid prompts."
+    
+    # Check if already set via environment
+    if [ -n "${DATA_SIZE:-}" ]; then
+        print_status "Using pre-selected dataset size: $DATA_SIZE"
         return 0
     fi
     
+    # Show available sizes and exit with error - force users to specify
     echo ""
-    print_step "📊 Choose dataset size:"
+    print_step "📊 Available dataset sizes:"
+    echo -e "   • ${GREEN}tiny${NC}   - 1K records   (~30s startup) - Quick testing"
+    echo -e "   • ${YELLOW}small${NC}  - 10K records  (~2m startup)  - Basic demos"  
+    echo -e "   • ${BLUE}medium${NC} - 100K records (~5m startup)  - Realistic testing"
+    echo -e "   • ${RED}large${NC}  - 1M+ records  (~10m startup) - Performance testing"
     echo ""
-    
-    # Display options with details
-    echo "   1) ${GREEN}tiny${NC}   - 1K records   (~30s startup) - Quick testing"
-    echo "   2) ${YELLOW}small${NC}  - 10K records  (~2m startup)  - Basic demos"  
-    echo "   3) ${BLUE}medium${NC} - 100K records (~5m startup)  - Realistic testing"
-    echo "   4) ${RED}large${NC}  - 1M+ records  (~10m startup) - Performance testing"
-    echo ""
-    
-    while true; do
-        read -p "Enter choice (1-4) [default: 1]: " choice
-        case ${choice:-1} in
-            1) 
-                export DATA_SIZE="tiny"
-                print_success "Selected: Tiny dataset (1K records)"
-                break 
-                ;;
-            2) 
-                export DATA_SIZE="small"
-                print_success "Selected: Small dataset (10K records)"
-                break 
-                ;;
-            3) 
-                export DATA_SIZE="medium"
-                print_success "Selected: Medium dataset (100K records)"
-                break 
-                ;;
-            4) 
-                export DATA_SIZE="large"
-                print_success "Selected: Large dataset (1M+ records)"
-                break 
-                ;;
-            *) 
-                print_warning "Invalid choice. Please enter 1-4."
-                ;;
-        esac
-    done
+    print_error "No dataset size specified. This script requires non-interactive operation."
+    print_status "Set environment variable: export DATA_SIZE=medium"
+    print_status "Or pass as argument: script_name.sh --size medium"
+    return 1
 }
 
 # Function to show dataset information

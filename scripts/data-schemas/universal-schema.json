@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://samas.ai/schemas/universal-dataset.json",
+  "title": "Universal Dataset Schema",
+  "description": "Universal data schema for @samas/smart-search supporting any dataset with any provider combination",
+  "type": "object",
+  "required": ["id", "title", "type", "category", "search_fields"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the record",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "title": {
+      "type": "string", 
+      "description": "Primary display title/name of the record",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Detailed description or content of the record",
+      "maxLength": 5000
+    },
+    "category": {
+      "type": "string",
+      "description": "Standardized classification within the dataset type",
+      "minLength": 1,
+      "maxLength": 100,
+      "examples": [
+        "cardiology", "oncology", "surgery", 
+        "equities", "bonds", "derivatives",
+        "electronics", "clothing", "home_garden"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Dataset-specific structured metadata",
+      "properties": {
+        "dataset_type": {
+          "type": "string",
+          "enum": ["healthcare", "finance", "retail", "education", "real_estate", "custom"]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "maxItems": 20
+        },
+        "keywords": {
+          "type": "array", 
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "maxItems": 50
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "inactive", "deprecated", "draft", "pending"]
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "name": {"type": "string"},
+            "url": {"type": "string", "format": "uri"},
+            "version": {"type": "string"},
+            "last_updated": {"type": "string", "format": "date-time"}
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "search_fields": {
+      "type": "object",
+      "description": "Configuration for searchable fields with weights and strategies",
+      "properties": {
+        "primary": {
+          "type": "object",
+          "description": "Highest priority search fields (exact matches preferred)",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "minItems": 1
+            },
+            "weight": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 100
+            },
+            "strategy": {
+              "type": "string",
+              "enum": ["exact_match_preferred", "exact_match_only", "fuzzy_match"],
+              "default": "exact_match_preferred"
+            },
+            "boost": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10.0,
+              "default": 2.0
+            }
+          },
+          "required": ["fields", "weight"]
+        },
+        "secondary": {
+          "type": "object",
+          "description": "Medium priority search fields (fuzzy matching allowed)",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "weight": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 75
+            },
+            "strategy": {
+              "type": "string",
+              "enum": ["fuzzy_match", "partial_match", "exact_match_preferred"],
+              "default": "fuzzy_match"
+            },
+            "boost": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10.0,
+              "default": 1.5
+            }
+          }
+        },
+        "tertiary": {
+          "type": "object",
+          "description": "Lower priority search fields (partial matching)",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "weight": {
+              "type": "integer", 
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "strategy": {
+              "type": "string",
+              "enum": ["partial_match", "fuzzy_match", "full_text_search"],
+              "default": "partial_match"
+            },
+            "boost": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10.0,
+              "default": 1.0
+            }
+          }
+        },
+        "full_text": {
+          "type": "object",
+          "description": "Full-text search fields for content searching",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "weight": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            },
+            "strategy": {
+              "type": "string",
+              "enum": ["full_text_search", "semantic_search"],
+              "default": "full_text_search"
+            },
+            "boost": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10.0,
+              "default": 0.8
+            },
+            "analyzer": {
+              "type": "string",
+              "enum": ["standard", "english", "keyword", "simple", "stop"],
+              "default": "english"
+            }
+          }
+        },
+        "faceted": {
+          "type": "object",
+          "description": "Fields for filtering and faceted search",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "weight": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            },
+            "strategy": {
+              "type": "string",
+              "enum": ["exact_match_only"],
+              "default": "exact_match_only"
+            },
+            "boost": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 10.0,
+              "default": 0.5
+            },
+            "filterable": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      },
+      "required": ["primary"],
+      "additionalProperties": true
+    },
+    "date_created": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the record was created"
+    },
+    "date_updated": {
+      "type": ["string", "null"],
+      "format": "date-time", 
+      "description": "ISO 8601 timestamp when the record was last updated"
+    },
+    "type": {
+      "type": "string",
+      "description": "Record type within the dataset",
+      "minLength": 1,
+      "maxLength": 100,
+      "examples": ["condition", "treatment", "drug", "stock", "bond", "product", "course"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "inactive", "deprecated", "draft", "pending", "archived"],
+      "default": "active",
+      "description": "Current status of the record"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": ["public", "private", "restricted", "internal"],
+      "default": "public", 
+      "description": "Visibility level for the record"
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "default": "en",
+      "description": "Language code (ISO 639-1 format)",
+      "examples": ["en", "es", "fr", "de", "zh", "ja"]
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the record schema or content",
+      "default": "1.0"
+    }
+  },
+  "additionalProperties": true,
+  "examples": [
+    {
+      "id": "healthcare_001",
+      "title": "Type 2 Diabetes Management", 
+      "description": "Comprehensive treatment protocols for Type 2 Diabetes Mellitus",
+      "category": "endocrinology",
+      "type": "treatment_protocol",
+      "metadata": {
+        "dataset_type": "healthcare",
+        "medical_codes": {
+          "icd_10": "E11",
+          "cpt_code": "99213"
+        },
+        "severity_level": "moderate",
+        "evidence_level": "A"
+      },
+      "search_fields": {
+        "primary": {
+          "fields": ["title", "condition_name"],
+          "weight": 100,
+          "strategy": "exact_match_preferred",
+          "boost": 2.0
+        },
+        "secondary": {
+          "fields": ["description", "treatment"],
+          "weight": 75,
+          "strategy": "fuzzy_match",
+          "boost": 1.5
+        }
+      },
+      "date_created": "2024-01-15T10:30:00Z",
+      "status": "active",
+      "language": "en"
+    }
+  ]
+}

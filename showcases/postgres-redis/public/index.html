@@ -560,7 +560,7 @@
                 </div>
                 <div class="stat-card">
                     <h3>Strategy</h3>
-                    <div class="stat-value">${currentStats.recommendedStrategy.toUpperCase()}</div>
+                    <div class="stat-value">${currentStats.recommendedStrategy?.primary?.toUpperCase() || 'DATABASE'}</div>
                     <div class="stat-label">Recommended</div>
                 </div>
             `;
@@ -645,15 +645,16 @@
             };
             
             const strategyInfo = strategyStyles[performance.strategy] || strategyStyles.cache;
-            const sourceIcon = performance.source === 'redis' ? '⚡' : '🗄️';
-            const sourceColor = performance.source === 'redis' ? '#28a745' : '#007bff';
+            const source = performance.strategy === 'cache' ? 'redis' : 'database';
+            const sourceIcon = source === 'redis' ? '⚡' : '🗄️';
+            const sourceColor = source === 'redis' ? '#28a745' : '#007bff';
             
             performanceInfo.innerHTML = `
                 <span style="color: ${strategyInfo.color}; font-weight: bold;">
                     ${strategyInfo.icon} ${performance.searchTime.toFixed(1)}ms
                 </span>
                 | <span style="color: ${sourceColor};">
-                    ${sourceIcon} ${performance.source.toUpperCase()}
+                    ${sourceIcon} ${source.toUpperCase()}
                 </span>
                 | <span style="color: ${performance.cacheHit ? '#28a745' : '#dc3545'};">
                     🎯 ${performance.cacheHit ? 'Cache Hit' : 'Cache Miss'}
@@ -675,7 +676,7 @@
 
             // Render results with strategy-specific styling
             resultsContainer.innerHTML = results.map(result => {
-                const source = result.metadata?.source || 'database';
+                const source = result.metadata?.source || (performance.strategy === 'cache' ? 'redis' : 'database');
                 const cached = result.metadata?.cached || false;
                 const strategy = result.metadata?.strategy || 'cache-first';
                 const responseTime = result.metadata?.responseTime || performance.searchTime;

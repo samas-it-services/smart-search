@@ -152,16 +152,8 @@ export class ConfigLoader {
       
       case 'yaml':
       case 'yml':
-        // For YAML support, you'd need to install js-yaml
-        // For now, we'll throw an error with helpful message
-        throw new Error(
-          'YAML support requires js-yaml package. Install with: npm install js-yaml @types/js-yaml\n' +
-          'Then uncomment the YAML parsing code in ConfigLoader.ts'
-        );
-        
-        // Uncomment this when js-yaml is available:
-        // const yaml = require('js-yaml');
-        // return yaml.load(content);
+        const yaml = require('js-yaml');
+        return yaml.load(content) as SmartSearchConfigFile;
       
       default:
         throw new Error(`Unsupported config file format: ${ext}`);

@@ -159,9 +159,15 @@ describe('RedisProvider', () => {
 
   describe('Search Functionality', () => {
     beforeEach(async () => {
+      // Reset all mocks first  
+      vi.clearAllMocks();
+      
       // Mock successful connection
       mockRedisClient.ping.mockResolvedValue('PONG');
       await provider.connect();
+
+      // Mock successful index creation
+      mockRedisClient.call.mockResolvedValue('OK');
 
       // Create mock index
       await provider.createSearchIndex({
@@ -317,6 +323,10 @@ describe('RedisProvider', () => {
 
   describe('Health Check', () => {
     it('should return healthy status when connected', async () => {
+      // Reset mocks and setup for index creation
+      vi.clearAllMocks();
+      mockRedisClient.call.mockResolvedValue('OK'); // For index creation
+      
       // Setup search index for health check
       await provider.createSearchIndex({
         indexName: 'idx:test',
@@ -324,8 +334,9 @@ describe('RedisProvider', () => {
         schema: { title: 'TEXT', author: 'TEXT' }
       });
       
+      // Setup mocks for health check
       mockRedisClient.ping.mockResolvedValue('PONG');
-      mockRedisClient.call.mockResolvedValue([0]); // Empty search result
+      mockRedisClient.call.mockResolvedValue([0]); // Empty search result for health check
       mockRedisClient.info.mockResolvedValue('used_memory_human:50MB\r\n');
       mockRedisClient.dbsize.mockResolvedValue(1000);
 

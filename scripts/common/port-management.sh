@@ -4,8 +4,8 @@
 # Handles port conflict detection and resolution across providers
 
 # Source docker helpers for consistent logging
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/docker-helpers.sh"
+HELPERS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HELPERS_DIR/docker-helpers.sh"
 
 # Function to check if a port is in use
 is_port_in_use() {

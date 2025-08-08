@@ -1,0 +1,463 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://samas.ai/schemas/finance-dataset.json",
+  "title": "Finance Dataset Schema", 
+  "description": "Finance-specific schema extending universal dataset schema with financial instruments and market data",
+  "allOf": [
+    {"$ref": "universal-schema.json"}
+  ],
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "Financial instrument or product category",
+      "enum": [
+        "equities", "bonds", "derivatives", "commodities", "forex",
+        "mutual_funds", "etfs", "reits", "cryptocurrencies", "indices",
+        "options", "futures", "swaps", "insurance", "banking_products",
+        "structured_products", "alternative_investments", "private_equity",
+        "hedge_funds", "venture_capital", "credit_default_swaps"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "dataset_type": {
+          "type": "string",
+          "const": "finance"
+        },
+        "market_data": {
+          "type": "object", 
+          "description": "Market and trading information",
+          "properties": {
+            "symbol": {
+              "type": ["string", "null"],
+              "description": "Trading symbol or ticker",
+              "pattern": "^[A-Z0-9.-]{1,10}$",
+              "examples": ["AAPL", "GOOGL", "BTC-USD", "SPY"]
+            },
+            "isin": {
+              "type": ["string", "null"],
+              "description": "International Securities Identification Number",
+              "pattern": "^[A-Z]{2}[A-Z0-9]{9}[0-9]$",
+              "examples": ["US0378331005", "GB0002162385"]
+            },
+            "cusip": {
+              "type": ["string", "null"],
+              "description": "Committee on Uniform Securities Identification Procedures",
+              "pattern": "^[0-9A-Z]{8}[0-9]$",
+              "examples": ["037833100", "68389X105"]
+            },
+            "exchange": {
+              "type": "string",
+              "enum": [
+                "NYSE", "NASDAQ", "AMEX", "LSE", "TSX", "HKEX", "SSE",
+                "SZSE", "BSE", "NSE", "JSE", "ASX", "EURONEXT", "XETRA",
+                "SIX", "OSE", "TSEJ", "KRX", "BOVESPA", "BMV"
+              ],
+              "description": "Primary trading exchange"
+            },
+            "sector": {
+              "type": ["string", "null"],
+              "enum": [
+                "technology", "healthcare", "financials", "consumer_discretionary",
+                "consumer_staples", "energy", "materials", "industrials",
+                "utilities", "telecommunications", "real_estate", "government",
+                "municipal", "corporate", "commodities", "currencies"
+              ],
+              "description": "Industry sector classification"
+            },
+            "industry": {
+              "type": ["string", "null"],
+              "description": "Specific industry within sector",
+              "maxLength": 100
+            },
+            "market_cap": {
+              "type": ["string", "null"],
+              "enum": ["nano", "micro", "small", "mid", "large", "mega"],
+              "description": "Market capitalization category"
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "default": "USD",
+              "description": "Base currency code (ISO 4217)",
+              "examples": ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"]
+            },
+            "country": {
+              "type": ["string", "null"],
+              "pattern": "^[A-Z]{2}$",
+              "description": "Country code (ISO 3166-1 alpha-2)",
+              "examples": ["US", "GB", "CA", "JP", "DE", "FR"]
+            }
+          }
+        },
+        "pricing": {
+          "type": "object",
+          "description": "Price and valuation information",
+          "properties": {
+            "current_price": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Current market price"
+            },
+            "previous_close": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Previous trading day closing price"
+            },
+            "day_high": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Highest price during current trading day"
+            },
+            "day_low": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Lowest price during current trading day"
+            },
+            "week_52_high": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "52-week high price"
+            },
+            "week_52_low": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "52-week low price"
+            },
+            "volume": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Trading volume"
+            },
+            "average_volume": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Average daily trading volume"
+            },
+            "bid": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Current bid price"
+            },
+            "ask": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Current ask price"
+            },
+            "spread": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Bid-ask spread"
+            }
+          }
+        },
+        "risk_metrics": {
+          "type": "object",
+          "description": "Risk assessment and volatility metrics",
+          "properties": {
+            "volatility": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Annualized volatility percentage"
+            },
+            "beta": {
+              "type": ["number", "null"],
+              "description": "Beta coefficient vs. market benchmark"
+            },
+            "sharpe_ratio": {
+              "type": ["number", "null"],
+              "description": "Risk-adjusted return metric"
+            },
+            "var_95": {
+              "type": ["number", "null"],
+              "description": "Value at Risk at 95% confidence"
+            },
+            "var_99": {
+              "type": ["number", "null"],
+              "description": "Value at Risk at 99% confidence"
+            },
+            "risk_rating": {
+              "type": "string",
+              "enum": ["very_conservative", "conservative", "moderate", "aggressive", "very_aggressive", "speculative"],
+              "description": "Overall risk assessment"
+            },
+            "credit_rating": {
+              "type": ["string", "null"],
+              "pattern": "^(AAA|AA[+-]?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?|CCC[+-]?|CC|C|D|NR)$",
+              "description": "Credit rating (S&P style)",
+              "examples": ["AAA", "AA+", "A-", "BBB", "BB-", "B", "CCC"]
+            }
+          }
+        },
+        "regulatory": {
+          "type": "object",
+          "description": "Regulatory and compliance information",
+          "properties": {
+            "sec_registered": {
+              "type": "boolean",
+              "description": "SEC registration status"
+            },
+            "accredited_only": {
+              "type": "boolean",
+              "description": "Requires accredited investor status"
+            },
+            "regulatory_status": {
+              "type": "string",
+              "enum": ["public", "private", "restricted", "regulation_d", "regulation_s"],
+              "description": "Regulatory classification"
+            },
+            "finra_oversight": {
+              "type": "boolean",
+              "description": "Subject to FINRA oversight"
+            },
+            "cftc_regulated": {
+              "type": "boolean",
+              "description": "Subject to CFTC regulation"
+            },
+            "mifid_compliant": {
+              "type": "boolean",
+              "description": "MiFID II compliant (EU)"
+            },
+            "prospectus_available": {
+              "type": "boolean",
+              "description": "Prospectus or offering document available"
+            }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "description": "Historical performance metrics",
+          "properties": {
+            "ytd_return": {
+              "type": ["number", "null"],
+              "description": "Year-to-date return percentage"
+            },
+            "trailing_1m": {
+              "type": ["number", "null"],
+              "description": "1-month trailing return percentage"
+            },
+            "trailing_3m": {
+              "type": ["number", "null"],
+              "description": "3-month trailing return percentage"
+            },
+            "trailing_6m": {
+              "type": ["number", "null"],
+              "description": "6-month trailing return percentage"
+            },
+            "trailing_12m": {
+              "type": ["number", "null"],
+              "description": "12-month trailing return percentage"
+            },
+            "trailing_3y": {
+              "type": ["number", "null"],
+              "description": "3-year annualized return percentage"
+            },
+            "trailing_5y": {
+              "type": ["number", "null"],
+              "description": "5-year annualized return percentage"
+            },
+            "dividend_yield": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Annual dividend yield percentage"
+            },
+            "pe_ratio": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Price-to-earnings ratio"
+            },
+            "pb_ratio": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Price-to-book ratio"
+            },
+            "expense_ratio": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Annual expense ratio percentage"
+            }
+          }
+        },
+        "fundamentals": {
+          "type": "object",
+          "description": "Financial fundamentals (for equities)",
+          "properties": {
+            "market_cap_value": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Market capitalization value"
+            },
+            "shares_outstanding": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Number of shares outstanding"
+            },
+            "float_shares": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Number of freely tradable shares"
+            },
+            "earnings_per_share": {
+              "type": ["number", "null"],
+              "description": "Earnings per share (trailing 12 months)"
+            },
+            "book_value_per_share": {
+              "type": ["number", "null"],
+              "description": "Book value per share"
+            },
+            "revenue": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Annual revenue"
+            },
+            "net_income": {
+              "type": ["number", "null"],
+              "description": "Annual net income"
+            },
+            "debt_to_equity": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Debt-to-equity ratio"
+            }
+          }
+        }
+      },
+      "required": ["dataset_type"]
+    },
+    "search_fields": {
+      "type": "object",
+      "properties": {
+        "financial_primary": {
+          "type": "object",
+          "description": "Primary financial identifier search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["symbol", "company_name", "ticker", "isin", "cusip"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 100
+            },
+            "case_sensitive": {
+              "type": "boolean",
+              "default": false,
+              "description": "Case sensitivity for symbol matching"
+            },
+            "symbol_expansion": {
+              "type": "boolean",
+              "default": true,
+              "description": "Expand symbols to company names"
+            }
+          }
+        },
+        "market_secondary": {
+          "type": "object",
+          "description": "Market classification search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["sector", "industry", "exchange", "category"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 75
+            },
+            "standardized_terms": {
+              "type": "boolean",
+              "default": true,
+              "description": "Use standardized financial terminology"
+            }
+          }
+        },
+        "code_search": {
+          "type": "object",
+          "description": "Financial identifier code search",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["isin", "cusip", "sedol", "lei"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 95
+            },
+            "strategy": {
+              "type": "string",
+              "enum": ["exact_match_only"],
+              "default": "exact_match_only"
+            },
+            "code_validation": {
+              "type": "boolean",
+              "default": true,
+              "description": "Validate financial identifier formats"
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "fin_aapl_equity_001",
+      "title": "Apple Inc. Common Stock",
+      "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables and accessories worldwide",
+      "category": "equities",
+      "type": "common_stock",
+      "metadata": {
+        "dataset_type": "finance",
+        "market_data": {
+          "symbol": "AAPL",
+          "isin": "US0378331005",
+          "cusip": "037833100",
+          "exchange": "NASDAQ",
+          "sector": "technology",
+          "industry": "consumer_electronics",
+          "market_cap": "mega",
+          "currency": "USD",
+          "country": "US"
+        },
+        "pricing": {
+          "current_price": 175.25,
+          "previous_close": 174.50,
+          "volume": 55420000
+        },
+        "risk_metrics": {
+          "volatility": 28.5,
+          "beta": 1.25,
+          "sharpe_ratio": 1.15,
+          "risk_rating": "moderate"
+        },
+        "performance": {
+          "ytd_return": 12.5,
+          "trailing_12m": 8.3,
+          "pe_ratio": 28.2,
+          "dividend_yield": 0.52
+        }
+      },
+      "search_fields": {
+        "financial_primary": {
+          "fields": ["symbol", "company_name"],
+          "weight": 100,
+          "case_sensitive": false,
+          "symbol_expansion": true
+        },
+        "market_secondary": {
+          "fields": ["sector", "industry"],
+          "weight": 75,
+          "standardized_terms": true
+        }
+      },
+      "date_created": "2024-01-15T10:30:00Z",
+      "status": "active",
+      "language": "en"
+    }
+  ]
+}

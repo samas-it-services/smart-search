@@ -1,0 +1,39 @@
+# MongoDB + Memcached override configuration
+version: '3.8'
+
+services:
+  database:
+    image: mongo:7
+    container_name: smart-search-mongodb-${PROVIDER_COMBO:-mongodb-memcached}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: smartsearch
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ../docker/init/mongodb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  cache:
+    image: memcached:1.6-alpine
+    container_name: smart-search-memcached-${PROVIDER_COMBO:-mongodb-memcached}
+    ports:
+      - "${MEMCACHED_PORT:-11211}:11211"
+    command: ["memcached", "-m", "64"]
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "11211"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mongodb_data:
+    driver: local

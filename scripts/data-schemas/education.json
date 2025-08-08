@@ -1,0 +1,447 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://samas.ai/schemas/education-dataset.json",
+  "title": "Education Dataset Schema",
+  "description": "Education-specific schema extending universal dataset schema with academic and learning content",
+  "allOf": [
+    {"$ref": "universal-schema.json"}
+  ],
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "Educational category or academic discipline",
+      "enum": [
+        "computer_science", "mathematics", "physics", "chemistry", "biology",
+        "literature", "history", "philosophy", "psychology", "sociology",
+        "economics", "business", "engineering", "medicine", "law",
+        "art", "music", "languages", "geography", "anthropology",
+        "political_science", "statistics", "architecture", "environmental_science",
+        "education", "linguistics", "archaeology", "astronomy", "geology"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "dataset_type": {
+          "type": "string",
+          "const": "education"
+        },
+        "academic_details": {
+          "type": "object",
+          "description": "Academic classification and structure",
+          "properties": {
+            "subject_area": {
+              "type": "string",
+              "description": "Primary subject area",
+              "maxLength": 100
+            },
+            "grade_level": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "pre_k", "kindergarten", "elementary", "middle_school", "high_school",
+                  "undergraduate", "graduate", "doctoral", "postdoc", "professional",
+                  "adult_education", "continuing_education", "all_levels"
+                ]
+              },
+              "description": "Target educational levels"
+            },
+            "difficulty_level": {
+              "type": "string",
+              "enum": ["beginner", "intermediate", "advanced", "expert", "variable"],
+              "description": "Content difficulty level"
+            },
+            "course_code": {
+              "type": ["string", "null"],
+              "description": "Course identifier code",
+              "pattern": "^[A-Z]{2,4}[0-9]{3,4}[A-Z]?$",
+              "examples": ["CS101", "MATH2500", "HIST1050A"]
+            },
+            "credit_hours": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 20,
+              "description": "Academic credit hours"
+            },
+            "prerequisites": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Required prerequisite courses or knowledge"
+            },
+            "learning_objectives": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Course or content learning objectives"
+            },
+            "assessment_methods": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "exam", "quiz", "assignment", "project", "presentation",
+                  "lab_work", "fieldwork", "thesis", "portfolio", "participation"
+                ]
+              },
+              "description": "Methods of student assessment"
+            }
+          }
+        },
+        "content_structure": {
+          "type": "object",
+          "description": "Educational content organization",
+          "properties": {
+            "content_type": {
+              "type": "string",
+              "enum": [
+                "course", "lesson", "module", "unit", "chapter", "lecture",
+                "tutorial", "workshop", "seminar", "lab", "assignment",
+                "exam", "quiz", "textbook", "article", "video", "audio",
+                "interactive", "simulation", "game", "resource"
+              ],
+              "description": "Type of educational content"
+            },
+            "format": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "text", "video", "audio", "interactive", "virtual_reality",
+                  "augmented_reality", "simulation", "game", "pdf", "slides",
+                  "worksheet", "hands_on", "discussion", "collaborative"
+                ]
+              },
+              "description": "Content delivery formats"
+            },
+            "duration": {
+              "type": ["string", "null"],
+              "description": "Estimated time to complete",
+              "examples": ["30 minutes", "2 hours", "1 semester", "Self-paced"]
+            },
+            "sequence_number": {
+              "type": ["integer", "null"],
+              "minimum": 1,
+              "description": "Position in course sequence"
+            },
+            "parent_course": {
+              "type": ["string", "null"],
+              "description": "Parent course or program identifier"
+            },
+            "related_content": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Related educational content IDs"
+            }
+          }
+        },
+        "pedagogical_info": {
+          "type": "object",
+          "description": "Teaching and learning methodology",
+          "properties": {
+            "teaching_methods": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "lecture", "discussion", "problem_based", "case_study",
+                  "experiential", "collaborative", "flipped_classroom",
+                  "inquiry_based", "project_based", "blended", "online",
+                  "hands_on", "simulation", "gamification"
+                ]
+              },
+              "description": "Teaching methodologies used"
+            },
+            "learning_styles": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["visual", "auditory", "kinesthetic", "reading_writing", "multimodal"]
+              },
+              "description": "Supported learning styles"
+            },
+            "bloom_taxonomy": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "remember", "understand", "apply", "analyze", "evaluate", "create"
+                ]
+              },
+              "description": "Bloom's taxonomy levels addressed"
+            },
+            "accessibility_features": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "closed_captions", "audio_description", "screen_reader",
+                  "large_text", "high_contrast", "keyboard_navigation",
+                  "multiple_languages", "simplified_language"
+                ]
+              },
+              "description": "Accessibility accommodations"
+            }
+          }
+        },
+        "quality_metrics": {
+          "type": "object",
+          "description": "Educational quality and effectiveness",
+          "properties": {
+            "student_rating": {
+              "type": ["number", "null"],
+              "minimum": 1,
+              "maximum": 5,
+              "description": "Average student rating (1-5 stars)"
+            },
+            "completion_rate": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Student completion rate percentage"
+            },
+            "pass_rate": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Student pass rate percentage"
+            },
+            "engagement_score": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Student engagement metrics"
+            },
+            "peer_review_score": {
+              "type": ["number", "null"],
+              "minimum": 1,
+              "maximum": 5,
+              "description": "Peer educator review score"
+            },
+            "learning_outcome_achievement": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Learning objective achievement rate"
+            }
+          }
+        },
+        "accreditation": {
+          "type": "object",
+          "description": "Accreditation and certification information",
+          "properties": {
+            "accredited_institution": {
+              "type": "boolean",
+              "description": "Whether from accredited institution"
+            },
+            "accreditation_body": {
+              "type": ["string", "null"],
+              "description": "Accrediting organization",
+              "examples": ["AACSB", "ABET", "LCME", "ABA", "NCATE"]
+            },
+            "certification_provided": {
+              "type": "boolean",
+              "description": "Whether certification is provided"
+            },
+            "ceu_credits": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Continuing Education Unit credits"
+            },
+            "professional_development": {
+              "type": "boolean",
+              "description": "Counts toward professional development"
+            },
+            "transferable_credits": {
+              "type": "boolean",
+              "description": "Whether credits are transferable"
+            }
+          }
+        },
+        "institution_info": {
+          "type": "object",
+          "description": "Educational institution details",
+          "properties": {
+            "institution_name": {
+              "type": ["string", "null"],
+              "description": "Educational institution name"
+            },
+            "institution_type": {
+              "type": ["string", "null"],
+              "enum": [
+                "university", "college", "community_college", "trade_school",
+                "online_platform", "corporate_training", "k12_school",
+                "research_institute", "professional_association"
+              ],
+              "description": "Type of educational institution"
+            },
+            "department": {
+              "type": ["string", "null"],
+              "description": "Academic department or division"
+            },
+            "instructor_name": {
+              "type": ["string", "null"],
+              "description": "Primary instructor name"
+            },
+            "instructor_credentials": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Instructor degrees and certifications"
+            }
+          }
+        }
+      },
+      "required": ["dataset_type"]
+    },
+    "search_fields": {
+      "type": "object",
+      "properties": {
+        "academic_primary": {
+          "type": "object",
+          "description": "Primary academic search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["title", "course_code", "subject_area", "instructor_name"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 100
+            },
+            "course_code_boost": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 2.0,
+              "description": "Boost factor for course code matches"
+            },
+            "academic_terminology": {
+              "type": "boolean",
+              "default": true,
+              "description": "Use academic terminology processing"
+            }
+          }
+        },
+        "content_secondary": {
+          "type": "object",
+          "description": "Content classification search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["category", "content_type", "learning_objectives", "topics"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 80
+            },
+            "hierarchy_search": {
+              "type": "boolean",
+              "default": true,
+              "description": "Search academic subject hierarchies"
+            }
+          }
+        },
+        "level_filtering": {
+          "type": "object",
+          "description": "Educational level and difficulty filtering",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["grade_level", "difficulty_level", "prerequisites"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 60
+            },
+            "level_matching": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable educational level matching"
+            }
+          }
+        },
+        "full_text_content": {
+          "type": "object",
+          "description": "Educational content full-text search",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["description", "content", "syllabus", "notes"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 40
+            },
+            "academic_language": {
+              "type": "boolean",
+              "default": true,
+              "description": "Use academic language processing"
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "edu_cs101_intro_001",
+      "title": "Introduction to Computer Science",
+      "description": "Fundamental concepts of computer science including programming, data structures, algorithms, and computational thinking",
+      "category": "computer_science",
+      "type": "course",
+      "metadata": {
+        "dataset_type": "education",
+        "academic_details": {
+          "subject_area": "Computer Science",
+          "grade_level": ["undergraduate"],
+          "difficulty_level": "beginner",
+          "course_code": "CS101",
+          "credit_hours": 3,
+          "prerequisites": ["MATH101", "Basic algebra"],
+          "learning_objectives": [
+            "Understand fundamental programming concepts",
+            "Implement basic algorithms",
+            "Analyze computational complexity"
+          ]
+        },
+        "content_structure": {
+          "content_type": "course",
+          "format": ["lecture", "lab", "interactive"],
+          "duration": "1 semester",
+          "sequence_number": 1
+        },
+        "pedagogical_info": {
+          "teaching_methods": ["lecture", "hands_on", "problem_based"],
+          "learning_styles": ["visual", "kinesthetic", "reading_writing"],
+          "bloom_taxonomy": ["understand", "apply", "analyze"]
+        },
+        "institution_info": {
+          "institution_name": "State University",
+          "institution_type": "university",
+          "department": "Computer Science",
+          "instructor_name": "Dr. Jane Smith",
+          "instructor_credentials": ["PhD Computer Science", "Microsoft Certified"]
+        }
+      },
+      "search_fields": {
+        "academic_primary": {
+          "fields": ["title", "course_code", "subject_area"],
+          "weight": 100,
+          "course_code_boost": 2.0,
+          "academic_terminology": true
+        },
+        "content_secondary": {
+          "fields": ["category", "learning_objectives"],
+          "weight": 80,
+          "hierarchy_search": true
+        }
+      },
+      "date_created": "2024-01-15T10:30:00Z",
+      "status": "active",
+      "language": "en"
+    }
+  ]
+}

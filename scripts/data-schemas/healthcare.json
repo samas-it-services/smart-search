@@ -1,0 +1,373 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://samas.ai/schemas/healthcare-dataset.json", 
+  "title": "Healthcare Dataset Schema",
+  "description": "Healthcare-specific schema extending universal dataset schema with medical terminology and codes",
+  "allOf": [
+    {"$ref": "universal-schema.json"}
+  ],
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "Medical specialty or healthcare category",
+      "enum": [
+        "cardiology", "oncology", "neurology", "pediatrics", 
+        "psychiatry", "surgery", "emergency_medicine", "radiology",
+        "pathology", "anesthesiology", "dermatology", "endocrinology",
+        "gastroenterology", "orthopedics", "urology", "ophthalmology",
+        "family_medicine", "internal_medicine", "obstetrics_gynecology",
+        "otolaryngology", "pulmonology", "nephrology", "rheumatology",
+        "infectious_disease", "physical_therapy", "pharmacy", "nursing"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "dataset_type": {
+          "type": "string",
+          "const": "healthcare"
+        },
+        "medical_codes": {
+          "type": "object",
+          "description": "Standard medical classification codes",
+          "properties": {
+            "icd_10": {
+              "type": ["string", "null"],
+              "description": "International Classification of Diseases, 10th Revision",
+              "pattern": "^[A-Z][0-9]{2}(\\.[0-9X]{1,4})?$",
+              "examples": ["E11.9", "I25.10", "F32.9"]
+            },
+            "icd_11": {
+              "type": ["string", "null"],
+              "description": "International Classification of Diseases, 11th Revision", 
+              "pattern": "^[0-9A-Z]{2}\\.[0-9A-Z]{2}(\\.[0-9A-Z]{1,5})?$"
+            },
+            "cpt_code": {
+              "type": ["string", "null"],
+              "description": "Current Procedural Terminology code",
+              "pattern": "^[0-9]{5}[FTU]?$",
+              "examples": ["99213", "93010", "36415"]
+            },
+            "loinc_code": {
+              "type": ["string", "null"],
+              "description": "Logical Observation Identifiers Names and Codes",
+              "pattern": "^[0-9]{1,5}-[0-9]$",
+              "examples": ["2339-0", "33747-0", "718-7"]
+            },
+            "rxnorm_code": {
+              "type": ["string", "null"],
+              "description": "RxNorm drug terminology codes",
+              "pattern": "^[0-9]{1,8}$",
+              "examples": ["860975", "197361", "313782"]
+            },
+            "snomed_ct": {
+              "type": ["string", "null"],
+              "description": "SNOMED Clinical Terms",
+              "pattern": "^[0-9]{6,18}$",
+              "examples": ["73211009", "22298006", "386661006"]
+            },
+            "mesh_code": {
+              "type": ["string", "null"],
+              "description": "Medical Subject Headings",
+              "pattern": "^[A-Z][0-9]{2}(\\.[0-9]{3})*$",
+              "examples": ["C14.280.067", "D12.776.543"]
+            }
+          }
+        },
+        "clinical_data": {
+          "type": "object",
+          "description": "Clinical and treatment information",
+          "properties": {
+            "severity_level": {
+              "type": "string",
+              "enum": ["low", "mild", "moderate", "high", "severe", "critical"],
+              "description": "Clinical severity or urgency level"
+            },
+            "age_group": {
+              "type": "string", 
+              "enum": ["neonatal", "infant", "pediatric", "adolescent", "adult", "geriatric", "all_ages"],
+              "description": "Target age demographic"
+            },
+            "gender_specific": {
+              "type": "string",
+              "enum": ["male", "female", "all", "not_applicable"],
+              "description": "Gender specificity of condition or treatment"
+            },
+            "treatment_phase": {
+              "type": "string",
+              "enum": ["prevention", "screening", "diagnosis", "treatment", "monitoring", "followup", "rehabilitation"],
+              "description": "Phase of care continuum"
+            },
+            "body_system": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "cardiovascular", "respiratory", "nervous", "musculoskeletal",
+                  "digestive", "endocrine", "immune", "integumentary", 
+                  "reproductive", "urinary", "sensory", "hematopoietic"
+                ]
+              },
+              "description": "Affected body systems"
+            },
+            "symptoms": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Associated symptoms or presentations"
+            },
+            "contraindications": {
+              "type": "array", 
+              "items": {"type": "string"},
+              "description": "Medical contraindications"
+            },
+            "drug_interactions": {
+              "type": "array",
+              "items": {"type": "string"}, 
+              "description": "Known drug interactions"
+            }
+          }
+        },
+        "regulatory": {
+          "type": "object",
+          "description": "Regulatory and compliance information",
+          "properties": {
+            "fda_approved": {
+              "type": "boolean",
+              "description": "FDA approval status"
+            },
+            "fda_class": {
+              "type": "string",
+              "enum": ["I", "II", "III", "not_applicable"],
+              "description": "FDA device classification"
+            },
+            "hipaa_level": {
+              "type": "string",
+              "enum": ["public", "protected", "restricted", "confidential"],
+              "description": "HIPAA privacy level requirement"
+            },
+            "clinical_trial_phase": {
+              "type": "string",
+              "enum": ["preclinical", "phase0", "phase1", "phase2", "phase3", "phase4", "approved", "not_applicable"],
+              "description": "Clinical trial development phase"
+            },
+            "dea_schedule": {
+              "type": ["string", "null"],
+              "enum": ["I", "II", "III", "IV", "V", null],
+              "description": "DEA controlled substance schedule"
+            }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "description": "Clinical performance and effectiveness metrics",
+          "properties": {
+            "success_rate": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Treatment success rate percentage"
+            },
+            "side_effects": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "effect": {"type": "string"},
+                  "frequency": {"type": "string", "enum": ["rare", "uncommon", "common", "very_common"]},
+                  "severity": {"type": "string", "enum": ["mild", "moderate", "severe"]}
+                }
+              },
+              "description": "Known side effects with frequency"
+            },
+            "evidence_level": {
+              "type": "string",
+              "enum": ["A", "B", "C", "D", "E"],
+              "description": "Evidence-based medicine strength rating"
+            },
+            "guideline_source": {
+              "type": "string",
+              "description": "Source of clinical guidelines",
+              "examples": ["AHA", "ACS", "NCCN", "WHO", "CDC", "NIH"]
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date",
+              "description": "Date when clinical information was last reviewed"
+            }
+          }
+        },
+        "research": {
+          "type": "object",
+          "description": "Research and publication information",
+          "properties": {
+            "pubmed_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9]{8}$"
+              },
+              "description": "PubMed publication identifiers"
+            },
+            "clinical_trials": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^NCT[0-9]{8}$"
+              },
+              "description": "ClinicalTrials.gov identifiers"
+            },
+            "peer_reviewed": {
+              "type": "boolean",
+              "description": "Whether information is peer-reviewed"
+            },
+            "meta_analysis": {
+              "type": "boolean",
+              "description": "Whether based on meta-analysis"
+            }
+          }
+        }
+      },
+      "required": ["dataset_type"]
+    },
+    "search_fields": {
+      "type": "object",
+      "properties": {
+        "medical_primary": {
+          "type": "object",
+          "description": "Primary medical terminology search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["condition_name", "treatment", "drug_name", "procedure_name"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 100
+            },
+            "medical_codes": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["icd_10", "cpt_code", "rxnorm_code"]
+            },
+            "synonyms_enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable medical synonym matching"
+            },
+            "medical_terminology": {
+              "type": "boolean", 
+              "default": true,
+              "description": "Use medical terminology processing"
+            }
+          }
+        },
+        "clinical_secondary": {
+          "type": "object",
+          "description": "Clinical context search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"}, 
+              "default": ["symptoms", "diagnosis", "specialty", "body_system"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 80
+            },
+            "fuzzy_threshold": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.8,
+              "description": "Fuzzy matching threshold for medical terms"
+            },
+            "medical_abbreviations": {
+              "type": "boolean",
+              "default": true,
+              "description": "Expand medical abbreviations"
+            }
+          }
+        },
+        "code_search": {
+          "type": "object", 
+          "description": "Medical code-based search",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["icd_10", "cpt_code", "loinc_code", "rxnorm_code", "snomed_ct"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 90
+            },
+            "strategy": {
+              "type": "string",
+              "enum": ["exact_match_only"],
+              "default": "exact_match_only"
+            },
+            "code_validation": {
+              "type": "boolean",
+              "default": true,
+              "description": "Validate medical codes format"
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "hc_diabetes_t2_001",
+      "title": "Type 2 Diabetes Mellitus Management Protocol",
+      "description": "Comprehensive evidence-based management protocol for Type 2 Diabetes Mellitus including diagnosis, treatment, and monitoring guidelines",
+      "category": "endocrinology", 
+      "type": "treatment_protocol",
+      "metadata": {
+        "dataset_type": "healthcare",
+        "medical_codes": {
+          "icd_10": "E11.9",
+          "cpt_code": "99213",
+          "loinc_code": "33747-0",
+          "snomed_ct": "44054006"
+        },
+        "clinical_data": {
+          "severity_level": "moderate",
+          "age_group": "adult",
+          "gender_specific": "all",
+          "treatment_phase": "treatment",
+          "body_system": ["endocrine", "cardiovascular"],
+          "symptoms": ["hyperglycemia", "polyuria", "polydipsia", "fatigue"]
+        },
+        "regulatory": {
+          "fda_approved": true,
+          "hipaa_level": "protected", 
+          "clinical_trial_phase": "approved"
+        },
+        "performance": {
+          "success_rate": 85,
+          "evidence_level": "A",
+          "guideline_source": "ADA"
+        }
+      },
+      "search_fields": {
+        "medical_primary": {
+          "fields": ["condition_name", "treatment"],
+          "weight": 100,
+          "medical_codes": ["icd_10", "cpt_code"],
+          "synonyms_enabled": true
+        },
+        "clinical_secondary": {
+          "fields": ["symptoms", "specialty"],
+          "weight": 80,
+          "fuzzy_threshold": 0.8
+        }
+      },
+      "date_created": "2024-01-15T10:30:00Z",
+      "status": "active",
+      "language": "en"
+    }
+  ]
+}

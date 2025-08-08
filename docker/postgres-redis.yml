@@ -1,0 +1,44 @@
+# PostgreSQL + Redis override configuration
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15
+    container_name: smart-search-postgres-${PROVIDER_COMBO:-postgres-redis}
+    environment:
+      POSTGRES_DB: smartsearch
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../docker/init/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d smartsearch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  cache:
+    image: redis:7.2-alpine
+    container_name: smart-search-redis-${PROVIDER_COMBO:-postgres-redis}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+      - ../docker/config/redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

@@ -1,0 +1,547 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://samas.ai/schemas/real-estate-dataset.json",
+  "title": "Real Estate Dataset Schema",
+  "description": "Real Estate-specific schema extending universal dataset schema with property and market data",
+  "allOf": [
+    {"$ref": "universal-schema.json"}
+  ],
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "Property category or real estate type",
+      "enum": [
+        "residential", "commercial", "industrial", "land", "multi_family",
+        "single_family", "townhouse", "condominium", "apartment",
+        "office", "retail", "warehouse", "hotel", "restaurant",
+        "medical", "educational", "religious", "government",
+        "agricultural", "recreational", "mixed_use", "development"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "dataset_type": {
+          "type": "string",
+          "const": "real_estate"
+        },
+        "property_details": {
+          "type": "object",
+          "description": "Core property characteristics",
+          "properties": {
+            "property_type": {
+              "type": "string",
+              "enum": [
+                "house", "apartment", "condo", "townhouse", "villa", "cottage",
+                "office_building", "retail_space", "warehouse", "factory",
+                "hotel", "restaurant", "medical_facility", "school",
+                "vacant_land", "farm", "ranch", "commercial_land"
+              ],
+              "description": "Specific property type"
+            },
+            "listing_type": {
+              "type": "string",
+              "enum": ["for_sale", "for_rent", "sold", "rented", "off_market", "coming_soon"],
+              "description": "Current listing status"
+            },
+            "square_footage": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Total square footage"
+            },
+            "lot_size": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Lot size in square feet"
+            },
+            "bedrooms": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 50,
+              "description": "Number of bedrooms"
+            },
+            "bathrooms": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 50,
+              "description": "Number of bathrooms (including partial)"
+            },
+            "floors": {
+              "type": ["integer", "null"],
+              "minimum": 1,
+              "maximum": 200,
+              "description": "Number of floors/stories"
+            },
+            "year_built": {
+              "type": ["integer", "null"],
+              "minimum": 1800,
+              "maximum": 2030,
+              "description": "Year property was built"
+            },
+            "garage_spaces": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 20,
+              "description": "Number of garage/parking spaces"
+            },
+            "pool": {
+              "type": "boolean",
+              "description": "Has swimming pool"
+            },
+            "fireplace": {
+              "type": "boolean",
+              "description": "Has fireplace"
+            },
+            "basement": {
+              "type": "boolean",
+              "description": "Has basement"
+            },
+            "hvac_system": {
+              "type": ["string", "null"],
+              "enum": ["central_air", "window_units", "radiant", "geothermal", "none", "other"],
+              "description": "HVAC system type"
+            },
+            "architectural_style": {
+              "type": ["string", "null"],
+              "enum": [
+                "colonial", "contemporary", "craftsman", "ranch", "victorian",
+                "mediterranean", "modern", "traditional", "tudor", "cape_cod",
+                "split_level", "farmhouse", "mid_century", "custom"
+              ],
+              "description": "Architectural style"
+            }
+          }
+        },
+        "location_data": {
+          "type": "object",
+          "description": "Geographic and location information",
+          "properties": {
+            "address": {
+              "type": "object",
+              "properties": {
+                "street_number": {"type": ["string", "null"]},
+                "street_name": {"type": ["string", "null"]},
+                "unit": {"type": ["string", "null"]},
+                "city": {"type": "string"},
+                "state": {"type": "string"},
+                "zip_code": {"type": "string", "pattern": "^[0-9]{5}(-[0-9]{4})?$"},
+                "country": {"type": "string", "default": "US"}
+              },
+              "required": ["city", "state", "zip_code"]
+            },
+            "coordinates": {
+              "type": ["object", "null"],
+              "properties": {
+                "latitude": {"type": "number", "minimum": -90, "maximum": 90},
+                "longitude": {"type": "number", "minimum": -180, "maximum": 180}
+              },
+              "description": "Geographic coordinates"
+            },
+            "neighborhood": {
+              "type": ["string", "null"],
+              "description": "Neighborhood or subdivision name"
+            },
+            "school_district": {
+              "type": ["string", "null"],
+              "description": "School district name"
+            },
+            "walkability_score": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Walk Score rating"
+            },
+            "nearby_amenities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {"type": "string", "enum": ["school", "hospital", "shopping", "restaurant", "park", "transit", "airport"]},
+                  "name": {"type": "string"},
+                  "distance": {"type": "number", "description": "Distance in miles"}
+                }
+              },
+              "description": "Nearby amenities and distances"
+            },
+            "flood_zone": {
+              "type": ["string", "null"],
+              "enum": ["A", "AE", "AH", "AO", "AR", "A99", "V", "VE", "X", "B", "C", "D"],
+              "description": "FEMA flood zone designation"
+            }
+          }
+        },
+        "pricing": {
+          "type": "object",
+          "description": "Pricing and financial information",
+          "properties": {
+            "list_price": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Current listing price"
+            },
+            "previous_price": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Previous listing price"
+            },
+            "rent_price": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Monthly rent price"
+            },
+            "price_per_sqft": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Price per square foot"
+            },
+            "estimated_value": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Estimated market value"
+            },
+            "property_taxes": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Annual property taxes"
+            },
+            "hoa_fees": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Monthly HOA fees"
+            },
+            "insurance_estimate": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Annual insurance estimate"
+            },
+            "utilities_included": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["electricity", "gas", "water", "sewer", "trash", "internet", "cable"]
+              },
+              "description": "Utilities included in rent"
+            },
+            "financing_available": {
+              "type": "boolean",
+              "description": "Owner financing available"
+            },
+            "lease_terms": {
+              "type": ["string", "null"],
+              "description": "Lease term requirements",
+              "examples": ["12 months", "Month-to-month", "Flexible"]
+            }
+          }
+        },
+        "market_data": {
+          "type": "object",
+          "description": "Market trends and analysis",
+          "properties": {
+            "days_on_market": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Number of days on market"
+            },
+            "price_changes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {"type": "string", "format": "date"},
+                  "price": {"type": "number", "minimum": 0},
+                  "change_type": {"type": "string", "enum": ["increase", "decrease", "initial"]}
+                }
+              },
+              "description": "Price change history"
+            },
+            "comparable_sales": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "address": {"type": "string"},
+                  "sale_price": {"type": "number", "minimum": 0},
+                  "sale_date": {"type": "string", "format": "date"},
+                  "square_footage": {"type": "number", "minimum": 0},
+                  "distance": {"type": "number", "description": "Distance in miles"}
+                }
+              },
+              "description": "Recently sold comparable properties"
+            },
+            "market_trends": {
+              "type": "object",
+              "properties": {
+                "median_price": {"type": "number", "minimum": 0},
+                "price_trend": {"type": "string", "enum": ["increasing", "decreasing", "stable"]},
+                "inventory_level": {"type": "string", "enum": ["low", "balanced", "high"]},
+                "average_dom": {"type": "integer", "minimum": 0, "description": "Average days on market"}
+              },
+              "description": "Local market trends"
+            }
+          }
+        },
+        "features_amenities": {
+          "type": "object",
+          "description": "Property features and amenities",
+          "properties": {
+            "interior_features": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Interior features and upgrades",
+              "examples": ["Hardwood floors", "Granite countertops", "Stainless appliances", "Walk-in closet"]
+            },
+            "exterior_features": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Exterior features and landscaping",
+              "examples": ["Deck", "Patio", "Sprinkler system", "Privacy fence"]
+            },
+            "appliances_included": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "refrigerator", "stove", "oven", "dishwasher", "microwave",
+                  "washer", "dryer", "water_heater", "garbage_disposal"
+                ]
+              },
+              "description": "Included appliances"
+            },
+            "utilities": {
+              "type": "object",
+              "properties": {
+                "electricity": {"type": "string", "enum": ["included", "separate", "shared"]},
+                "gas": {"type": "string", "enum": ["included", "separate", "shared", "none"]},
+                "water": {"type": "string", "enum": ["included", "separate", "shared"]},
+                "internet": {"type": "string", "enum": ["included", "separate", "wired", "none"]}
+              },
+              "description": "Utility arrangements"
+            },
+            "parking": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string", "enum": ["garage", "carport", "driveway", "street", "covered", "none"]},
+                "spaces": {"type": "integer", "minimum": 0},
+                "cost": {"type": "number", "minimum": 0, "description": "Monthly parking cost"}
+              },
+              "description": "Parking details"
+            },
+            "pet_policy": {
+              "type": "object",
+              "properties": {
+                "pets_allowed": {"type": "boolean"},
+                "pet_deposit": {"type": "number", "minimum": 0},
+                "pet_rent": {"type": "number", "minimum": 0},
+                "restrictions": {"type": "string"}
+              },
+              "description": "Pet policy details"
+            }
+          }
+        },
+        "legal_status": {
+          "type": "object",
+          "description": "Legal and regulatory information",
+          "properties": {
+            "mls_number": {
+              "type": ["string", "null"],
+              "description": "Multiple Listing Service number"
+            },
+            "legal_description": {
+              "type": ["string", "null"],
+              "description": "Legal property description"
+            },
+            "parcel_number": {
+              "type": ["string", "null"],
+              "description": "Tax parcel identifier"
+            },
+            "zoning": {
+              "type": ["string", "null"],
+              "description": "Zoning classification",
+              "examples": ["R1", "R2", "C1", "M1", "A1"]
+            },
+            "restrictions": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Property restrictions or covenants"
+            },
+            "easements": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Property easements"
+            },
+            "disclosure_required": {
+              "type": "boolean",
+              "description": "Seller disclosure required"
+            }
+          }
+        }
+      },
+      "required": ["dataset_type"]
+    },
+    "search_fields": {
+      "type": "object",
+      "properties": {
+        "location_primary": {
+          "type": "object",
+          "description": "Primary location search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["address", "city", "state", "zip_code", "neighborhood"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 100
+            },
+            "location_boost": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 2.0,
+              "description": "Boost factor for exact location matches"
+            },
+            "proximity_search": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable geographic proximity search"
+            }
+          }
+        },
+        "property_secondary": {
+          "type": "object",
+          "description": "Property characteristics search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["property_type", "category", "bedrooms", "bathrooms", "square_footage"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 85
+            },
+            "range_search": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable range searching for numeric fields"
+            }
+          }
+        },
+        "features_tertiary": {
+          "type": "object",
+          "description": "Features and amenities search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["interior_features", "exterior_features", "amenities"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 60
+            },
+            "feature_matching": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable feature-specific matching"
+            }
+          }
+        },
+        "financial_filters": {
+          "type": "object",
+          "description": "Price and financial filtering",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["list_price", "rent_price", "price_per_sqft", "property_taxes"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 70
+            },
+            "range_filters": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable price range filtering"
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "re_house_suburb_001",
+      "title": "Beautiful 4BR Colonial Home in Riverside Heights",
+      "description": "Stunning 4-bedroom, 3.5-bathroom colonial home in desirable Riverside Heights neighborhood. Features hardwood floors, updated kitchen with granite countertops, finished basement, and large backyard.",
+      "category": "residential",
+      "type": "single_family_home",
+      "metadata": {
+        "dataset_type": "real_estate",
+        "property_details": {
+          "property_type": "house",
+          "listing_type": "for_sale",
+          "square_footage": 2850,
+          "lot_size": 8712,
+          "bedrooms": 4,
+          "bathrooms": 3.5,
+          "floors": 2,
+          "year_built": 1995,
+          "garage_spaces": 2,
+          "pool": false,
+          "fireplace": true,
+          "basement": true,
+          "architectural_style": "colonial"
+        },
+        "location_data": {
+          "address": {
+            "street_number": "123",
+            "street_name": "Oak Avenue",
+            "city": "Springfield",
+            "state": "MA",
+            "zip_code": "01105",
+            "country": "US"
+          },
+          "neighborhood": "Riverside Heights",
+          "school_district": "Springfield Public Schools",
+          "walkability_score": 72
+        },
+        "pricing": {
+          "list_price": 485000,
+          "price_per_sqft": 170.18,
+          "property_taxes": 8500,
+          "hoa_fees": 0,
+          "insurance_estimate": 1800
+        },
+        "features_amenities": {
+          "interior_features": [
+            "Hardwood floors", "Granite countertops", "Stainless appliances",
+            "Crown molding", "Finished basement", "Walk-in closets"
+          ],
+          "exterior_features": [
+            "Large backyard", "Deck", "Mature trees", "Sprinkler system"
+          ],
+          "appliances_included": ["refrigerator", "stove", "dishwasher", "washer", "dryer"]
+        }
+      },
+      "search_fields": {
+        "location_primary": {
+          "fields": ["address", "city", "neighborhood"],
+          "weight": 100,
+          "location_boost": 2.0,
+          "proximity_search": true
+        },
+        "property_secondary": {
+          "fields": ["property_type", "bedrooms", "bathrooms"],
+          "weight": 85,
+          "range_search": true
+        }
+      },
+      "date_created": "2024-01-15T10:30:00Z",
+      "status": "active",
+      "language": "en"
+    }
+  ]
+}

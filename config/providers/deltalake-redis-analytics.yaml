@@ -1,0 +1,105 @@
+# SmartSearch Configuration - Delta Lake + Redis Analytics
+# Optimized for analytical/time-series data with Delta Lake + Redis infrastructure
+
+database:
+  type: postgresql  # Delta Lake accessed through PostgreSQL interface
+  connection:
+    host: deltalake
+    port: 5432
+    database: analytics
+    user: user
+    password: password
+    ssl: false
+  pool:
+    max: 30
+    min: 8
+    idleTimeoutMillis: 60000
+  options:
+    statement_timeout: 60000
+    query_timeout: 60000
+    application_name: smart_search_analytics
+
+cache:
+  type: redis
+  connection:
+    host: redis
+    port: 6379
+    db: 3
+  options:
+    connectTimeout: 15000
+    lazyConnect: true
+    retryDelayOnFailover: 300
+    maxRetriesPerRequest: 3
+    enableAutoPipelining: true
+
+search:
+  fallback: database
+  tables:
+    analytics_data:
+      columns:
+        id: id
+        title: title
+        subtitle: data_source
+        description: description
+        category: analysis_type
+        language: language
+        visibility: visibility
+        createdAt: timestamp_created
+      searchColumns:
+        - title
+        - description
+        - data_source
+        - analysis_type
+        - metric_name
+      type: analytics
+      searchConfig: english
+      weightConfig:
+        metric_name: A
+        title: A
+        analysis_type: B
+        data_source: C
+        description: D
+      autoCreateIndexes: true
+      indexStrategy: time_partitioned
+
+circuitBreaker:
+  failureThreshold: 2
+  recoveryTimeout: 120000
+  healthCacheTTL: 60000
+  maxConsecutiveFailures: 3
+  resetTimeout: 240000
+
+cacheConfig:
+  enabled: true
+  defaultTTL: 1800000  # 30 minutes for analytical data
+  maxSize: 100000
+  keyPrefix: "analytics:"
+  compressionThreshold: 8192
+  strategies:
+    - type: database-first  # Analytics queries are complex, database preferred
+      ttl: 900000
+    - type: hybrid
+      ttl: 1800000
+    - type: cache-first
+      ttl: 3600000  # 1 hour for historical data
+
+performance:
+  enableMetrics: true
+  logQueries: true  # Analytics queries need monitoring
+  slowQueryThreshold: 5000
+  maxConcurrentQueries: 20
+  queryTimeout: 60000
+  connectionTimeout: 15000
+
+# Delta Lake + Analytics optimizations
+deltaLakeOptimizations:
+  timePartitioning: true
+  columnPruning: true
+  predicate_pushdown: true
+  fileCompaction: true
+  zOrderOptimization: true
+  vacuumRetention: "168 hours"  # 7 days
+  timeSeriesIndexing: true
+  metricAggregationCaching: true
+  historicalDataArchiving: true
+  deltaTableVersioning: true

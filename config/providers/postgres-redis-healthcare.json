@@ -1,0 +1,115 @@
+{
+  "database": {
+    "type": "postgresql",
+    "connection": {
+      "host": "database",
+      "port": 5432,
+      "database": "smartsearch",
+      "user": "user",
+      "password": "password",
+      "ssl": false
+    },
+    "pool": {
+      "max": 20,
+      "min": 2,
+      "idleTimeoutMillis": 30000
+    },
+    "options": {
+      "statement_timeout": 30000,
+      "query_timeout": 30000
+    }
+  },
+  "cache": {
+    "type": "redis",
+    "connection": {
+      "host": "cache",
+      "port": 6379,
+      "db": 0
+    },
+    "options": {
+      "connectTimeout": 10000,
+      "lazyConnect": true,
+      "retryDelayOnFailover": 100,
+      "maxRetriesPerRequest": 3,
+      "enableAutoPipelining": true
+    }
+  },
+  "search": {
+    "fallback": "database",
+    "tables": {
+      "healthcare_data": {
+        "columns": {
+          "id": "id",
+          "title": "title",
+          "subtitle": "specialty",
+          "description": "description",
+          "category": "type",
+          "language": "language",
+          "visibility": "visibility",
+          "createdAt": "date_created"
+        },
+        "searchColumns": [
+          "title",
+          "description", 
+          "condition_name",
+          "treatment",
+          "specialty"
+        ],
+        "type": "healthcare",
+        "searchConfig": "english",
+        "weightConfig": {
+          "title": "A",
+          "condition_name": "A",
+          "treatment": "B", 
+          "description": "C",
+          "specialty": "D"
+        },
+        "autoCreateIndexes": true,
+        "indexStrategy": "gin_tsvector"
+      }
+    }
+  },
+  "circuitBreaker": {
+    "failureThreshold": 3,
+    "recoveryTimeout": 60000,
+    "healthCacheTTL": 30000,
+    "maxConsecutiveFailures": 5,
+    "resetTimeout": 120000
+  },
+  "cacheConfig": {
+    "enabled": true,
+    "defaultTTL": 300000,
+    "maxSize": 10000,
+    "keyPrefix": "healthcare:",
+    "compressionThreshold": 1024,
+    "strategies": [
+      {
+        "type": "cache-first",
+        "ttl": 600000
+      },
+      {
+        "type": "database-first",
+        "ttl": 180000
+      },
+      {
+        "type": "hybrid", 
+        "ttl": 300000
+      }
+    ]
+  },
+  "performance": {
+    "enableMetrics": true,
+    "logQueries": false,
+    "slowQueryThreshold": 1000,
+    "maxConcurrentQueries": 50,
+    "queryTimeout": 30000,
+    "connectionTimeout": 10000
+  },
+  "healthcareOptimizations": {
+    "medicalCodeIndexing": true,
+    "clinicalTermWeighting": true,
+    "specialtyFiltering": true,
+    "evidenceLevelScoring": true,
+    "fdaApprovalBoost": 1.2
+  }
+}

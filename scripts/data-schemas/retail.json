@@ -1,0 +1,527 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://samas.ai/schemas/retail-dataset.json",
+  "title": "Retail Dataset Schema",
+  "description": "Retail/E-commerce-specific schema extending universal dataset schema with product and commerce data",
+  "allOf": [
+    {"$ref": "universal-schema.json"}
+  ],
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "Product category classification",
+      "enum": [
+        "electronics", "clothing", "home_garden", "sports_outdoors", 
+        "books_media", "health_beauty", "toys_games", "automotive",
+        "food_beverages", "jewelry", "tools_hardware", "baby_products",
+        "pet_supplies", "office_supplies", "musical_instruments", "crafts",
+        "furniture", "appliances", "shoes", "bags_luggage", "watches",
+        "collectibles", "industrial", "digital_products", "services"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "dataset_type": {
+          "type": "string",
+          "const": "retail"
+        },
+        "product_details": {
+          "type": "object",
+          "description": "Core product information",
+          "properties": {
+            "brand": {
+              "type": ["string", "null"],
+              "description": "Product brand or manufacturer",
+              "maxLength": 100
+            },
+            "model": {
+              "type": ["string", "null"],
+              "description": "Product model or variant",
+              "maxLength": 100
+            },
+            "sku": {
+              "type": ["string", "null"],
+              "description": "Stock Keeping Unit identifier",
+              "maxLength": 50
+            },
+            "upc": {
+              "type": ["string", "null"],
+              "description": "Universal Product Code",
+              "pattern": "^[0-9]{12}$"
+            },
+            "ean": {
+              "type": ["string", "null"],
+              "description": "European Article Number",
+              "pattern": "^[0-9]{13}$"
+            },
+            "isbn": {
+              "type": ["string", "null"],
+              "description": "International Standard Book Number (for books)",
+              "pattern": "^(97[89])?[0-9]{9}[0-9X]$"
+            },
+            "weight": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Product weight in grams"
+            },
+            "dimensions": {
+              "type": ["object", "null"],
+              "properties": {
+                "length": {"type": "number", "minimum": 0},
+                "width": {"type": "number", "minimum": 0},
+                "height": {"type": "number", "minimum": 0},
+                "unit": {"type": "string", "enum": ["mm", "cm", "m", "in", "ft"], "default": "cm"}
+              },
+              "description": "Product dimensions"
+            },
+            "color": {
+              "type": ["string", "null"],
+              "description": "Primary product color",
+              "maxLength": 50
+            },
+            "size": {
+              "type": ["string", "null"],
+              "description": "Product size (clothing, shoes, etc.)",
+              "maxLength": 20
+            },
+            "material": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Materials used in product"
+            },
+            "age_group": {
+              "type": ["string", "null"],
+              "enum": ["infant", "toddler", "child", "teen", "adult", "senior", "all_ages"],
+              "description": "Target age demographic"
+            },
+            "gender": {
+              "type": ["string", "null"],
+              "enum": ["male", "female", "unisex", "not_applicable"],
+              "description": "Target gender demographic"
+            }
+          }
+        },
+        "pricing": {
+          "type": "object",
+          "description": "Pricing and cost information",
+          "properties": {
+            "msrp": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Manufacturer's Suggested Retail Price"
+            },
+            "current_price": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Current selling price"
+            },
+            "original_price": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Original list price"
+            },
+            "discount_percent": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Current discount percentage"
+            },
+            "cost_basis": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Cost basis for margin calculation"
+            },
+            "price_history": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {"type": "string", "format": "date"},
+                  "price": {"type": "number", "minimum": 0},
+                  "source": {"type": "string"}
+                }
+              },
+              "description": "Historical pricing data"
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "default": "USD",
+              "description": "Currency code (ISO 4217)"
+            },
+            "pricing_tier": {
+              "type": ["string", "null"],
+              "enum": ["budget", "value", "premium", "luxury", "enterprise"],
+              "description": "Pricing tier classification"
+            },
+            "subscription_model": {
+              "type": ["object", "null"],
+              "properties": {
+                "is_subscription": {"type": "boolean"},
+                "billing_frequency": {"type": "string", "enum": ["daily", "weekly", "monthly", "quarterly", "yearly"]},
+                "trial_period": {"type": "integer", "minimum": 0}
+              },
+              "description": "Subscription pricing information"
+            }
+          }
+        },
+        "availability": {
+          "type": "object",
+          "description": "Stock and availability information",
+          "properties": {
+            "in_stock": {
+              "type": "boolean",
+              "description": "Current stock availability status"
+            },
+            "stock_quantity": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Available stock quantity"
+            },
+            "stock_threshold": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Low stock threshold"
+            },
+            "warehouse_locations": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Warehouse locations where item is stocked"
+            },
+            "shipping_time": {
+              "type": ["string", "null"],
+              "description": "Estimated shipping time",
+              "examples": ["1-2 days", "Same day", "2-3 weeks"]
+            },
+            "shipping_methods": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "method": {"type": "string"},
+                  "cost": {"type": "number", "minimum": 0},
+                  "time": {"type": "string"}
+                }
+              },
+              "description": "Available shipping options"
+            },
+            "backorder_allowed": {
+              "type": "boolean",
+              "description": "Whether backorders are accepted"
+            },
+            "seasonal": {
+              "type": "boolean",
+              "description": "Whether product is seasonal"
+            },
+            "availability_regions": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Geographic regions where available"
+            }
+          }
+        },
+        "quality_metrics": {
+          "type": "object",
+          "description": "Quality and performance metrics",
+          "properties": {
+            "average_rating": {
+              "type": ["number", "null"],
+              "minimum": 1,
+              "maximum": 5,
+              "description": "Average customer rating (1-5 stars)"
+            },
+            "review_count": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Total number of customer reviews"
+            },
+            "ratings_distribution": {
+              "type": ["object", "null"],
+              "properties": {
+                "5_star": {"type": "integer", "minimum": 0},
+                "4_star": {"type": "integer", "minimum": 0},
+                "3_star": {"type": "integer", "minimum": 0},
+                "2_star": {"type": "integer", "minimum": 0},
+                "1_star": {"type": "integer", "minimum": 0}
+              },
+              "description": "Distribution of star ratings"
+            },
+            "return_rate": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Return rate percentage"
+            },
+            "defect_rate": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Defect rate percentage"
+            },
+            "customer_satisfaction": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Customer satisfaction score"
+            },
+            "warranty_period": {
+              "type": ["string", "null"],
+              "description": "Warranty period",
+              "examples": ["1 year", "90 days", "Lifetime", "No warranty"]
+            },
+            "certifications": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Product certifications",
+              "examples": ["UL Listed", "FCC Approved", "Energy Star", "Organic"]
+            }
+          }
+        },
+        "sales_data": {
+          "type": "object",
+          "description": "Sales performance and trends",
+          "properties": {
+            "units_sold": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "description": "Total units sold (all time)"
+            },
+            "sales_rank": {
+              "type": ["integer", "null"],
+              "minimum": 1,
+              "description": "Sales rank within category"
+            },
+            "trending_score": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Product trending score"
+            },
+            "bestseller": {
+              "type": "boolean",
+              "description": "Whether product is a bestseller"
+            },
+            "new_release": {
+              "type": "boolean",
+              "description": "Whether product is a new release"
+            },
+            "seasonal_sales": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "season": {"type": "string", "enum": ["spring", "summer", "fall", "winter", "holiday"]},
+                  "sales_multiplier": {"type": "number", "minimum": 0}
+                }
+              },
+              "description": "Seasonal sales patterns"
+            },
+            "cross_sell_items": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Frequently bought together items"
+            },
+            "upsell_items": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Upsell product recommendations"
+            }
+          }
+        },
+        "compliance": {
+          "type": "object",
+          "description": "Regulatory and safety compliance",
+          "properties": {
+            "safety_warnings": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Required safety warnings"
+            },
+            "age_restrictions": {
+              "type": ["string", "null"],
+              "description": "Age restrictions for purchase/use"
+            },
+            "hazardous_material": {
+              "type": "boolean",
+              "description": "Whether product contains hazardous materials"
+            },
+            "restricted_locations": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Locations where product is restricted"
+            },
+            "regulatory_approvals": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Required regulatory approvals",
+              "examples": ["FDA", "FCC", "CE", "UL"]
+            },
+            "export_restrictions": {
+              "type": "boolean",
+              "description": "Whether product has export restrictions"
+            }
+          }
+        }
+      },
+      "required": ["dataset_type"]
+    },
+    "search_fields": {
+      "type": "object",
+      "properties": {
+        "product_primary": {
+          "type": "object",
+          "description": "Primary product identifier search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["title", "brand", "model", "sku", "upc"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 100
+            },
+            "brand_boost": {
+              "type": "number",
+              "minimum": 1.0,
+              "default": 1.5,
+              "description": "Boost factor for brand name matches"
+            },
+            "exact_match_priority": {
+              "type": "boolean",
+              "default": true,
+              "description": "Prioritize exact SKU/UPC matches"
+            }
+          }
+        },
+        "category_secondary": {
+          "type": "object",
+          "description": "Category and classification search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["category", "subcategory", "tags", "keywords"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 75
+            },
+            "hierarchy_search": {
+              "type": "boolean",
+              "default": true,
+              "description": "Search category hierarchies"
+            }
+          }
+        },
+        "attribute_tertiary": {
+          "type": "object",
+          "description": "Product attributes search fields",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["color", "size", "material", "features"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 50
+            },
+            "attribute_matching": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable attribute-specific matching"
+            }
+          }
+        },
+        "review_content": {
+          "type": "object",
+          "description": "Customer review content search",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {"type": "string"},
+              "default": ["review_text", "review_summary", "customer_feedback"]
+            },
+            "weight": {
+              "type": "integer",
+              "default": 25
+            },
+            "sentiment_boost": {
+              "type": "boolean",
+              "default": true,
+              "description": "Boost based on review sentiment"
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "ret_iphone15_001",
+      "title": "Apple iPhone 15 Pro Max 256GB Natural Titanium",
+      "description": "Apple iPhone 15 Pro Max with 6.7-inch Super Retina XDR display, A17 Pro chip, Advanced camera system with 5x Telephoto lens, and Titanium design",
+      "category": "electronics",
+      "type": "smartphone",
+      "metadata": {
+        "dataset_type": "retail",
+        "product_details": {
+          "brand": "Apple",
+          "model": "iPhone 15 Pro Max",
+          "sku": "APL-IPH15PM-256-NT",
+          "upc": "194253404040",
+          "weight": 221,
+          "dimensions": {
+            "length": 159.9,
+            "width": 76.7,
+            "height": 8.25,
+            "unit": "mm"
+          },
+          "color": "Natural Titanium",
+          "size": "256GB",
+          "material": ["Titanium", "Glass", "Aluminum"],
+          "age_group": "adult",
+          "gender": "unisex"
+        },
+        "pricing": {
+          "msrp": 1199.00,
+          "current_price": 1199.00,
+          "currency": "USD",
+          "pricing_tier": "premium"
+        },
+        "availability": {
+          "in_stock": true,
+          "stock_quantity": 50,
+          "shipping_time": "1-2 days",
+          "availability_regions": ["US", "CA", "EU", "AU"]
+        },
+        "quality_metrics": {
+          "average_rating": 4.6,
+          "review_count": 2847,
+          "return_rate": 2.1,
+          "warranty_period": "1 year",
+          "certifications": ["FCC Approved", "CE Marked"]
+        }
+      },
+      "search_fields": {
+        "product_primary": {
+          "fields": ["title", "brand", "model"],
+          "weight": 100,
+          "brand_boost": 1.5,
+          "exact_match_priority": true
+        },
+        "category_secondary": {
+          "fields": ["category", "tags"],
+          "weight": 75,
+          "hierarchy_search": true
+        }
+      },
+      "date_created": "2024-01-15T10:30:00Z",
+      "status": "active",
+      "language": "en"
+    }
+  ]
+}

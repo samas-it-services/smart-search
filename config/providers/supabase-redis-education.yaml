@@ -1,0 +1,100 @@
+# SmartSearch Configuration - Supabase + Redis Education
+# Optimized for educational data with Supabase + Redis infrastructure
+
+database:
+  type: supabase
+  connection:
+    url: ${SUPABASE_URL}
+    key: ${SUPABASE_ANON_KEY}
+  options:
+    schema: public
+    realtime: true
+    autoRefreshToken: true
+    persistSession: true
+
+cache:
+  type: redis
+  connection:
+    host: redis
+    port: 6379
+    db: 2
+  options:
+    connectTimeout: 12000
+    lazyConnect: true
+    retryDelayOnFailover: 150
+    maxRetriesPerRequest: 4
+    enableAutoPipelining: true
+
+search:
+  fallback: database
+  tables:
+    education_data:
+      columns:
+        id: id
+        title: title
+        subtitle: course_code
+        description: description
+        category: subject_area
+        language: language
+        visibility: visibility
+        createdAt: date_created
+      searchColumns:
+        - title
+        - description
+        - course_code
+        - subject_area
+        - institution_name
+        - instructor_name
+      type: education
+      searchConfig: english
+      weightConfig:
+        course_code: A
+        title: A
+        subject_area: B
+        instructor_name: C
+        description: D
+      autoCreateIndexes: true
+      indexStrategy: supabase_rpc
+
+circuitBreaker:
+  failureThreshold: 3
+  recoveryTimeout: 40000
+  healthCacheTTL: 25000
+  maxConsecutiveFailures: 5
+  resetTimeout: 80000
+
+cacheConfig:
+  enabled: true
+  defaultTTL: 600000  # 10 minutes for course data
+  maxSize: 20000
+  keyPrefix: "education:"
+  compressionThreshold: 1024
+  strategies:
+    - type: database-first  # Supabase has real-time updates
+      ttl: 300000
+    - type: hybrid
+      ttl: 450000
+    - type: cache-first
+      ttl: 900000
+
+performance:
+  enableMetrics: true
+  logQueries: false
+  slowQueryThreshold: 1500
+  maxConcurrentQueries: 35
+  queryTimeout: 20000
+  connectionTimeout: 12000
+
+# Supabase + Education optimizations
+supabaseEducationOptimizations:
+  realtimeEnabled: true
+  rowLevelSecurity: true
+  postgresExtensions:
+    - pg_trgm
+    - fuzzystrmatch
+  courseCodeIndexing: true
+  subjectAreaGrouping: true
+  difficultyLevelWeighting: true
+  institutionFiltering: true
+  completionRateBoost: 1.4
+  studentRatingWeighting: 1.2

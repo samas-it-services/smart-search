@@ -38,13 +38,15 @@ main() {
             print_warning "Large dataset startup may take ~10 minutes"
             print_warning "Ensure you have sufficient system resources (4GB+ RAM recommended)"
             
-            # Confirm before starting
-            echo ""
-            read -p "Continue with large dataset launch? [y/N]: " -n 1 -r
-            echo ""
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                print_status "Large dataset launch cancelled"
-                exit 0
+            # Check force mode for automation
+            if [ "$FORCE" != true ]; then
+                print_status "Large dataset requires significant resources (4GB+ RAM, ~10 minute startup)"
+                print_status "Use --force flag or set FORCE=true environment variable to proceed automatically"
+                print_error "Large dataset launch requires explicit confirmation. Exiting."
+                print_status "To proceed: $0 --force or FORCE=true $0"
+                exit 1
+            else
+                print_status "Force mode enabled - proceeding with large dataset launch"
             fi
             
             # Ensure dataset is available

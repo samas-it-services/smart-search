@@ -310,6 +310,7 @@ describe('SmartSearch', () => {
 
     it('should prefer database when cache is unhealthy', async () => {
       mockCache.setConnected(false);
+      await smartSearch.forceHealthCheck(); // Force refresh of health status
       
       const result = await smartSearch.search('test');
       expect(result.strategy.primary).toBe('database');

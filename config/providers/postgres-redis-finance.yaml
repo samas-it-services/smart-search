@@ -1,0 +1,101 @@
+# SmartSearch Configuration - PostgreSQL + Redis Finance
+# Optimized for financial data with PostgreSQL + Redis infrastructure
+
+database:
+  type: postgresql
+  connection:
+    host: postgres
+    port: 5432
+    database: smartsearch
+    user: user
+    password: password
+    ssl: false
+  pool:
+    max: 25
+    min: 5
+    idleTimeoutMillis: 20000
+  options:
+    statement_timeout: 15000
+    query_timeout: 15000
+
+cache:
+  type: redis
+  connection:
+    host: redis
+    port: 6379
+    db: 1
+  options:
+    connectTimeout: 5000
+    lazyConnect: true
+    retryDelayOnFailover: 50
+    maxRetriesPerRequest: 5
+    enableAutoPipelining: true
+
+search:
+  fallback: cache
+  tables:
+    finance_data:
+      columns:
+        id: id
+        title: title
+        subtitle: company_name
+        description: description
+        category: sector
+        language: language
+        visibility: visibility
+        createdAt: date_created
+      searchColumns:
+        - title
+        - description
+        - company_name
+        - sector
+        - industry
+        - symbol
+      type: finance
+      searchConfig: english
+      weightConfig:
+        symbol: A
+        company_name: A
+        title: B
+        sector: C
+        description: D
+      autoCreateIndexes: true
+      indexStrategy: gin_tsvector
+
+circuitBreaker:
+  failureThreshold: 5
+  recoveryTimeout: 30000
+  healthCacheTTL: 15000
+  maxConsecutiveFailures: 8
+  resetTimeout: 60000
+
+cacheConfig:
+  enabled: true
+  defaultTTL: 120000  # Shorter TTL for real-time financial data
+  maxSize: 25000
+  keyPrefix: "finance:"
+  compressionThreshold: 512
+  strategies:
+    - type: cache-first
+      ttl: 300000
+    - type: hybrid
+      ttl: 120000
+    - type: database-first
+      ttl: 60000
+
+performance:
+  enableMetrics: true
+  logQueries: false
+  slowQueryThreshold: 500
+  maxConcurrentQueries: 100
+  queryTimeout: 15000
+  connectionTimeout: 5000
+
+# Finance-specific optimizations  
+financeOptimizations:
+  symbolIndexing: true
+  marketCapWeighting: true
+  sectorGrouping: true
+  realTimeDataPriority: true
+  riskRatingBoost: 1.5
+  dividendYieldWeighting: 1.3

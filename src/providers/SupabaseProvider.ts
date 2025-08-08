@@ -94,11 +94,21 @@ export class SupabaseProvider implements DatabaseProvider {
     const results: SearchResult[] = [];
     const { filters, limit = 20 } = options;
 
-    // Get requested types or default to all configured tables
-    const requestedTypes = filters?.type || Object.keys(this.searchConfig.tables);
+    // Get tables to search based on filter types or default to all configured tables
+    let tablesToSearch: string[];
+    
+    if (filters?.type && filters.type.length > 0) {
+      // Find tables that match the requested types
+      tablesToSearch = Object.keys(this.searchConfig.tables).filter(tableName => {
+        const tableConfig = this.searchConfig.tables[tableName];
+        return filters.type!.includes(tableConfig.type);
+      });
+    } else {
+      tablesToSearch = Object.keys(this.searchConfig.tables);
+    }
 
     // Search each configured table type
-    for (const tableType of requestedTypes) {
+    for (const tableType of tablesToSearch) {
       const tableConfig = this.searchConfig.tables[tableType];
       if (!tableConfig) continue;
 
@@ -277,7 +287,7 @@ export class SupabaseProvider implements DatabaseProvider {
         .select('*')
         .limit(1);
       
-      const latency = Date.now() - startTime;
+      const latency = Math.max(1, Date.now() - startTime); // Ensure minimum 1ms latency
       
       // PGRST116 = no rows returned, PGRST106 = table not found - both OK for health check
       if (error && !['PGRST116', 'PGRST106'].includes(error.code)) {
@@ -306,7 +316,7 @@ export class SupabaseProvider implements DatabaseProvider {
       return {
         isConnected: false,
         isSearchAvailable: false,
-        latency: Date.now() - startTime,
+        latency: Math.max(1, Date.now() - startTime), // Ensure minimum 1ms latency
         memoryUsage: 'N/A',
         keyCount: 0,
         lastSync: null,

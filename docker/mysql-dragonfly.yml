@@ -1,0 +1,43 @@
+# MySQL + DragonflyDB override configuration
+version: '3.8'
+
+services:
+  database:
+    image: mysql:8.0
+    container_name: smart-search-mysql-${PROVIDER_COMBO:-mysql-dragonfly}
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: smartsearch
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../docker/init/mysql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "user", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  cache:
+    image: dragonflydb/dragonfly:latest
+    container_name: smart-search-dragonfly-${PROVIDER_COMBO:-mysql-dragonfly}
+    ports:
+      - "${DRAGONFLY_PORT:-6380}:6379"
+    volumes:
+      - dragonfly_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  mysql_data:
+    driver: local
+  dragonfly_data:
+    driver: local

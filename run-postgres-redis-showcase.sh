@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# @samas/smart-search - PostgreSQL + Redis Showcase Launcher (Legacy Wrapper)
-# This script now serves as a wrapper around the new organized provider scripts
-# For full functionality, use the scripts in scripts/providers/postgres-redis/
+# @samas/smart-search - PostgreSQL + Redis Showcase Launcher
+# Non-interactive automation-ready script with comprehensive CLI support
+# Supports environment variables, command line flags, and positional arguments
 
 set -e
 
@@ -16,9 +16,13 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 print_header() {
+    local size_display=${DATA_SIZE:-tiny}
+    local industry_display=${INDUSTRY:-healthcare}
+    local size_upper=$(echo "$size_display" | tr '[:lower:]' '[:upper:]')
+    
     echo ""
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║${NC} ${CYAN}🏥 Smart Search - PostgreSQL + Redis Healthcare Showcase${NC} ${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC} ${CYAN}🔍 Smart Search - PostgreSQL + Redis $size_upper $industry_display${NC} ${BLUE}║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
@@ -47,6 +51,15 @@ print_success() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_DIR="$SCRIPT_DIR/docker"
 COMPOSE_FILE="$DOCKER_DIR/postgres-redis.docker-compose.yml"
+
+# Source common helpers
+COMMON_DIR="$SCRIPT_DIR/scripts/common"
+if [[ -f "$COMMON_DIR/dataset-helpers.sh" ]]; then
+    source "$COMMON_DIR/dataset-helpers.sh"
+else
+    echo "Error: Helper scripts not found. Please run from project root."
+    exit 1
+fi
 
 # Function to check if Docker is running
 check_docker() {
@@ -87,30 +100,15 @@ check_ports() {
     fi
 }
 
-# Function to prompt for dataset size
-prompt_dataset_size() {
-    if [ -z "$DATA_SIZE" ]; then
-        echo ""
-        print_step "📊 Choose dataset size:"
-        echo "   1) tiny   - 1K records (fastest startup)"
-        echo "   2) small  - 10K records (quick demo)"
-        echo "   3) medium - 100K records (realistic testing)"
-        echo "   4) large  - 1M+ records (performance testing)"
-        echo ""
-        
-        while true; do
-            read -p "Enter choice (1-4) [default: 1]: " choice
-            case ${choice:-1} in
-                1) export DATA_SIZE="tiny"; break ;;
-                2) export DATA_SIZE="small"; break ;;
-                3) export DATA_SIZE="medium"; break ;;
-                4) export DATA_SIZE="large"; break ;;
-                *) print_warning "Invalid choice. Please enter 1-4." ;;
-            esac
-        done
-        
-        print_success "Selected dataset: $DATA_SIZE"
+# Function to get dataset size (non-interactive)
+get_showcase_dataset_size() {
+    # Use the helper function with fallback to tiny for automation
+    if ! get_dataset_size; then
+        print_status "Defaulting to tiny dataset for automation"
+        export DATA_SIZE="tiny"
     fi
+    
+    print_success "Using dataset: $DATA_SIZE"
 }
 
 # Function to start services
@@ -126,9 +124,8 @@ start_services() {
     
     cd "$DOCKER_DIR"
     
-    # Prompt for dataset size if not specified
-    prompt_dataset_size
-    print_status "Using dataset size: $DATA_SIZE"
+    # Get dataset size (non-interactive)
+    get_showcase_dataset_size
     
     if [ "$USE_ALT_PORTS" = true ]; then
         print_status "Using alternative ports - PostgreSQL: $POSTGRES_PORT, Redis: $REDIS_PORT, Showcase: $SHOWCASE_PORT"
@@ -378,102 +375,53 @@ show_usage() {
     echo ""
 }
 
-# Main execution
+# Main execution with non-interactive automation support
 main() {
-    local command="${1:-start}"
+    # Parse command line arguments using the standardized helper
+    parse_dataset_args "$@"
     
-    # Get script directory
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    local provider_scripts_dir="$script_dir/scripts/providers/postgres-redis"
-    
-    # Check if new organized scripts exist
-    if [ -d "$provider_scripts_dir" ]; then
-        print_step "Using new organized scripts in $provider_scripts_dir/"
-        
-        case $command in
-            start)
-                # If DATA_SIZE is specified, use the appropriate script
-                if [ -n "$DATA_SIZE" ]; then
-                    case $DATA_SIZE in
-                        tiny)
-                            exec "$provider_scripts_dir/start-tiny.sh" start
-                            ;;
-                        small)
-                            exec "$provider_scripts_dir/start-small.sh" start
-                            ;;
-                        medium)
-                            exec "$provider_scripts_dir/start-medium.sh" start
-                            ;;
-                        large)
-                            exec "$provider_scripts_dir/start-large.sh" start
-                            ;;
-                        *)
-                            print_warning "Unknown dataset size: $DATA_SIZE"
-                            print_status "Using interactive launcher..."
-                            exec "$provider_scripts_dir/interactive.sh"
-                            ;;
-                    esac
-                else
-                    # No dataset size specified, use interactive launcher
-                    exec "$provider_scripts_dir/interactive.sh"
-                fi
-                ;;
-            stop)
-                exec "$provider_scripts_dir/stop.sh"
-                ;;
-            status)
-                exec "$provider_scripts_dir/stop.sh" status
-                ;;
-            logs)
-                # Default to tiny if no size specified
-                local size=${DATA_SIZE:-tiny}
-                exec "$provider_scripts_dir/start-$size.sh" logs
-                ;;
-            help|--help|-h)
-                show_usage_new
-                ;;
-            *)
-                print_error "Unknown command: $command"
-                show_usage_new
-                exit 1
-                ;;
-        esac
-    else
-        # Fallback to legacy behavior if new scripts don't exist
-        print_warning "New organized scripts not found, using legacy mode"
-        
-        case $command in
-            start)
-                print_header
-                check_docker
-                check_ports
-                start_services
-                show_status
-                ;;
-            stop)
-                stop_services
-                ;;
-            restart)
-                restart_services
-                ;;
-            status)
-                show_status
-                ;;
-            logs)
-                show_logs
-                ;;
-            help|--help|-h)
-                print_header
-                show_usage
-                ;;
-            *)
-                print_error "Unknown command: $command"
-                echo ""
-                show_usage
-                exit 1
-                ;;
-        esac
+    # Handle help request
+    if [ "$HELP" = true ]; then
+        show_dataset_help "$(basename "$0")" "PostgreSQL + Redis Healthcare Showcase Launcher"
+        exit 0
     fi
+    
+    # Set provider to postgres-redis (this script is provider-specific)
+    export PROVIDER="postgres-redis"
+    
+    # Set defaults if not specified
+    export DATA_SIZE=${DATA_SIZE:-tiny}
+    export INDUSTRY=${INDUSTRY:-healthcare}
+    
+    # Validate dataset size
+    if ! validate_dataset_size "$DATA_SIZE"; then
+        exit 1
+    fi
+    
+    print_header
+    print_status "Configuration:"
+    print_status "  Provider: $PROVIDER"
+    print_status "  Industry: $INDUSTRY" 
+    print_status "  Dataset Size: $DATA_SIZE"
+    print_status "  Force Mode: $FORCE"
+    print_status "  Dry Run: $DRY_RUN"
+    echo ""
+    
+    # Handle dry run mode
+    if [ "$DRY_RUN" = true ]; then
+        print_status "DRY RUN: Would launch PostgreSQL + Redis showcase with $DATA_SIZE $INDUSTRY dataset"
+        print_status "DRY RUN: Would check Docker availability"
+        print_status "DRY RUN: Would check port conflicts and configure services"
+        print_status "DRY RUN: Would start containers and seed data"
+        print_status "DRY RUN: Would launch web interface"
+        exit 0
+    fi
+    
+    # Execute the actual launch process
+    check_docker
+    check_ports
+    start_services
+    show_status
 }
 
 # Run main function

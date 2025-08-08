@@ -683,4 +683,221 @@ export class PostgreSQLProvider implements DatabaseProvider {
       client.release();
     }
   }
+
+  /**
+   * Create advanced indexes for optimal search performance
+   */
+  async createOptimizedIndexes(): Promise<void> {
+    if (!this.isConnectedFlag) {
+      throw new Error('PostgreSQL connection not established');
+    }
+
+    const client = await this.client.connect();
+    try {
+      for (const [tableName, tableConfig] of Object.entries(this.searchConfig.tables)) {
+        if (tableConfig.autoCreateIndexes !== false) {
+          await this.createAdvancedIndexes(client, tableName, tableConfig);
+        }
+      }
+      console.log('✅ Advanced PostgreSQL indexes created successfully');
+    } catch (error) {
+      console.error('❌ Failed to create advanced indexes:', error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Analyze search performance and provide optimization suggestions
+   */
+  async analyzeSearchPerformance(query: string): Promise<{
+    queryPlan: any;
+    executionTime: number;
+    suggestions: string[];
+  }> {
+    if (!this.isConnectedFlag) {
+      throw new Error('PostgreSQL connection not established');
+    }
+
+    const client = await this.client.connect();
+    try {
+      // Get query execution plan
+      const explainResult = await client.query(`
+        EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) 
+        SELECT * FROM (${this.buildSampleQuery(query)}) AS sample_query
+      `);
+
+      const queryPlan = explainResult.rows[0]['QUERY PLAN'][0];
+      const executionTime = queryPlan['Execution Time'];
+
+      // Generate optimization suggestions
+      const suggestions = this.generateOptimizationSuggestions(queryPlan);
+
+      return {
+        queryPlan,
+        executionTime,
+        suggestions
+      };
+
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Enable advanced PostgreSQL features for search
+   */
+  async enableAdvancedFeatures(): Promise<void> {
+    if (!this.isConnectedFlag) {
+      throw new Error('PostgreSQL connection not established');
+    }
+
+    const client = await this.client.connect();
+    try {
+      // Enable pg_trgm for similarity searches
+      await client.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
+      
+      // Enable unaccent for accent-insensitive searches
+      await client.query(`CREATE EXTENSION IF NOT EXISTS unaccent`);
+      
+      // Enable fuzzystrmatch for fuzzy matching
+      await client.query(`CREATE EXTENSION IF NOT EXISTS fuzzystrmatch`);
+
+      console.log('✅ PostgreSQL advanced features enabled');
+
+    } catch (error) {
+      console.warn('⚠️ Could not enable all advanced features:', error);
+      // Don't throw - some features may not be available
+    } finally {
+      client.release();
+    }
+  }
+
+  // Enhanced private helper methods
+  private async createAdvancedIndexes(client: any, tableName: string, tableConfig: any): Promise<void> {
+    try {
+      const searchConfig = tableConfig.searchConfig || 'english';
+      const searchColumns = tableConfig.searchColumns;
+
+      // 1. Create GIN index for full-text search (already exists from base implementation)
+      await this.createSearchIndexes(client, tableName, tableConfig);
+
+      // 2. Create trigram indexes for fuzzy matching
+      for (const column of searchColumns) {
+        const trigramIndexName = `idx_${tableName}_${column}_trgm`;
+        
+        try {
+          const indexExists = await client.query(
+            'SELECT EXISTS (SELECT FROM pg_indexes WHERE indexname = $1)',
+            [trigramIndexName]
+          );
+
+          if (!indexExists.rows[0].exists) {
+            await client.query(`
+              CREATE INDEX CONCURRENTLY ${trigramIndexName} 
+              ON "${tableName}" 
+              USING GIN ("${column}" gin_trgm_ops)
+            `);
+            console.log(`✅ Trigram index created: ${trigramIndexName}`);
+          }
+        } catch (error) {
+          console.warn(`⚠️ Could not create trigram index for ${column}:`, error);
+        }
+      }
+
+      // 3. Create partial indexes for common filters
+      if (tableConfig.columns.visibility) {
+        const partialIndexName = `idx_${tableName}_public_visible`;
+        try {
+          await client.query(`
+            CREATE INDEX CONCURRENTLY ${partialIndexName}
+            ON "${tableName}" ("${tableConfig.columns.visibility}")
+            WHERE "${tableConfig.columns.visibility}" = 'public'
+          `);
+          console.log(`✅ Partial index created: ${partialIndexName}`);
+        } catch (error) {
+          console.warn(`⚠️ Could not create partial index:`, error);
+        }
+      }
+
+      // 4. Create composite indexes for common filter combinations
+      if (tableConfig.columns.category && tableConfig.columns.createdAt) {
+        const compositeIndexName = `idx_${tableName}_category_created`;
+        try {
+          await client.query(`
+            CREATE INDEX CONCURRENTLY ${compositeIndexName}
+            ON "${tableName}" ("${tableConfig.columns.category}", "${tableConfig.columns.createdAt}" DESC)
+          `);
+          console.log(`✅ Composite index created: ${compositeIndexName}`);
+        } catch (error) {
+          console.warn(`⚠️ Could not create composite index:`, error);
+        }
+      }
+
+    } catch (error) {
+      console.error(`❌ Failed to create advanced indexes for ${tableName}:`, error);
+    }
+  }
+
+  private buildSampleQuery(query: string): string {
+    // Build a sample query for performance analysis
+    const tableName = Object.keys(this.searchConfig.tables)[0];
+    const tableConfig = this.searchConfig.tables[tableName];
+    const searchConfig = tableConfig.searchConfig || 'english';
+    const tsQuery = this.buildTsQuery(query);
+
+    const tsvectorExpression = tableConfig.searchColumns.map((col: string) => {
+      const weight = tableConfig.weightConfig?.[col] || 'D';
+      return `setweight(to_tsvector('${searchConfig}', coalesce("${col}", '')), '${weight}')`;
+    }).join(' || ');
+
+    return `
+      SELECT *,
+             ts_rank_cd((${tsvectorExpression}), to_tsquery('${searchConfig}', '${tsQuery}')) as rank_score
+      FROM "${tableName}"
+      WHERE (${tsvectorExpression}) @@ to_tsquery('${searchConfig}', '${tsQuery}')
+      ORDER BY rank_score DESC
+      LIMIT 10
+    `;
+  }
+
+  private generateOptimizationSuggestions(queryPlan: any): string[] {
+    const suggestions: string[] = [];
+
+    // Analyze execution time
+    if (queryPlan['Execution Time'] > 1000) {
+      suggestions.push('Query execution time is high (>1s). Consider adding more specific filters.');
+    }
+
+    // Check for sequential scans
+    if (JSON.stringify(queryPlan).includes('Seq Scan')) {
+      suggestions.push('Sequential scan detected. Consider adding appropriate indexes.');
+    }
+
+    // Check buffer usage
+    const bufferHits = this.extractBufferHits(queryPlan);
+    if (bufferHits && bufferHits.shared_read > bufferHits.shared_hit) {
+      suggestions.push('Low buffer hit ratio. Consider increasing shared_buffers or optimizing query.');
+    }
+
+    // Check for sorts
+    if (JSON.stringify(queryPlan).includes('Sort')) {
+      suggestions.push('Sort operation detected. Consider adding an index on the ORDER BY columns.');
+    }
+
+    return suggestions;
+  }
+
+  private extractBufferHits(plan: any): { shared_hit: number; shared_read: number } | null {
+    try {
+      const buffers = plan['Buffers'];
+      return buffers ? {
+        shared_hit: buffers['Shared Hit Blocks'] || 0,
+        shared_read: buffers['Shared Read Blocks'] || 0
+      } : null;
+    } catch {
+      return null;
+    }
+  }
 }
