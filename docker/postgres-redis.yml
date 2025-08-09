@@ -2,7 +2,7 @@
 version: '3.8'
 
 services:
-  database:
+  postgres:
     image: postgres:15
     container_name: smart-search-postgres-${PROVIDER_COMBO:-postgres-redis}
     environment:
@@ -21,7 +21,7 @@ services:
       retries: 5
       start_period: 30s
 
-  cache:
+  redis:
     image: redis/redis-stack-server:latest
     container_name: smart-search-redis-${PROVIDER_COMBO:-postgres-redis}
     ports:

@@ -4,12 +4,12 @@ version: '3.8'
 
 services:
   # Database services (will be overridden by provider-specific files)
-  database:
+  postgres:
     networks:
       - smart-search
 
   # Cache services (will be overridden by provider-specific files)  
-  cache:
+  redis:
     networks:
       - smart-search
 
@@ -37,9 +37,9 @@ services:
     ports:
       - "${SHOWCASE_PORT:-3000}:${SHOWCASE_PORT:-3000}"
     depends_on:
-      database:
+      postgres:
         condition: service_healthy
-      cache:
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${SHOWCASE_PORT:-3000}/api/health"]

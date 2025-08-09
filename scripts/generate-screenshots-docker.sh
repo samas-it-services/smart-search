@@ -38,26 +38,86 @@ print_step() {
     echo -e "${PURPLE}[STEP]${NC} $1"
 }
 
-# Function to get showcase configuration
-get_showcase_config() {
-    local showcase=$1
-    case $showcase in
-        postgres-redis)
-            echo "postgres-redis.docker-compose.yml:3002:PostgreSQL + Redis - Healthcare"
-            ;;
-        mysql-dragonfly)
-            echo "mysql-dragonfly.docker-compose.yml:3003:MySQL + DragonflyDB - Finance"
-            ;;
-        mongodb-memcached)
-            echo "mongodb-memcached.docker-compose.yml:3004:MongoDB + Memcached - Retail"
-            ;;
-        deltalake-redis)
-            echo "deltalake-redis.docker-compose.yml:3005:Delta Lake + Redis - Financial Analytics"
-            ;;
-        *)
-            echo ""
-            ;;
-    esac
+# Screenshot-specific port assignments (isolated from showcases)
+SCREENSHOT_PORTS=(
+    "postgres-redis:8100"
+    "mysql-dragonfly:8200"
+    "mongodb-memcached:8300"
+)
+
+# Function to get screenshot port for provider
+get_screenshot_port() {
+    local provider=$1
+    for port_config in "${SCREENSHOT_PORTS[@]}"; do
+        if [[ "$port_config" == "$provider:"* ]]; then
+            echo "${port_config#*:}"
+            return 0
+        fi
+    done
+    echo "8100"  # Default fallback
+}
+
+# Function to check if port is available
+check_port_available() {
+    local port="$1"
+    if lsof -i :$port >/dev/null 2>&1; then
+        return 1  # Port is in use
+    else
+        return 0  # Port is available
+    fi
+}
+
+# Function to find available screenshot port
+find_available_screenshot_port() {
+    local provider="$1"
+    local base_port=$(get_screenshot_port "$provider")
+    
+    # Try base port first
+    if check_port_available "$base_port"; then
+        echo "$base_port"
+        return 0
+    fi
+    
+    # Try ports in range base_port to base_port+99
+    for (( port=$base_port; port<=$(($base_port + 99)); port++ )); do
+        if check_port_available "$port"; then
+            echo "$port"
+            return 0
+        fi
+    done
+    
+    print_error "No available ports in range $base_port-$(($base_port + 99)) for $provider"
+    return 1
+}
+
+# Function to cleanup existing screenshot containers
+cleanup_screenshot_containers() {
+    print_step "Cleaning up any existing screenshot containers..."
+    
+    # Stop and remove any existing containers with screenshot naming pattern
+    local containers=$(docker ps -a --filter "name=smart-search-.*screenshot" --format "{{.Names}}" 2>/dev/null || true)
+    
+    if [[ -n "$containers" ]]; then
+        print_warning "Found existing screenshot containers:"
+        echo "$containers" | sed 's/^/  • /'
+        echo "$containers" | xargs -I {} docker stop {} 2>/dev/null || true
+        echo "$containers" | xargs -I {} docker rm {} 2>/dev/null || true
+        print_status "Cleaned up existing screenshot containers"
+    else
+        print_status "No existing screenshot containers to clean up"
+    fi
+    
+    # Also clean up any showcase containers that might conflict
+    local showcase_containers=$(docker ps -a --filter "name=smart-search-showcase-" --format "{{.Names}}" 2>/dev/null || true)
+    if [[ -n "$showcase_containers" ]]; then
+        print_warning "Found conflicting showcase containers, stopping them temporarily:"
+        echo "$showcase_containers" | sed 's/^/  • /'
+        echo "$showcase_containers" | xargs -I {} docker stop {} 2>/dev/null || true
+        echo "$showcase_containers" | xargs -I {} docker rm {} 2>/dev/null || true
+    fi
+    
+    # Clean up networks
+    docker network prune -f >/dev/null 2>&1 || true
 }
 
 # Function to get search queries for showcase
@@ -93,38 +153,102 @@ check_docker() {
     fi
 }
 
-# Function to start Docker services for a showcase
-start_showcase_services() {
-    local showcase=$1
-    local showcase_config=$(get_showcase_config "$showcase")
+# Function to create screenshot environment file
+create_screenshot_env_file() {
+    local provider="$1"
+    local dataset="${2:-healthcare}"
+    local data_size="${3:-medium}"
     
-    if [ -z "$showcase_config" ]; then
-        print_error "Unknown showcase: $showcase"
+    local port=$(find_available_screenshot_port "$provider")
+    if [[ $? -ne 0 ]]; then
+        print_error "Cannot find available port for screenshots"
         return 1
     fi
     
-    # Get data size from environment variable, default to medium
+    local env_file="$PROJECT_ROOT/docker/envs/screenshot-${provider}-${dataset}-${data_size}.env"
+    mkdir -p "$(dirname "$env_file")"
+    
+    cat > "$env_file" << EOF
+# Screenshot generation environment: ${provider}-${dataset}-${data_size}
+PROVIDER_COMBO=screenshot-${provider}-${dataset}-${data_size}
+SHOWCASE_TYPE=${provider}
+DATASET=${dataset}
+DATA_SIZE=${data_size}
+
+# Screenshot-specific port assignments
+SHOWCASE_PORT=${port}
+EOF
+
+    # Add database port
+    case "$provider" in
+        "postgres-redis")
+            echo "POSTGRES_PORT=$((port + 1))" >> "$env_file"
+            echo "REDIS_PORT=$((port + 2))" >> "$env_file"
+            echo "DATABASE_URL=postgresql://user:password@postgres:5432/smartsearch" >> "$env_file"
+            echo "CACHE_URL=redis://redis:6379" >> "$env_file"
+            ;;
+        "mysql-dragonfly")
+            echo "MYSQL_PORT=$((port + 1))" >> "$env_file"
+            echo "DRAGONFLY_PORT=$((port + 2))" >> "$env_file" 
+            echo "DATABASE_URL=mysql://user:password@mysql:3306/smartsearch" >> "$env_file"
+            echo "CACHE_URL=redis://dragonfly:6379" >> "$env_file"
+            ;;
+        "mongodb-memcached")
+            echo "MONGODB_PORT=$((port + 1))" >> "$env_file"
+            echo "MEMCACHED_PORT=$((port + 2))" >> "$env_file"
+            echo "DATABASE_URL=mongodb://root:password@mongodb:27017/smartsearch" >> "$env_file"
+            echo "CACHE_URL=memcached://memcached:11211" >> "$env_file"
+            ;;
+    esac
+    
+    echo "$env_file"
+}
+
+# Function to start Docker services for a showcase  
+start_showcase_services() {
+    local provider=$1
+    local dataset="${2:-healthcare}"
     local data_size="${DATA_SIZE:-medium}"
     
-    local compose_file="${showcase_config%%:*}"
-    local compose_path="$DOCKER_DIR/$compose_file"
+    # Validate provider
+    case "$provider" in
+        postgres-redis|mysql-dragonfly|mongodb-memcached)
+            ;;
+        *)
+            print_error "Unknown provider: $provider"
+            print_error "Available providers: postgres-redis, mysql-dragonfly, mongodb-memcached"
+            return 1
+            ;;
+    esac
     
-    if [ ! -f "$compose_path" ]; then
-        print_error "Docker compose file not found: $compose_path"
+    # Cleanup first
+    cleanup_screenshot_containers
+    
+    print_step "Creating screenshot environment for $provider with $data_size $dataset dataset..."
+    
+    # Create screenshot-specific environment file
+    local env_file=$(create_screenshot_env_file "$provider" "$dataset" "$data_size")
+    if [[ $? -ne 0 ]]; then
         return 1
     fi
     
-    print_step "Starting services for $showcase with $data_size dataset..."
-    cd "$DOCKER_DIR"
+    print_status "Created environment file: $env_file"
     
-    # Start services with data size environment variable
-    DATA_SIZE="$data_size" docker-compose -f "$compose_file" up -d
+    # Get port from env file  
+    local port=$(grep SHOWCASE_PORT "$env_file" | cut -d= -f2)
     
-    # Extract port from configuration
-    local port="${showcase_config#*:}"
-    port="${port%%:*}"
+    print_step "Starting $provider services for screenshots on port $port..."
     
-    print_step "Waiting for $showcase showcase to be healthy on port $port..."
+    cd "$PROJECT_ROOT"
+    
+    # Start services using the new base + provider approach
+    docker-compose \
+        -f docker/base.docker-compose.yml \
+        -f docker/${provider}.yml \
+        --env-file "$env_file" \
+        up -d --remove-orphans
+    
+    print_step "Waiting for $provider showcase to be healthy on port $port..."
     
     # Wait for showcase to be ready (up to 5 minutes)
     local max_attempts=60
@@ -132,40 +256,67 @@ start_showcase_services() {
     
     while [ $attempt -le $max_attempts ]; do
         if curl -s -f "http://localhost:$port/api/health" >/dev/null 2>&1; then
-            print_status "$showcase is healthy and ready!"
+            print_status "$provider is healthy and ready for screenshots!"
+            echo "$port"  # Return the port for use by screenshot generation
             return 0
         fi
         
         if [ $((attempt % 10)) -eq 0 ]; then
-            print_step "Still waiting for $showcase... (attempt $attempt/$max_attempts)"
+            print_step "Still waiting for $provider... (attempt $attempt/$max_attempts)"
         fi
         
         sleep 5
         ((attempt++))
     done
     
-    print_error "$showcase failed to start within $(($max_attempts * 5)) seconds"
+    print_error "$provider failed to start within $(($max_attempts * 5)) seconds"
     print_warning "Checking container logs..."
-    docker-compose -f "$compose_file" logs --tail=20
+    docker-compose \
+        -f docker/base.docker-compose.yml \
+        -f docker/${provider}.yml \
+        --env-file "$env_file" \
+        logs --tail=20
     return 1
 }
 
 # Function to stop Docker services for a showcase
 stop_showcase_services() {
-    local showcase=$1
-    local showcase_config=$(get_showcase_config "$showcase")
+    local provider=$1
+    local dataset="${2:-healthcare}" 
+    local data_size="${DATA_SIZE:-medium}"
     
-    if [ -z "$showcase_config" ]; then
-        return 1
-    fi
+    # Validate provider
+    case "$provider" in
+        postgres-redis|mysql-dragonfly|mongodb-memcached)
+            ;;
+        *)
+            print_error "Unknown provider: $provider"
+            return 1
+            ;;
+    esac
     
-    local compose_file="${showcase_config%%:*}"
-    local compose_path="$DOCKER_DIR/$compose_file"
+    print_step "Stopping screenshot services for $provider..."
     
-    if [ -f "$compose_path" ]; then
-        print_step "Stopping services for $showcase..."
-        cd "$DOCKER_DIR"
-        docker-compose -f "$compose_file" down
+    # Find the screenshot environment file
+    local env_file="$PROJECT_ROOT/docker/envs/screenshot-${provider}-${dataset}-${data_size}.env"
+    
+    if [ -f "$env_file" ]; then
+        cd "$PROJECT_ROOT"
+        docker-compose \
+            -f docker/base.docker-compose.yml \
+            -f docker/${provider}.yml \
+            --env-file "$env_file" \
+            down --remove-orphans
+        
+        # Remove the environment file
+        rm -f "$env_file"
+    else
+        # Fallback: stop any screenshot-related containers
+        local containers=$(docker ps -a --filter "name=smart-search-.*screenshot" --format "{{.Names}}" 2>/dev/null || true)
+        if [[ -n "$containers" ]]; then
+            echo "$containers" | xargs -I {} docker stop {} 2>/dev/null || true
+            echo "$containers" | xargs -I {} docker rm {} 2>/dev/null || true
+        fi
     fi
 }
 
@@ -205,17 +356,41 @@ seed_showcase_data() {
 
 # Function to generate screenshots for a showcase
 generate_showcase_screenshots() {
-    local showcase=$1
-    local showcase_config=$(get_showcase_config "$showcase")
+    local provider=$1
+    local dataset="${2:-healthcare}"
+    local data_size="${DATA_SIZE:-medium}"
     
-    if [ -z "$showcase_config" ]; then
-        print_error "Unknown showcase: $showcase"
+    # Validate provider
+    case "$provider" in
+        postgres-redis|mysql-dragonfly|mongodb-memcached)
+            ;;
+        *)
+            print_error "Unknown provider: $provider"
+            return 1
+            ;;
+    esac
+    
+    # Start services and get port
+    local port=$(start_showcase_services "$provider" "$dataset" "$data_size")
+    
+    if [[ $? -ne 0 || -z "$port" ]]; then
+        print_error "Failed to start services for $provider"
         return 1
     fi
     
-    local port="${showcase_config#*:}"
-    port="${port%%:*}"
-    local name="${showcase_config##*:}"
+    # Get provider display name
+    local name
+    case "$provider" in
+        postgres-redis)
+            name="PostgreSQL + Redis - Healthcare"
+            ;;
+        mysql-dragonfly)  
+            name="MySQL + DragonflyDB - Finance"
+            ;;
+        mongodb-memcached)
+            name="MongoDB + Memcached - Retail"
+            ;;
+    esac
     
     print_header "Generating Screenshots for $name"
     
@@ -436,7 +611,7 @@ except Exception as e:
     
     # Clean up services
     if [ "$KEEP_SERVICES_RUNNING" != "true" ]; then
-        stop_showcase_services "$showcase"
+        stop_showcase_services "$provider" "$dataset" "$data_size"
     fi
     
     return 0
@@ -444,17 +619,29 @@ except Exception as e:
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 [showcase] [options]"
+    echo "Usage: $0 [provider] [options]"
     echo ""
-    echo "Showcases:"
-    for showcase in $SHOWCASE_LIST; do
-        local showcase_config=$(get_showcase_config "$showcase")
-        local name="${showcase_config##*:}"
-        local port="${showcase_config#*:}"
-        port="${port%%:*}"
-        echo "  $showcase - $name (port $port)"
+    echo "Providers:"
+    for provider in $SHOWCASE_LIST; do
+        local port=$(get_screenshot_port "$provider")
+        local name
+        case "$provider" in
+            postgres-redis)
+                name="PostgreSQL + Redis - Healthcare"
+                ;;
+            mysql-dragonfly)  
+                name="MySQL + DragonflyDB - Finance"
+                ;;
+            mongodb-memcached)
+                name="MongoDB + Memcached - Retail"
+                ;;
+            *)
+                name="Unknown Provider"
+                ;;
+        esac
+        echo "  $provider - $name (port $port+)"
     done
-    echo "  all - Generate screenshots for all showcases"
+    echo "  all - Generate screenshots for all providers"
     echo ""
     echo "Options:"
     echo "  --keep-services    Keep Docker services running after screenshots"
@@ -499,14 +686,14 @@ main() {
     check_docker
     
     if [ "$showcase" = "all" ]; then
-        print_status "Generating screenshots for all showcases..."
+        print_status "Generating screenshots for all providers..."
         
-        for showcase_key in $SHOWCASE_LIST; do
+        for provider in $SHOWCASE_LIST; do
             echo ""
-            generate_showcase_screenshots "$showcase_key"
+            generate_showcase_screenshots "$provider"
         done
         
-    elif [ -n "$(get_showcase_config "$showcase")" ]; then
+    elif [[ " $SHOWCASE_LIST " == *" $showcase "* ]]; then
         generate_showcase_screenshots "$showcase"
         
     else

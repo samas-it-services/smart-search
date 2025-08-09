@@ -32,6 +32,143 @@ SIZES=(
     "large"
 )
 
+# Port range definitions for conflict avoidance
+PORT_RANGES=(
+    "postgres-redis:5100:5199"
+    "mysql-dragonfly:5200:5299" 
+    "mongodb-memcached:5400:5499"
+    "screenshots:8100:8199"
+    "development:3000:3099"
+)
+
+# Utility functions for graceful container and port management
+
+check_port_available() {
+    local port="$1"
+    if lsof -i :$port >/dev/null 2>&1; then
+        return 1  # Port is in use
+    else
+        return 0  # Port is available
+    fi
+}
+
+find_available_port() {
+    local provider="$1"
+    local start_port="$2"
+    
+    # Get port range for provider
+    for range in "${PORT_RANGES[@]}"; do
+        IFS=':' read -ra PARTS <<< "$range"
+        if [[ "${PARTS[0]}" == "$provider" ]]; then
+            local min_port="${PARTS[1]}"
+            local max_port="${PARTS[2]}"
+            
+            # If custom start_port provided and in range, try that first
+            if [[ -n "$start_port" && "$start_port" -ge "$min_port" && "$start_port" -le "$max_port" ]]; then
+                if check_port_available "$start_port"; then
+                    echo "$start_port"
+                    return 0
+                fi
+            fi
+            
+            # Find first available port in range
+            for (( port=$min_port; port<=$max_port; port++ )); do
+                if check_port_available "$port"; then
+                    echo "$port"
+                    return 0
+                fi
+            done
+            
+            echo "ERROR: No available ports in range $min_port-$max_port for $provider" >&2
+            return 1
+        fi
+    done
+    
+    # Fallback to original logic if provider not found
+    echo "${start_port:-5000}"
+}
+
+cleanup_smart_search_containers() {
+    local provider="$1"
+    local dataset="$2"
+    local size="$3"
+    local force="$4"
+    
+    echo "🧹 Cleaning up existing Smart Search containers..."
+    
+    # Stop and remove containers by name pattern
+    local containers=$(docker ps -a --filter "name=smart-search-" --format "{{.Names}}" 2>/dev/null || true)
+    
+    if [[ -n "$containers" ]]; then
+        echo "Found existing containers:"
+        echo "$containers" | sed 's/^/  • /'
+        echo ""
+        
+        if [[ "$force" == "true" ]]; then
+            echo "🛑 Force mode: Stopping and removing all Smart Search containers..."
+        else
+            echo "🛑 Stopping and removing containers..."
+        fi
+        
+        # Stop containers first
+        echo "$containers" | xargs -I {} docker stop {} 2>/dev/null || true
+        
+        # Remove containers
+        echo "$containers" | xargs -I {} docker rm {} 2>/dev/null || true
+        
+        # Clean up orphaned networks
+        docker network prune -f >/dev/null 2>&1 || true
+        
+        echo "✅ Container cleanup completed"
+    else
+        echo "ℹ️  No existing Smart Search containers to clean up"
+    fi
+    
+    echo ""
+}
+
+show_system_status() {
+    echo "🔍 Smart Search System Status"
+    echo "============================="
+    
+    local containers=$(docker ps --filter "name=smart-search-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true)
+    
+    if [[ -n "$containers" && "$containers" != "NAMES	STATUS	PORTS" ]]; then
+        echo ""
+        echo "📊 Running Services:"
+        echo "$containers"
+        
+        echo ""
+        echo "🔌 Port Usage:"
+        lsof -i -P | grep LISTEN | grep -E "(5[0-9]{3}|3[0-9]{3}|8[0-9]{3})" | awk '{print "  • Port " $9 " - " $1}' | sort -u || true
+    else
+        echo ""
+        echo "ℹ️  No Smart Search services currently running"
+    fi
+    
+    echo ""
+}
+
+verify_prerequisites() {
+    # Check if Docker is running
+    if ! docker info >/dev/null 2>&1; then
+        echo "❌ Docker is not running. Please start Docker and try again."
+        exit 1
+    fi
+    
+    # Check if docker-compose is available
+    if ! command -v docker-compose >/dev/null 2>&1; then
+        echo "❌ docker-compose is not installed. Please install docker-compose and try again."
+        exit 1
+    fi
+    
+    # Check if required directories exist
+    if [[ ! -d "docker" ]]; then
+        echo "❌ Docker configuration directory not found. Please run from the Smart Search root directory."
+        exit 1
+    fi
+}
+
 show_usage() {
     echo "Usage: $0 [COMMAND] [OPTIONS]"
     echo ""
@@ -41,13 +178,16 @@ show_usage() {
     echo "  stop-all Stop all running showcases"
     echo "  list     List all running showcases"
     echo "  logs     Show logs for a specific showcase"
+    echo "  status   Show system status and port usage"
+    echo "  cleanup  Clean up all Smart Search containers and networks"
     echo ""
     echo "OPTIONS:"
     echo "  --provider    Provider combination (postgres-redis, mysql-dragonfly, mongodb-memcached)"
     echo "  --dataset     Dataset type (healthcare, finance, retail, education, real_estate)"
     echo "  --size        Dataset size (tiny, small, medium, large)"
     echo "  --config      Use existing environment file (optional)"
-    echo "  --port        Custom port range start (optional, defaults to auto-assign)"
+    echo "  --port        Custom port range start (optional, auto-detects available ports)"
+    echo "  --force       Force cleanup of existing containers before starting"
     echo ""
     echo "EXAMPLES:"
     echo "  $0 start --provider postgres-redis --dataset healthcare --size medium"
@@ -164,13 +304,13 @@ get_database_url() {
     
     case "$provider" in
         "postgres-redis")
-            echo "DATABASE_URL=postgresql://user:password@database:5432/smartsearch"
+            echo "DATABASE_URL=postgresql://user:password@postgres:5432/smartsearch"
             ;;
         "mysql-dragonfly")
-            echo "DATABASE_URL=mysql://user:password@database:3306/smartsearch"
+            echo "DATABASE_URL=mysql://user:password@mysql:3306/smartsearch"
             ;;
         "mongodb-memcached")
-            echo "DATABASE_URL=mongodb://root:password@database:27017/smartsearch"
+            echo "DATABASE_URL=mongodb://root:password@mongodb:27017/smartsearch"
             ;;
     esac
 }
@@ -179,11 +319,14 @@ get_cache_url() {
     local provider="$1"
     
     case "$provider" in
-        "postgres-redis"|"mysql-dragonfly")
-            echo "CACHE_URL=redis://cache:6379"
+        "postgres-redis")
+            echo "CACHE_URL=redis://redis:6379"
+            ;;
+        "mysql-dragonfly")
+            echo "CACHE_URL=redis://dragonfly:6379"
             ;;
         "mongodb-memcached")
-            echo "CACHE_URL=memcached://cache:11211"
+            echo "CACHE_URL=memcached://memcached:11211"
             ;;
     esac
 }
@@ -194,6 +337,13 @@ start_showcase() {
     local size="$3"
     local config_file="$4"
     local custom_port="$5"
+    local force_cleanup="$6"
+    
+    # Verify prerequisites first
+    verify_prerequisites
+    
+    echo "🚀 Starting Smart Search Showcase"
+    echo "=================================="
     
     # Validate inputs
     if [[ ! " ${PROVIDERS[@]} " =~ " $provider " ]]; then
@@ -214,6 +364,31 @@ start_showcase() {
         exit 1
     fi
     
+    local combo=$(get_combo_name "$provider" "$dataset" "$size")
+    
+    # Graceful cleanup before starting
+    cleanup_smart_search_containers "$provider" "$dataset" "$size" "$force_cleanup"
+    
+    # Smart port detection and assignment
+    local port_start
+    if [[ -n "$custom_port" ]]; then
+        port_start=$(find_available_port "$provider" "$custom_port")
+        if [[ $? -ne 0 ]]; then
+            echo "❌ Cannot find available port starting from $custom_port"
+            echo "💡 Try: $0 start --provider $provider --dataset $dataset --size $size"
+            exit 1
+        fi
+        echo "🔌 Using requested port: $port_start"
+    else
+        port_start=$(find_available_port "$provider")
+        if [[ $? -ne 0 ]]; then
+            echo "❌ Cannot find available port in range for $provider"
+            echo "💡 Try: $0 cleanup && $0 start --provider $provider --dataset $dataset --size $size --force"
+            exit 1
+        fi
+        echo "🔌 Auto-detected available port: $port_start"
+    fi
+    
     # Use existing config or create new one
     local env_file
     if [[ -n "$config_file" ]]; then
@@ -223,42 +398,59 @@ start_showcase() {
             exit 1
         fi
     else
-        local port_start=${custom_port:-$(get_port_range "$provider" "$dataset" "$size")}
         env_file=$(create_env_file "$provider" "$dataset" "$size" "$port_start")
     fi
     
-    local combo=$(get_combo_name "$provider" "$dataset" "$size")
+    echo ""
+    echo "📋 Configuration Summary:"
+    echo "   • Showcase: $combo"
+    echo "   • Config: $env_file"
+    echo "   • Port: $port_start"
+    echo "   • Provider: $provider"
+    echo "   • Dataset: $dataset ($size)"
+    echo ""
     
-    echo "🚀 Starting showcase: $combo"
-    echo "📄 Using config: $env_file"
-    echo "🔗 Provider files: docker/base.docker-compose.yml + docker/${provider}.yml"
-    
-    # Start the services
+    # Start the services with proper cleanup
+    echo "🏗️  Starting services..."
     docker-compose \
         -f docker/base.docker-compose.yml \
         -f docker/${provider}.yml \
         --env-file "$env_file" \
-        up -d
+        up -d --remove-orphans
     
     # Get the showcase port from env file
     local showcase_port=$(grep SHOWCASE_PORT "$env_file" | cut -d= -f2)
     
     echo ""
     echo "✅ Showcase started successfully!"
+    echo ""
     echo "🌐 Access URLs:"
     echo "   • Showcase App: http://localhost:${showcase_port}"
     echo "   • Health Check: http://localhost:${showcase_port}/api/health"
     echo "   • Search API: http://localhost:${showcase_port}/api/search?q=test"
     echo "   • Stats API: http://localhost:${showcase_port}/api/stats"
     echo ""
-    echo "📊 Configuration:"
+    echo "📊 Service Details:"
     echo "   • Provider: $provider"
-    echo "   • Dataset: $dataset ($size)"
+    echo "   • Dataset: $dataset ($size)"  
     echo "   • Port Range: ${showcase_port}-$((showcase_port + 99))"
+    echo "   • Docker Network: smart-search"
     echo ""
     echo "📝 Management Commands:"
     echo "   • Stop: $0 stop --provider $provider --dataset $dataset --size $size"
     echo "   • Logs: $0 logs --provider $provider --dataset $dataset --size $size"
+    echo "   • Status: $0 status"
+    echo ""
+    echo "🔍 Testing the service..."
+    sleep 3
+    
+    # Basic health check
+    if curl -f "http://localhost:${showcase_port}/api/health" >/dev/null 2>&1; then
+        echo "✅ Health check passed - service is running correctly"
+    else
+        echo "⚠️  Health check failed - service may still be starting"
+        echo "💡 Run: $0 logs --provider $provider --dataset $dataset --size $size"
+    fi
 }
 
 stop_showcase() {
@@ -382,10 +574,11 @@ DATASET=""
 SIZE=""
 CONFIG=""
 CUSTOM_PORT=""
+FORCE_CLEANUP="false"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        start|stop|stop-all|list|logs)
+        start|stop|stop-all|list|logs|status|cleanup)
             COMMAND="$1"
             shift
             ;;
@@ -408,6 +601,10 @@ while [[ $# -gt 0 ]]; do
         --port)
             CUSTOM_PORT="$2"
             shift 2
+            ;;
+        --force)
+            FORCE_CLEANUP="true"
+            shift
             ;;
         -h|--help)
             show_usage
@@ -439,7 +636,7 @@ case "$COMMAND" in
             exit 1
         fi
         
-        start_showcase "$PROVIDER" "$DATASET" "$SIZE" "$CONFIG" "$CUSTOM_PORT"
+        start_showcase "$PROVIDER" "$DATASET" "$SIZE" "$CONFIG" "$CUSTOM_PORT" "$FORCE_CLEANUP"
         ;;
     "stop")
         if [[ -z "$PROVIDER" || -z "$DATASET" || -z "$SIZE" ]]; then
@@ -456,6 +653,14 @@ case "$COMMAND" in
         ;;
     "list")
         list_showcases
+        ;;
+    "status")
+        show_system_status
+        ;;
+    "cleanup")
+        cleanup_smart_search_containers "" "" "" "true"
+        echo "🧹 Full system cleanup completed!"
+        echo "💡 All Smart Search containers and networks have been removed."
         ;;
     "logs")
         if [[ -z "$PROVIDER" || -z "$DATASET" || -z "$SIZE" ]]; then
