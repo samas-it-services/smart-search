@@ -343,7 +343,7 @@ test.describe('@samas/smart-search E2E Tests', () => {
                     limit: () => Promise.resolve({
                       data: mockData.filter(item => values.includes(item.category)),
                       error: null
-                    });
+                    })
                   };
                 },
                 limit: () => Promise.resolve({ data: mockData, error: null })

@@ -1,5 +1,4 @@
-// @ts-check
-const { test, expect } = require('@playwright/test');
+import { test, expect } from '@playwright/test';
 
 test.describe('PostgreSQL + Redis Showcase', () => {
   test.beforeEach(async ({ page }) => {
@@ -329,7 +328,11 @@ test.describe('PostgreSQL + Redis Showcase', () => {
       'typescript patterns'
     ];
 
-    const performanceMetrics = [];
+    const performanceMetrics: Array<{
+      query: string;
+      responseTime: number;
+      timestamp: string;
+    }> = [];
 
     for (const query of queries) {
       const startTime = Date.now();
