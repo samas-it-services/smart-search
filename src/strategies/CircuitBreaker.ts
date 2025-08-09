@@ -3,7 +3,7 @@
  * Intelligent failure handling and recovery for search operations
  */
 
-import { CircuitBreakerError, ErrorHandler } from '../errors/SearchErrors';
+import { CircuitBreakerError } from '../errors/SearchErrors';
 
 export interface CircuitBreakerConfig {
   failureThreshold: number; // Number of failures before opening
@@ -104,9 +104,9 @@ export class CircuitBreaker {
       failureRate: this.calculateFailureRate()
     };
     
-    if (this.lastFailureTime) stats.lastFailureTime = this.lastFailureTime;
-    if (this.lastSuccessTime) stats.lastSuccessTime = this.lastSuccessTime;
-    if (this.nextRetryTime) stats.nextRetryTime = this.nextRetryTime;
+    if (this.lastFailureTime) {stats.lastFailureTime = this.lastFailureTime;}
+    if (this.lastSuccessTime) {stats.lastSuccessTime = this.lastSuccessTime;}
+    if (this.nextRetryTime) {stats.nextRetryTime = this.nextRetryTime;}
     
     return stats;
   }
@@ -208,10 +208,9 @@ export class CircuitBreaker {
   }
 
   private calculateFailureRate(): number {
-    if (this.totalRequests === 0) return 0;
+    if (this.totalRequests === 0) {return 0;}
     
     const recentFailureCount = this.recentFailures.length;
-    const windowStart = Date.now() - this.config.monitoringWindow;
     const recentRequests = Math.max(1, this.totalRequests); // Avoid division by zero
     
     return recentFailureCount / recentRequests;

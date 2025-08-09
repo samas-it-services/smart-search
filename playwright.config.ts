@@ -17,7 +17,7 @@ export default defineConfig({
     ['junit', { outputFile: 'test-results/e2e-results.xml' }]
   ],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:13002',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'
@@ -46,9 +46,10 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm run test:serve',
-    port: 3000,
-    reuseExistingServer: !process.env.CI,
-  },
+  // Using existing Docker showcase server
+  // webServer: {
+  //   command: 'npm run test:serve',
+  //   port: 13002,
+  //   reuseExistingServer: !process.env.CI,
+  // },
 });

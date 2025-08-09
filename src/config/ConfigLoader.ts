@@ -20,7 +20,7 @@ export interface SmartSearchConfigFile {
       key?: string; // For Supabase
       uri?: string; // For MongoDB
     };
-    options?: Record<string, any>;
+    options?: Record<string, string | number | boolean>;
   };
   cache?: {
     type: 'redis' | 'memcached' | 'dragonfly';
@@ -35,7 +35,7 @@ export interface SmartSearchConfigFile {
       tls?: boolean | object; // For secure connections
       servers?: string[]; // For Memcached
     };
-    options?: Record<string, any>;
+    options?: Record<string, string | number | boolean>;
   };
   search: {
     fallback: 'database' | 'cache';
@@ -191,9 +191,9 @@ export class ConfigLoader {
           host: process.env.SMART_SEARCH_DB_HOST || 'localhost',
           port: parseInt(process.env.SMART_SEARCH_DB_PORT || '5432')
         };
-        if (dbUser) config.database.connection.user = dbUser;
-        if (dbPassword) config.database.connection.password = dbPassword;
-        if (dbName) config.database.connection.database = dbName;
+        if (dbUser) {config.database.connection.user = dbUser;}
+        if (dbPassword) {config.database.connection.password = dbPassword;}
+        if (dbName) {config.database.connection.database = dbName;}
         break;
       
       case 'mongodb':
@@ -221,12 +221,12 @@ export class ConfigLoader {
           const redisUsername = process.env.REDIS_USERNAME || process.env.SMART_SEARCH_CACHE_USERNAME;
           const redisApiKey = process.env.REDIS_API_KEY || process.env.REDIS_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env.SMART_SEARCH_CACHE_API_KEY;
           
-          if (redisUrl) config.cache.connection.url = redisUrl;
-          if (redisHost) config.cache.connection.host = redisHost;
+          if (redisUrl) {config.cache.connection.url = redisUrl;}
+          if (redisHost) {config.cache.connection.host = redisHost;}
           config.cache.connection.port = parseInt(process.env.REDIS_PORT || process.env.SMART_SEARCH_CACHE_PORT || '6379');
-          if (redisPassword) config.cache.connection.password = redisPassword;
-          if (redisUsername) config.cache.connection.username = redisUsername;
-          if (redisApiKey) config.cache.connection.apiKey = redisApiKey;
+          if (redisPassword) {config.cache.connection.password = redisPassword;}
+          if (redisUsername) {config.cache.connection.username = redisUsername;}
+          if (redisApiKey) {config.cache.connection.apiKey = redisApiKey;}
           config.cache.connection.db = parseInt(process.env.REDIS_DB || process.env.SMART_SEARCH_CACHE_DB || '0');
           config.cache.connection.tls = process.env.REDIS_TLS === 'true' || process.env.SMART_SEARCH_CACHE_TLS === 'true';
           break;

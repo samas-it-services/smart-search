@@ -237,27 +237,27 @@ export class DataGovernanceService {
   static readonly MaskingFunctions = {
     // Social Security Number masking
     ssn: (value: string, userRole: string) => {
-      if (userRole === 'admin' || userRole === 'doctor') return value;
+      if (userRole === 'admin' || userRole === 'doctor') {return value;}
       return value ? `***-**-${value.slice(-4)}` : '';
     },
 
     // Email masking
     email: (value: string, userRole: string) => {
-      if (userRole === 'admin') return value;
-      if (!value) return '';
+      if (userRole === 'admin') {return value;}
+      if (!value) {return '';}
       const [localPart, domain] = value.split('@');
       return `${localPart.slice(0, 2)}***@${domain}`;
     },
 
     // Phone number masking
     phone: (value: string, userRole: string) => {
-      if (userRole === 'admin' || userRole === 'doctor') return value;
+      if (userRole === 'admin' || userRole === 'doctor') {return value;}
       return value ? `***-***-${value.slice(-4)}` : '';
     },
 
     // Medical Record Number masking
     medicalRecordNumber: (value: string, userRole: string) => {
-      if (userRole === 'doctor' || userRole === 'nurse') return value;
+      if (userRole === 'doctor' || userRole === 'nurse') {return value;}
       return value ? `***${value.slice(-3)}` : '';
     },
 
@@ -278,23 +278,23 @@ export class DataGovernanceService {
   static readonly RLSFunctions = {
     // Patient data access by assigned doctor
     patientsByDoctor: (userId: string, userRole: string) => {
-      if (userRole === 'admin') return 'true';
-      if (userRole === 'doctor') return `assigned_doctor_id = '${userId}'`;
+      if (userRole === 'admin') {return 'true';}
+      if (userRole === 'doctor') {return `assigned_doctor_id = '${userId}'`;}
       return 'false';
     },
 
     // Institutional data access
     byInstitution: (userId: string, userRole: string, context: SecurityContext) => {
-      if (userRole === 'admin') return 'true';
-      if (context.institutionId) return `institution_id = '${context.institutionId}'`;
+      if (userRole === 'admin') {return 'true';}
+      if (context.institutionId) {return `institution_id = '${context.institutionId}'`;}
       return 'false';
     },
 
     // Time-based access (office hours only)
     officeHours: (userId: string, userRole: string, context: SecurityContext) => {
       const hour = context.timestamp.getHours();
-      if (userRole === 'admin') return 'true';
-      if (hour >= 8 && hour <= 18) return 'true'; // 8 AM to 6 PM
+      if (userRole === 'admin') {return 'true';}
+      if (hour >= 8 && hour <= 18) {return 'true';} // 8 AM to 6 PM
       return 'access_after_hours = true';
     }
   };
@@ -308,7 +308,7 @@ export class DataGovernanceService {
     const keys = path.split('.');
     const lastKey = keys.pop()!;
     const target = keys.reduce((current, key) => {
-      if (!(key in current)) current[key] = {};
+      if (!(key in current)) {current[key] = {};}
       return current[key];
     }, obj);
     target[lastKey] = value;
@@ -360,7 +360,7 @@ export class DataGovernanceService {
   }
 
   private checkFieldAccess(user: SecurityContext, field: string, classification?: string): boolean {
-    if (!classification) return true;
+    if (!classification) {return true;}
     
     const rolePermissions: Record<string, string[]> = {
       'admin': ['public', 'internal', 'confidential', 'restricted', 'pii', 'phi'],
@@ -375,14 +375,14 @@ export class DataGovernanceService {
   }
 
   private calculateRiskScore(logs: AuditLogEntry[]): number {
-    if (logs.length === 0) return 0;
+    if (logs.length === 0) {return 0;}
     
     let riskScore = 0;
     
     logs.forEach(log => {
-      if (log.sensitiveDataAccessed) riskScore += 2;
-      if (log.complianceFlags.length > 0) riskScore += log.complianceFlags.length * 3;
-      if (!log.success) riskScore += 1;
+      if (log.sensitiveDataAccessed) {riskScore += 2;}
+      if (log.complianceFlags.length > 0) {riskScore += log.complianceFlags.length * 3;}
+      if (!log.success) {riskScore += 1;}
     });
 
     return Math.min(100, (riskScore / logs.length) * 10);

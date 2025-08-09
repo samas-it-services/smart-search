@@ -4,6 +4,7 @@ import tsParser from '@typescript-eslint/parser';
 export default [
   {
     files: ['**/*.ts', '**/*.tsx'],
+    ignores: ['**/*.test.ts', '**/*.spec.ts', 'tests/**/*'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -33,6 +34,14 @@ export default [
   },
   {
     files: ['**/*.test.ts', '**/*.spec.ts', 'tests/**/*', 'examples/**/*'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module'
+        // Removed project reference for test files to avoid TSConfig conflict
+      }
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off'

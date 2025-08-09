@@ -270,7 +270,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/search', async (req, res) => {
     try {
-        const { q: query, limit, offset, category, language, strategy } = req.query;
+        const { q: query, limit, offset, page, category, language, strategy } = req.query;
         
         if (!query || query.trim().length === 0) {
             return res.status(400).json({
@@ -284,9 +284,10 @@ app.get('/api/search', async (req, res) => {
             });
         }
         
-        // Parse parameters
+        // Parse parameters with pagination support
         const searchLimit = Math.min(parseInt(limit) || 20, 500); // Cap at 500 for performance
-        const searchOffset = parseInt(offset) || 0;
+        const currentPage = Math.max(parseInt(page) || 1, 1);
+        const searchOffset = offset ? parseInt(offset) : (currentPage - 1) * searchLimit;
         
         const options = {
             limit: searchLimit,
@@ -304,7 +305,7 @@ app.get('/api/search', async (req, res) => {
             options.filters.language = Array.isArray(language) ? language : [language];
         }
         
-        console.log(`🔍 Search query: "${query}" (strategy: ${options.strategy}, limit: ${searchLimit})`);
+        console.log(`🔍 Search query: "${query}" (strategy: ${options.strategy}, limit: ${searchLimit}, page: ${currentPage})`);
         
         const startTime = Date.now();
         const searchResult = await smartSearch.search(query, options);
@@ -312,10 +313,22 @@ app.get('/api/search', async (req, res) => {
         
         console.log(`✅ Search completed in ${totalTime}ms, found ${searchResult.results.length} results`);
         
+        // Add pagination metadata
+        const totalResults = searchResult.metadata?.totalCount || searchResult.results.length;
+        const totalPages = Math.ceil(totalResults / searchLimit);
+        
         res.json({
             success: true,
             data: {
                 ...searchResult,
+                pagination: {
+                    page: currentPage,
+                    limit: searchLimit,
+                    total: totalResults,
+                    pages: totalPages,
+                    hasNext: currentPage < totalPages,
+                    hasPrev: currentPage > 1
+                },
                 metadata: {
                     ...searchResult.metadata,
                     totalQueryTime: totalTime,

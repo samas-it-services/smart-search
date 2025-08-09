@@ -95,11 +95,14 @@ The showcase will be available at http://localhost:3001
 
 ### What You'll See
 
-The showcase demonstrates a realistic article search system with:
-- **5,000+ sample articles** about technology, programming, and databases
+The showcase demonstrates a realistic healthcare search system with:
+- **100,000+ healthcare records** including clinical trials, treatments, and medical research
 - **Real-time search** with instant results as you type
-- **Advanced filtering** by category, author, and date
+- **Advanced filtering** by category, specialty, and date
 - **Performance metrics** showing cache hit ratios and response times
+
+![Smart Search Homepage - PostgreSQL + Redis Healthcare Showcase](../screenshots/blog/postgres-redis/01-homepage-overview.png)
+*Homepage showing the healthcare search interface with real-time statistics and performance metrics*
 
 ## Deep Dive: The Search Experience
 
@@ -112,6 +115,9 @@ As soon as you start typing, the Smart Search system kicks into action:
 3. **Database Query**: If not cached, executes a PostgreSQL full-text search
 4. **Result Caching**: Stores results in Redis for future requests
 5. **Response**: Returns results typically within 5-15ms
+
+![Diabetes Search Results](../screenshots/blog/postgres-redis/02-search-diabetes.png)
+*Searching for "diabetes" returns relevant healthcare records with highlighted matches and performance metrics*
 
 ### Advanced PostgreSQL Features
 
@@ -155,6 +161,9 @@ Key features include:
 - **Automatic Warming**: Pre-loads common searches
 - **Memory Optimization**: LRU eviction prevents memory exhaustion
 
+![Cardiac Surgery Search Results](../screenshots/blog/postgres-redis/03-search-cardiac-surgery.png)
+*Complex medical query for "cardiac surgery" demonstrating advanced search capabilities and relevance ranking*
+
 ## Performance Results
 
 Our benchmark tests show impressive performance improvements:
@@ -174,6 +183,9 @@ Our benchmark tests show impressive performance improvements:
 - **Memory Usage**: ~128MB for 10,000 cached queries
 - **Throughput**: 15,000+ requests/second sustained
 - **Availability**: 99.9% uptime with circuit breaker
+
+![Performance Statistics Dashboard](../screenshots/blog/postgres-redis/06-performance-stats.png)
+*Real-time performance metrics showing cache hit ratios, response times, and system health*
 
 ## Smart Search Features in Action
 
@@ -716,6 +728,9 @@ http://localhost:3001
 # Try: "diabetes", "cardiac surgery", "clinical trials", "immunotherapy"
 ```
 
+![Immunotherapy Search Results](../screenshots/blog/postgres-redis/04-search-immunotherapy.png)
+*Advanced medical search for "immunotherapy" showing specialized treatment options and research data*
+
 #### **What Each Approach Demonstrates**
 
 | **Method** | **Best For** | **Data Type** | **Strategy Coverage** | **Screenshots** | **Service Management** |
@@ -747,6 +762,13 @@ http://localhost:3001
 - Performance: 8-80ms with adaptive optimization
 - Screenshots: Purple-themed interfaces showing smart medical search
 
+### Mobile Responsive Design
+
+The showcase is fully optimized for mobile devices, providing the same powerful search capabilities on any screen size:
+
+![Mobile Search Interface](../screenshots/blog/postgres-redis/08-mobile-homepage.png)
+*Mobile-optimized interface maintaining full functionality and performance on smaller screens*
+
 ### What's Next?
 
 Explore our other showcases:
@@ -770,4 +792,4 @@ Your support helps us create more high-quality showcases, maintain the Smart Sea
 
 ---
 
-*Want to contribute or have questions? Join our [GitHub discussions](https://github.com/samas-it-services/smart-search/discussions) or follow us on [Twitter](https://twitter.com/smartsearch) for updates.*
+*Want to contribute? Check out our [GitHub repository](https://github.com/samas-it-services/smart-search) or review the documentation for more examples.*

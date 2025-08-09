@@ -15,24 +15,24 @@ test.describe('PostgreSQL + Redis Showcase', () => {
 
   test('Homepage loads correctly', async ({ page }) => {
     // Check title and main elements
-    await expect(page).toHaveTitle(/Smart Search Showcase/);
-    await expect(page.locator('h1')).toContainText('Smart Search Showcase');
+    await expect(page).toHaveTitle(/Healthcare Search Platform/);
+    await expect(page.locator('h1')).toContainText('Healthcare Search');
     await expect(page.locator('p')).toContainText('PostgreSQL + Redis');
     
     // Take screenshot for blog post
     await page.screenshot({ 
-      path: 'screenshots/blog/homepage-overview.png',
+      path: 'screenshots/blog/postgres-redis/01-homepage-overview.png',
       fullPage: true
     });
   });
 
-  test('Search functionality works', async ({ page }) => {
+  test('Search functionality works with real healthcare data', async ({ page }) => {
     const searchInput = page.locator('#searchInput');
     const searchBtn = page.locator('#searchBtn');
     const resultsContainer = page.locator('#resultsContainer');
 
-    // Perform a search
-    await searchInput.fill('postgresql');
+    // Test diabetes search with real healthcare data
+    await searchInput.fill('diabetes');
     await searchBtn.click();
 
     // Wait for results
@@ -42,6 +42,7 @@ test.describe('PostgreSQL + Redis Showcase', () => {
     const resultItems = page.locator('.result-item');
     const count = await resultItems.count();
     expect(count).toBeGreaterThan(0);
+    expect(count).toBeLessThanOrEqual(20); // Default limit
     
     // Check result structure
     const firstResult = resultItems.first();
@@ -49,23 +50,60 @@ test.describe('PostgreSQL + Redis Showcase', () => {
     await expect(firstResult.locator('.result-meta')).toBeVisible();
     await expect(firstResult.locator('.result-description')).toBeVisible();
     
+    // Verify healthcare-specific content appears in results
+    const resultTitles = await resultItems.locator('.result-title').allTextContents();
+    const diabetesResults = resultTitles.filter(title => 
+      title.toLowerCase().includes('diabetes') || 
+      title.toLowerCase().includes('mellitus')
+    );
+    expect(diabetesResults.length).toBeGreaterThan(0);
+    
     // Take screenshot of search results
     await page.screenshot({ 
-      path: 'screenshots/blog/search-results-postgresql.png',
+      path: 'screenshots/blog/postgres-redis/02-search-diabetes.png',
       fullPage: true
     });
   });
 
-  test('Real-time search with different queries', async ({ page }) => {
+  test('Cardiac surgery search and performance metrics', async ({ page }) => {
+    const searchInput = page.locator('#searchInput');
+    const searchBtn = page.locator('#searchBtn');
+    const strategySelector = page.locator('#strategySelector');
+
+    // Test cardiac surgery search
+    await searchInput.fill('cardiac surgery');
+    await strategySelector.selectOption('database-only');
+    await searchBtn.click();
+
+    // Wait for results
+    await page.waitForSelector('.result-item', { timeout: 10000 });
+    
+    // Verify results
+    const resultItems = page.locator('.result-item');
+    const count = await resultItems.count();
+    expect(count).toBeGreaterThan(0);
+    
+    // Verify performance metrics are displayed
+    await expect(page.locator('#performanceInfo')).toBeVisible();
+    const performanceText = await page.locator('#performanceInfo').textContent();
+    expect(performanceText).toContain('ms'); // Should show timing
+    expect(performanceText).toContain('DATABASE'); // Should show source
+    
+    await page.screenshot({ 
+      path: 'screenshots/blog/postgres-redis/03-search-cardiac-surgery.png',
+      fullPage: true
+    });
+  });
+
+  test('Real-time search with different healthcare queries', async ({ page }) => {
     const searchInput = page.locator('#searchInput');
     const resultsCount = page.locator('#resultsCount');
     
-    // Test different search queries
+    // Test different healthcare search queries
     const searchQueries = [
-      { query: 'redis', expectedTerms: ['redis', 'cache'] },
-      { query: 'typescript', expectedTerms: ['typescript', 'javascript'] },
-      { query: 'docker', expectedTerms: ['docker', 'container'] },
-      { query: 'performance', expectedTerms: ['performance', 'optimization'] }
+      { query: 'immunotherapy', expectedTerms: ['immunotherapy', 'treatment'] },
+      { query: 'mental health', expectedTerms: ['mental', 'health', 'psychiatry'] },
+      { query: 'medical research', expectedTerms: ['medical', 'research', 'study'] }
     ];
 
     for (const { query, expectedTerms } of searchQueries) {

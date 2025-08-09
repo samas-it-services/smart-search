@@ -586,9 +586,8 @@ export class SmartSearch {
       return databaseResults;
     } catch (error) {
       console.error('❌ Cache search failed:', error);
-      // Fall back to database search
-      console.warn('⚠️ cache search failed, falling back to database:', error instanceof Error ? error.message : String(error));
-      return await this.database.search(query, options);
+      // Don't fall back to database here - let the higher level search() handle fallback strategy
+      throw error;
     }
   }
 

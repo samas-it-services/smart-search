@@ -6,9 +6,9 @@
 export abstract class SearchError extends Error {
   public readonly code: string;
   public readonly timestamp: Date;
-  public readonly context?: Record<string, any>;
+  public readonly context?: Record<string, unknown>;
 
-  constructor(message: string, code: string, context?: Record<string, any>) {
+  constructor(message: string, code: string, context?: Record<string, unknown>) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;
@@ -33,13 +33,13 @@ export abstract class SearchError extends Error {
 
 // Connection and Infrastructure Errors
 export class DatabaseConnectionError extends SearchError {
-  constructor(message: string, context?: Record<string, any>) {
+  constructor(message: string, context?: Record<string, unknown>) {
     super(message, 'DATABASE_CONNECTION_ERROR', context);
   }
 }
 
 export class CacheConnectionError extends SearchError {
-  constructor(message: string, context?: Record<string, any>) {
+  constructor(message: string, context?: Record<string, unknown>) {
     super(message, 'CACHE_CONNECTION_ERROR', context);
   }
 }
@@ -47,7 +47,7 @@ export class CacheConnectionError extends SearchError {
 export class SearchTimeoutError extends SearchError {
   public readonly timeoutMs: number;
 
-  constructor(message: string, timeoutMs: number, context?: Record<string, any>) {
+  constructor(message: string, timeoutMs: number, context?: Record<string, unknown>) {
     super(message, 'SEARCH_TIMEOUT_ERROR', { ...context, timeoutMs });
     this.timeoutMs = timeoutMs;
   }
@@ -62,7 +62,7 @@ export class CircuitBreakerError extends SearchError {
     message: string, 
     failureCount: number, 
     nextRetryTime: Date, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'CIRCUIT_BREAKER_OPEN', { 
       ...context, 
@@ -85,7 +85,7 @@ export class SecurityAccessDeniedError extends SearchError {
     userId: string, 
     requiredRole: string, 
     actualRole: string, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'SECURITY_ACCESS_DENIED', { 
       ...context, 
@@ -107,7 +107,7 @@ export class DataGovernanceViolationError extends SearchError {
     message: string, 
     violationType: string, 
     fieldPath: string, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'DATA_GOVERNANCE_VIOLATION', { 
       ...context, 
@@ -124,7 +124,7 @@ export class InvalidQueryError extends SearchError {
   public readonly query: string;
   public readonly reason: string;
 
-  constructor(message: string, query: string, reason: string, context?: Record<string, any>) {
+  constructor(message: string, query: string, reason: string, context?: Record<string, unknown>) {
     super(message, 'INVALID_QUERY_ERROR', { ...context, query, reason });
     this.query = query;
     this.reason = reason;
@@ -139,7 +139,7 @@ export class ConfigurationError extends SearchError {
     message: string, 
     configKey: string, 
     expectedType: string, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'CONFIGURATION_ERROR', { ...context, configKey, expectedType });
     this.configKey = configKey;
@@ -156,7 +156,7 @@ export class ProviderError extends SearchError {
     message: string, 
     providerName: string, 
     providerType: 'database' | 'cache', 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'PROVIDER_ERROR', { ...context, providerName, providerType });
     this.providerName = providerName;
@@ -172,7 +172,7 @@ export class IndexNotFoundError extends SearchError {
     message: string, 
     indexName: string, 
     providerName: string, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'INDEX_NOT_FOUND_ERROR', { ...context, indexName, providerName });
     this.indexName = indexName;
@@ -191,7 +191,7 @@ export class ResourceExhaustedError extends SearchError {
     resourceType: 'memory' | 'cpu' | 'connections' | 'storage',
     currentUsage: number,
     limit: number,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'RESOURCE_EXHAUSTED_ERROR', { 
       ...context, 
@@ -217,7 +217,7 @@ export class RateLimitExceededError extends SearchError {
     rateLimit: number,
     windowMs: number,
     resetTime: Date,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'RATE_LIMIT_EXCEEDED_ERROR', { 
       ...context, 
@@ -242,7 +242,7 @@ export class ComplianceViolationError extends SearchError {
     message: string, 
     complianceType: 'HIPAA' | 'PCI_DSS' | 'GDPR' | 'SOX' | 'CUSTOM',
     violationDetails: string[],
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) {
     super(message, 'COMPLIANCE_VIOLATION_ERROR', { 
       ...context, 
@@ -272,7 +272,7 @@ export class ErrorHandler {
       maxRetries?: number;
     }
   ): Promise<never> {
-    const { query, options, provider, retryCount = 0, maxRetries = 3 } = context;
+    const { query, provider, retryCount = 0, maxRetries = 3 } = context;
     
     // Track error frequency for circuit breaker logic
     this.trackErrorFrequency(error, provider);
@@ -445,10 +445,10 @@ export class ErrorHandler {
 }
 
 // Export convenience functions for error creation
-export const createDatabaseError = (message: string, context?: Record<string, any>) =>
+export const createDatabaseError = (message: string, context?: Record<string, unknown>) =>
   new DatabaseConnectionError(message, context);
 
-export const createTimeoutError = (message: string, timeoutMs: number, context?: Record<string, any>) =>
+export const createTimeoutError = (message: string, timeoutMs: number, context?: Record<string, unknown>) =>
   new SearchTimeoutError(message, timeoutMs, context);
 
 export const createSecurityError = (
@@ -456,12 +456,12 @@ export const createSecurityError = (
   userId: string, 
   requiredRole: string, 
   actualRole: string,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ) => new SecurityAccessDeniedError(message, userId, requiredRole, actualRole, context);
 
 export const createCircuitBreakerError = (
   message: string,
   failureCount: number,
   nextRetryTime: Date,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ) => new CircuitBreakerError(message, failureCount, nextRetryTime, context);

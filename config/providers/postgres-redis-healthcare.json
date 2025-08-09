@@ -2,7 +2,7 @@
   "database": {
     "type": "postgresql",
     "connection": {
-      "host": "database",
+      "host": "postgres",
       "port": 5432,
       "database": "smartsearch",
       "user": "user",
@@ -22,7 +22,7 @@
   "cache": {
     "type": "redis",
     "connection": {
-      "host": "cache",
+      "host": "redis",
       "port": 6379,
       "db": 0
     },

@@ -187,7 +187,7 @@ export class MySQLProvider implements DatabaseProvider {
   private async createSearchIndexes(tableName: string, tableConfig: any): Promise<void> {
     try {
       const indexName = `ft_${tableName}_search`;
-      if (this.indexesCreated.has(indexName)) return;
+      if (this.indexesCreated.has(indexName)) {return;}
 
       // Check if table exists
       const [tableExists] = await this.connection.execute(
@@ -353,8 +353,8 @@ export class MySQLProvider implements DatabaseProvider {
         WHERE ${matchExpression}
       `;
       
-      let params: any[] = [searchQuery, searchQuery];
-      let paramIndex = 3;
+      const params: any[] = [searchQuery, searchQuery];
+      const paramIndex = 3;
 
       // Add custom filter if specified
       if (tableConfig.customFilter) {
@@ -406,7 +406,7 @@ export class MySQLProvider implements DatabaseProvider {
     // Clean the query
     const cleanQuery = query.trim();
 
-    if (!cleanQuery) return '';
+    if (!cleanQuery) {return '';}
 
     if (mode === 'BOOLEAN') {
       // For boolean mode, we can pass the query more directly
@@ -430,7 +430,7 @@ export class MySQLProvider implements DatabaseProvider {
     const clauses: string[] = [];
     const params: any[] = [];
 
-    if (!filters) return { clauses, params };
+    if (!filters) {return { clauses, params };}
 
     // Category filter with IN clause for multiple values
     if (filters.category && filters.category.length > 0 && tableConfig.columns.category) {

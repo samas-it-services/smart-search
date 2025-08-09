@@ -458,7 +458,7 @@ export class RedisProvider implements CacheProvider {
       } = options || {};
 
       // Build Redis Search query
-      let searchQuery = `*${query}*`; // Simple wildcard search
+      const searchQuery = `*${query}*`; // Simple wildcard search
 
       // Build FT.SEARCH command
       const searchArgs = [indexName, searchQuery];
@@ -584,14 +584,14 @@ export class RedisProvider implements CacheProvider {
   private determineMatchType(query: string, doc: Record<string, any>): SearchResult['matchType'] {
     const queryLower = query.toLowerCase();
     
-    if (doc.title && doc.title.toLowerCase().includes(queryLower)) return 'title';
-    if (doc.author && doc.author.toLowerCase().includes(queryLower)) return 'author';
-    if (doc.username && doc.username.toLowerCase().includes(queryLower)) return 'username';
-    if (doc.name && doc.name.toLowerCase().includes(queryLower)) return 'name';
-    if (doc.description && doc.description.toLowerCase().includes(queryLower)) return 'description';
-    if (doc.category && doc.category.toLowerCase().includes(queryLower)) return 'category';
-    if (doc.question && doc.question.toLowerCase().includes(queryLower)) return 'question';
-    if (doc.answer && doc.answer.toLowerCase().includes(queryLower)) return 'answer';
+    if (doc.title && doc.title.toLowerCase().includes(queryLower)) {return 'title';}
+    if (doc.author && doc.author.toLowerCase().includes(queryLower)) {return 'author';}
+    if (doc.username && doc.username.toLowerCase().includes(queryLower)) {return 'username';}
+    if (doc.name && doc.name.toLowerCase().includes(queryLower)) {return 'name';}
+    if (doc.description && doc.description.toLowerCase().includes(queryLower)) {return 'description';}
+    if (doc.category && doc.category.toLowerCase().includes(queryLower)) {return 'category';}
+    if (doc.question && doc.question.toLowerCase().includes(queryLower)) {return 'question';}
+    if (doc.answer && doc.answer.toLowerCase().includes(queryLower)) {return 'answer';}
     
     return 'custom';
   }
@@ -604,25 +604,25 @@ export class RedisProvider implements CacheProvider {
     const titleField = doc.title || doc.name;
     if (titleField) {
       const titleLower = titleField.toLowerCase();
-      if (titleLower === queryLower) score += 100;
-      else if (titleLower.startsWith(queryLower)) score += 80;
-      else if (titleLower.includes(queryLower)) score += 60;
+      if (titleLower === queryLower) {score += 100;}
+      else if (titleLower.startsWith(queryLower)) {score += 80;}
+      else if (titleLower.includes(queryLower)) {score += 60;}
     }
 
     // Author/username match gets medium score
     const authorField = doc.author || doc.username;
     if (authorField) {
       const authorLower = authorField.toLowerCase();
-      if (authorLower === queryLower) score += 80;
-      else if (authorLower.startsWith(queryLower)) score += 60;
-      else if (authorLower.includes(queryLower)) score += 40;
+      if (authorLower === queryLower) {score += 80;}
+      else if (authorLower.startsWith(queryLower)) {score += 60;}
+      else if (authorLower.includes(queryLower)) {score += 40;}
     }
 
     // Description/bio match gets lower score
     const descField = doc.description || doc.bio;
     if (descField) {
       const descLower = descField.toLowerCase();
-      if (descLower.includes(queryLower)) score += 20;
+      if (descLower.includes(queryLower)) {score += 20;}
     }
 
     return score;

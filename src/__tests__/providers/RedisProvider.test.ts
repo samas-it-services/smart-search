@@ -392,6 +392,11 @@ describe('RedisProvider', () => {
   });
 
   describe('Error Handling', () => {
+    beforeEach(async () => {
+      mockRedisClient.ping.mockResolvedValue('PONG');
+      await provider.connect();
+    });
+
     it('should handle cache operation errors gracefully', async () => {
       mockRedisClient.set.mockRejectedValue(new Error('Cache error'));
 

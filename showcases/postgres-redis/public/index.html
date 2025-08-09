@@ -566,7 +566,7 @@
             `;
         }
 
-        async function performSearch(event = null) {
+        async function performSearch(event = null, page = 1) {
             if (event) {
                 event.preventDefault();
             }
@@ -593,7 +593,8 @@
                 const params = new URLSearchParams({
                     q: query,
                     limit: limitFilter.value,
-                    strategy: strategySelector.value
+                    strategy: strategySelector.value,
+                    page: page.toString()
                 });
 
                 if (categoryFilter.value) {
@@ -604,7 +605,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    renderResults(data.data, query);
+                    renderResults(data.data, query, page);
                     
                     // Update stats after search
                     setTimeout(loadStats, 500);
@@ -626,15 +627,22 @@
             }
         }
 
-        function renderResults(searchData, query) {
+        function renderResults(searchData, query, currentPage = 1) {
             const resultsContainer = document.getElementById('resultsContainer');
             const resultsCount = document.getElementById('resultsCount');
             const performanceInfo = document.getElementById('performanceInfo');
 
-            const { results, performance, strategy } = searchData;
+            const { results, performance, strategy, pagination } = searchData;
 
-            // Update header info with strategy-specific styling
-            resultsCount.textContent = `Found ${results.length} results for "${query}"`;
+            // Update header info with pagination support
+            const totalResults = pagination?.total || results.length;
+            const limit = pagination?.limit || 20;
+            const totalPages = Math.ceil(totalResults / limit);
+            
+            resultsCount.innerHTML = `
+                Found ${totalResults} results for "${query}" 
+                ${totalPages > 1 ? `(Page ${currentPage} of ${totalPages})` : ''}
+            `;
             
             // Strategy-specific color and icon mapping
             const strategyStyles = {
@@ -659,7 +667,7 @@
                 | <span style="color: ${performance.cacheHit ? '#28a745' : '#dc3545'};">
                     🎯 ${performance.cacheHit ? 'Cache Hit' : 'Cache Miss'}
                 </span>
-                ${strategy.circuitBreakerState ? `| <span style="color: ${strategy.circuitBreakerState === 'OPEN' ? '#dc3545' : '#28a745'};">🔧 CB:${strategy.circuitBreakerState}</span>` : ''}
+                ${strategy && strategy.circuitBreakerState ? `| <span style="color: ${strategy.circuitBreakerState === 'OPEN' ? '#dc3545' : '#28a745'};">🔧 CB:${strategy.circuitBreakerState}</span>` : ''}
                 ${performance.failoverReason ? `<br><small style="color: #ffc107;">⚠️ ${performance.failoverReason}</small>` : ''}
                 ${performance.routingReason ? `<br><small style="color: #6f42c1;">🤖 ${performance.routingReason}</small>` : ''}
             `;
@@ -689,7 +697,7 @@
                     <div class="result-item" style="border-left: 4px solid ${source === 'redis' ? '#28a745' : '#007bff'}; background: ${sourceColor};">
                         <div class="result-title">${highlightText(result.title, query)}</div>
                         <div class="result-meta">
-                            <span>👤 ${result.author}</span>
+                            <span>🏥 ${result.subtitle || 'Healthcare'}</span>
                             <span>📁 ${result.category}</span>
                             <span>📅 ${new Date(result.createdAt).toLocaleDateString()}</span>
                             <span>⭐ ${result.relevanceScore}</span>
@@ -713,6 +721,34 @@
                     </div>
                 `;
             }).join('');
+
+            // Add pagination controls if needed
+            if (pagination && pagination.pages > 1) {
+                const paginationHtml = `
+                    <div class="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                        <button onclick="performSearch(null, ${Math.max(1, currentPage - 1)})" 
+                                ${!pagination.hasPrev ? 'disabled' : ''} 
+                                style="padding: 8px 12px; border: 1px solid #ddd; background: ${!pagination.hasPrev ? '#f8f9fa' : '#fff'}; color: ${!pagination.hasPrev ? '#999' : '#333'}; border-radius: 4px; cursor: ${!pagination.hasPrev ? 'not-allowed' : 'pointer'};">
+                            ← Previous
+                        </button>
+                        <span style="padding: 8px 12px; font-weight: bold;">
+                            Page ${pagination.page} of ${pagination.pages}
+                        </span>
+                        <button onclick="performSearch(null, ${Math.min(pagination.pages, currentPage + 1)})" 
+                                ${!pagination.hasNext ? 'disabled' : ''} 
+                                style="padding: 8px 12px; border: 1px solid #ddd; background: ${!pagination.hasNext ? '#f8f9fa' : '#fff'}; color: ${!pagination.hasNext ? '#999' : '#333'}; border-radius: 4px; cursor: ${!pagination.hasNext ? 'not-allowed' : 'pointer'};">
+                            Next →
+                        </button>
+                        <select onchange="performSearch(null, 1)" id="pageSizeSelector" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-left: 20px;">
+                            <option value="10" ${searchLimit === 10 ? 'selected' : ''}>10 per page</option>
+                            <option value="20" ${searchLimit === 20 ? 'selected' : ''}>20 per page</option>
+                            <option value="50" ${searchLimit === 50 ? 'selected' : ''}>50 per page</option>
+                            <option value="100" ${searchLimit === 100 ? 'selected' : ''}>100 per page</option>
+                        </select>
+                    </div>
+                `;
+                resultsContainer.innerHTML += paginationHtml;
+            }
         }
 
         function highlightText(text, query) {

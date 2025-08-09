@@ -197,7 +197,7 @@ export class PostgreSQLProvider implements DatabaseProvider {
   private async createSearchIndexes(client: PoolClient, tableName: string, tableConfig: any): Promise<void> {
     try {
       const indexName = `idx_${tableName}_fts_search`;
-      if (this.indexesCreated.has(indexName)) return;
+      if (this.indexesCreated.has(indexName)) {return;}
 
       // Check if table exists
       const tableExists = await client.query(
@@ -362,8 +362,8 @@ export class PostgreSQLProvider implements DatabaseProvider {
         WHERE (${tsvectorExpression}) @@ to_tsquery('${searchConfig}', $1)
       `;
       
-      let params: any[] = [tsQuery];
-      let paramIndex = 2;
+      const params: any[] = [tsQuery];
+      const paramIndex = 2;
 
       // Add custom filter if specified
       if (tableConfig.customFilter) {
@@ -417,7 +417,7 @@ export class PostgreSQLProvider implements DatabaseProvider {
       .replace(/[^\w\s"]/g, ' ') // Remove special chars except quotes
       .trim();
 
-    if (!cleanQuery) return 'empty:*';
+    if (!cleanQuery) {return 'empty:*';}
 
     // Split into terms while preserving quoted phrases
     const terms: string[] = [];
@@ -472,7 +472,7 @@ export class PostgreSQLProvider implements DatabaseProvider {
     const params: any[] = [];
     let paramIndex = startParamIndex;
 
-    if (!filters) return { clauses, params };
+    if (!filters) {return { clauses, params };}
 
     // Category filter with IN clause for multiple values
     if (filters.category && filters.category.length > 0 && tableConfig.columns.category) {

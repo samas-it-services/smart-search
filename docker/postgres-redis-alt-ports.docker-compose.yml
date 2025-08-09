@@ -51,7 +51,10 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://user:password@postgres:5432/smartsearch
       - REDIS_URL=redis://redis:6379
-      - DATA_SIZE=${DATA_SIZE:-tiny}
+      - DATA_SIZE=${DATA_SIZE:-medium}
+      - SMART_SEARCH_CONFIG=/app/config/providers/postgres-redis-healthcare.json
+    volumes:
+      - ../config:/app/config
     ports:
       - "13002:13002"  # Use alternative port 13002 instead of 3002
     depends_on:

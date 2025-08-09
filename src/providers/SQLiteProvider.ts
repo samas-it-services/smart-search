@@ -192,7 +192,7 @@ export class SQLiteProvider implements DatabaseProvider {
         WHERE fts MATCH ?
       `;
       
-      let params = [searchQuery];
+      const params = [searchQuery];
 
       // Add filters
       const filterClauses = this.buildFilterClauses(filters, tableConfig);
@@ -253,7 +253,7 @@ export class SQLiteProvider implements DatabaseProvider {
     ).join(' OR ');
 
     let sql = `SELECT * FROM ${tableName} WHERE (${likeConditions})`;
-    let params = searchColumns.map(() => `%${query}%`);
+    const params = searchColumns.map(() => `%${query}%`);
 
     // Add filters
     const filterClauses = this.buildFilterClauses(filters, tableConfig);
@@ -301,7 +301,7 @@ export class SQLiteProvider implements DatabaseProvider {
     const clauses: string[] = [];
     const params: any[] = [];
 
-    if (!filters) return { clauses, params };
+    if (!filters) {return { clauses, params };}
 
     // Category filter
     if (filters.category && filters.category.length > 0 && tableConfig.columns.category) {

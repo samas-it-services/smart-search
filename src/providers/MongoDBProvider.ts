@@ -208,11 +208,11 @@ export class MongoDBProvider implements DatabaseProvider {
    * Creates optimized text indexes for search on collection fields
    */
   private async createSearchIndexes(collectionName: string, collectionConfig: any): Promise<void> {
-    if (!this.db) return;
+    if (!this.db) {return;}
 
     try {
       const indexName = `text_search_${collectionName}`;
-      if (this.indexesCreated.has(indexName)) return;
+      if (this.indexesCreated.has(indexName)) {return;}
 
       const collection = this.db.collection(collectionName);
 
@@ -325,7 +325,7 @@ export class MongoDBProvider implements DatabaseProvider {
    */
   async isConnected(): Promise<boolean> {
     try {
-      if (!this.db) return false;
+      if (!this.db) {return false;}
       
       // Lightweight health check with minimal overhead
       await this.db.admin().ping();
@@ -395,7 +395,7 @@ export class MongoDBProvider implements DatabaseProvider {
     query: string,
     options: SearchOptions
   ): Promise<SearchResult[]> {
-    if (!this.db) return [];
+    if (!this.db) {return [];}
 
     try {
       const collection = this.db.collection(collectionName);
@@ -548,7 +548,7 @@ export class MongoDBProvider implements DatabaseProvider {
   private buildMatchConditions(filters: any, collectionConfig: any): any {
     const matchConditions: any = {};
 
-    if (!filters) return matchConditions;
+    if (!filters) {return matchConditions;}
 
     // Add custom filter if specified
     if (collectionConfig.customFilter) {
@@ -757,6 +757,7 @@ export class MongoDBProvider implements DatabaseProvider {
   /**
    * Gets detailed MongoDB performance statistics
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getDetailedStats(): Promise<any> {
     if (!this.isConnectedFlag || !this.db) {
       throw new Error('MongoDB connection not established');
@@ -830,7 +831,7 @@ export class MongoDBProvider implements DatabaseProvider {
    */
   private formatBytes(bytes: number): string {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {return '0 Bytes';}
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   }

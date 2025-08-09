@@ -422,9 +422,9 @@ export class MemcachedProvider implements CacheProvider {
 
       // Get cache statistics
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      let _memoryUsage = 'Unknown';
+      const _memoryUsage = 'Unknown';
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      let _keyCount = 0;
+      const _keyCount = 0;
       try {
         // In real implementation:
         // const stats = await new Promise((resolve, reject) => {
@@ -489,7 +489,7 @@ export class MemcachedProvider implements CacheProvider {
 
   private formatBytes(bytes: number): string {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) {return '0 Bytes';}
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   }

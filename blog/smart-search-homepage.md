@@ -4,8 +4,8 @@
 
 [![npm version](https://badge.fury.io/js/%40samas%2Fsmart-search.svg)](https://www.npmjs.com/package/@samas/smart-search)
 [![Downloads](https://img.shields.io/npm/dm/@samas/smart-search.svg)](https://www.npmjs.com/package/@samas/smart-search)
-[![Build Status](https://github.com/samas/smart-search/workflows/CI/badge.svg)](https://github.com/samas/smart-search/actions)
-[![Coverage](https://codecov.io/gh/samas/smart-search/branch/main/graph/badge.svg)](https://codecov.io/gh/samas/smart-search)
+[![License](https://img.shields.io/npm/l/@samas/smart-search.svg)](https://github.com/samas-it-services/smart-search/blob/main/LICENSE)
+[![Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## 🎯 What is Smart Search?
 
@@ -109,7 +109,7 @@ Smart Search is a **universal search engine** that seamlessly integrates with yo
 - Planning technology investments
 - Comparing vendor options
 
-[**📕 Decision Maker Guide →**](smart-search-decision-makers.md)
+**📕 Decision Maker Guide** - Available in our comprehensive documentation
 
 **What you'll learn:**
 - 💰 ROI analysis and cost comparisons
@@ -149,7 +149,8 @@ Smart Search is a **universal search engine** that seamlessly integrates with yo
 
 ```bash
 # Universal platform detector
-curl -sSL https://smart-search.dev/setup | bash
+# Check project's package.json for repository URL
+# git clone [repository-url-from-package.json]
 # Automatically detects: Codespaces, GitLab IDE, StackBlitz, and more
 
 # Or choose manually
@@ -167,7 +168,8 @@ npm run platform:setup
 ### 🚀 One-Command Universal Setup
 ```bash
 # Works on ANY platform globally
-curl -sSL https://smart-search.dev/setup | bash
+# Check project's package.json for repository URL
+# git clone [repository-url-from-package.json]
 
 # Platform-specific optimization included:
 # ✅ Auto-detects your development environment
@@ -210,7 +212,7 @@ curl -sSL https://smart-search.dev/setup | bash
 - ⚡ **90% reduction** in database load
 - 📊 **40% increase** in user engagement
 
-[**📊 View All Case Studies →**](case-studies.md)
+**📊 Case Studies** - Coming soon in our documentation
 
 ---
 
@@ -281,7 +283,7 @@ Understanding how to synchronize data between your database and cache is crucial
 ### Healthcare Search Demo
 > *Search through 100,000+ medical records with HIPAA compliance*
 
-![Healthcare Search Demo](appendix/screenshots-homepage/healthcare-search-demo.png)
+*Screenshot: Healthcare search interface with field masking and audit logging*
 
 **Features Demonstrated:**
 - ⚡ Sub-10ms search responses
@@ -289,12 +291,12 @@ Understanding how to synchronize data between your database and cache is crucial
 - 📊 Advanced filtering and pagination
 - 📈 Real-time performance metrics
 
-[**🔗 Try Live Demo**](https://demo.smart-search.dev/healthcare) | [**📷 View All Screenshots**](appendix/)
+[**📖 View Examples**](https://github.com/samas-it-services/smart-search/tree/main/examples) | [**🚀 Try It Yourself**](https://github.com/samas-it-services/smart-search#quick-start)
 
 ### E-commerce Product Search
 > *Search 1M+ products with real-time inventory updates*
 
-![E-commerce Search Demo](appendix/screenshots-homepage/ecommerce-search-demo.png)
+*Screenshot: Product search with filters, categories, and inventory sync*
 
 **Features Demonstrated:**
 - 🛍️ Faceted search with filters
@@ -302,12 +304,12 @@ Understanding how to synchronize data between your database and cache is crucial
 - 🔄 Real-time inventory updates
 - 📱 Mobile-responsive design
 
-[**🔗 Try Live Demo**](https://demo.smart-search.dev/ecommerce)
+[**📖 View Examples**](https://github.com/samas-it-services/smart-search/tree/main/examples)
 
 ### Enterprise Analytics Dashboard
 > *Search across multi-tenant data with security isolation*
 
-![Analytics Dashboard Demo](appendix/screenshots-homepage/analytics-dashboard-demo.png)
+*Screenshot: Multi-tenant dashboard with security isolation and analytics*
 
 **Features Demonstrated:**
 - 🏢 Multi-tenant data isolation
@@ -315,23 +317,26 @@ Understanding how to synchronize data between your database and cache is crucial
 - 🔒 Role-based access control
 - 📈 Performance monitoring
 
-[**🔗 Try Live Demo**](https://demo.smart-search.dev/analytics)
+[**📖 View Examples**](https://github.com/samas-it-services/smart-search/tree/main/examples)
 
 ---
 
-## 🤖 AI Model Optimization
+## 💻 Development & Integration
 
-Smart Search is optimized for all major AI models and development assistants:
+Smart Search is designed to work with your existing development workflow:
 
-| AI Model | Fit Rating | Strengths | Specialized Areas |
-|----------|------------|-----------|-------------------|
-| **Claude** | 95/100 ⭐⭐⭐⭐⭐ | Enterprise docs, analysis | Multi-database reasoning, security |
-| **DEEPSEEK** | 92/100 ⭐⭐⭐⭐⭐ | Research, optimization | Performance analysis, algorithms |
-| **OpenAI GPT** | 89/100 ⭐⭐⭐⭐⭐ | Code generation, APIs | Clean code, documentation |
-| **Llama 3** | 88/100 ⭐⭐⭐⭐⭐ | Open source, customization | Local deployment, privacy |
-| **Qwen 2.5** | 87/100 ⭐⭐⭐⭐⭐ | Multilingual, efficiency | Asian markets, localization |
+**Language Support:**
+- ✅ **TypeScript/JavaScript** - Full type definitions and modern ES6+ support
+- ✅ **Any Node.js project** - Express, Next.js, NestJS, Fastify, and more
+- ✅ **Any database** - PostgreSQL, MySQL, MongoDB, Supabase, SQLite
 
-[**🤖 View All AI Model Configurations →**](ai-models/)
+**Development Tools:**
+- 📚 **Comprehensive documentation** with working examples
+- 🛠️ **CLI tools** for configuration and management
+- 🧪 **Test utilities** for reliable testing
+- 🔧 **TypeScript support** with full type safety
+
+[**📖 View Development Guide →**](blog/development-guide.md)
 
 ---
 
@@ -350,7 +355,7 @@ Smart Search is optimized for all major AI models and development assistants:
 - 🥈 **PostgreSQL + Redis**: 1.5ms avg, 1800 RPS  
 - 🥉 **MongoDB + Memcached**: 2.1ms avg, 1500 RPS
 
-[**📈 Complete Benchmark Results →**](provider-benchmarks.md)
+**📈 Benchmark Results** - Available in our PostgreSQL + Redis showcase
 
 ---
 
@@ -374,7 +379,7 @@ Smart Search is optimized for all major AI models and development assistants:
 - ✅ **Processing integrity** with data validation
 - ✅ **Confidentiality** with encryption at rest and in transit
 
-[**🔒 Complete Security Guide →**](security-compliance-guide.md)
+**🔒 Security Guide** - Available in our comprehensive documentation
 
 ---
 
@@ -421,7 +426,7 @@ Smart Search is optimized for all major AI models and development assistants:
 - **📝 Blog Posts**: Best practices and case studies
 - **🎤 Webinars**: Monthly technical deep-dives
 
-[**🔗 Join Our Community**](https://community.smart-search.dev) | [**💼 Enterprise Inquiry**](mailto:enterprise@smart-search.dev)
+[**🔗 Community**](./community-showcase.md) | [**📖 Documentation**](../README.md)
 
 ---
 
@@ -448,7 +453,7 @@ npm run dev
 | **QA Engineer** | 3-5 days | Complete testing automation |
 | **Decision Maker** | 2 hours | Technology evaluation complete |
 
-[**🚀 Start Your Journey**](#-quick-start---choose-your-path) | [**💬 Talk to Our Team**](https://calendly.com/smart-search/consultation)
+[**🚀 Start Your Journey**](#-quick-start---choose-your-path) | [**💬 Get Help**](./community-showcase.md#community-support)
 
 ---
 
@@ -474,10 +479,10 @@ npm run dev
 - 📅 **No-code configuration** interface
 - 📅 **Enterprise SSO integration**
 
-[**🔮 View Complete Roadmap →**](roadmap.md)
+[**🔮 View Complete Roadmap →**](community-roadmap.md)
 
 ---
 
 *Smart Search is developed with ❤️ by the SAMAS team and trusted by 1000+ companies worldwide.*
 
-**[Get Started Now →](#1-minute-setup)** | **[View Pricing →](pricing.md)** | **[Contact Sales →](mailto:sales@smart-search.dev)**
+**[Get Started Now →](#1-minute-setup)** | **[Open Source Benefits →](open-source-benefits.md)** | **[Community →](community-showcase.md)**

@@ -58,7 +58,7 @@ export class SupabaseProvider implements DatabaseProvider {
       // Test connection by checking if we can access the database
       // Try to query the first configured table, or use a system table if none configured
       const tableNames = Object.keys(this.searchConfig.tables);
-      let testTable = tableNames.length > 0 ? tableNames[0] : 'information_schema.tables';
+      const testTable = tableNames.length > 0 ? tableNames[0] : 'information_schema.tables';
       
       const { error } = await this.supabase
         .from(testTable)
@@ -110,7 +110,7 @@ export class SupabaseProvider implements DatabaseProvider {
     // Search each configured table type
     for (const tableType of tablesToSearch) {
       const tableConfig = this.searchConfig.tables[tableType];
-      if (!tableConfig) continue;
+      if (!tableConfig) {continue;}
 
       try {
         const tableResults = await this.searchTable(query, tableType, tableConfig, options);
@@ -238,9 +238,9 @@ export class SupabaseProvider implements DatabaseProvider {
     const titleField = item[columns.title];
     if (titleField && typeof titleField === 'string') {
       const titleLower = titleField.toLowerCase();
-      if (titleLower === queryLower) score += 100;
-      else if (titleLower.startsWith(queryLower)) score += 80;
-      else if (titleLower.includes(queryLower)) score += 60;
+      if (titleLower === queryLower) {score += 100;}
+      else if (titleLower.startsWith(queryLower)) {score += 80;}
+      else if (titleLower.includes(queryLower)) {score += 60;}
     }
 
     // Subtitle match gets medium-high score
@@ -248,9 +248,9 @@ export class SupabaseProvider implements DatabaseProvider {
       const subtitleField = item[columns.subtitle];
       if (subtitleField && typeof subtitleField === 'string') {
         const subtitleLower = subtitleField.toLowerCase();
-        if (subtitleLower === queryLower) score += 80;
-        else if (subtitleLower.startsWith(queryLower)) score += 60;
-        else if (subtitleLower.includes(queryLower)) score += 40;
+        if (subtitleLower === queryLower) {score += 80;}
+        else if (subtitleLower.startsWith(queryLower)) {score += 60;}
+        else if (subtitleLower.includes(queryLower)) {score += 40;}
       }
     }
 
@@ -259,7 +259,7 @@ export class SupabaseProvider implements DatabaseProvider {
       const descField = item[columns.description];
       if (descField && typeof descField === 'string') {
         const descLower = descField.toLowerCase();
-        if (descLower.includes(queryLower)) score += 20;
+        if (descLower.includes(queryLower)) {score += 20;}
       }
     }
 
@@ -280,7 +280,7 @@ export class SupabaseProvider implements DatabaseProvider {
     try {
       // Test basic connectivity using the same approach as connect()
       const tableNames = Object.keys(this.searchConfig.tables);
-      let testTable = tableNames.length > 0 ? tableNames[0] : 'information_schema.tables';
+      const testTable = tableNames.length > 0 ? tableNames[0] : 'information_schema.tables';
       
       const { error } = await this.supabase
         .from(testTable)
