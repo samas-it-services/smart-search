@@ -22,14 +22,14 @@ services:
       start_period: 30s
 
   cache:
-    image: redis:7.2-alpine
+    image: redis/redis-stack-server:latest
     container_name: smart-search-redis-${PROVIDER_COMBO:-postgres-redis}
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
-      - ../docker/config/redis.conf:/etc/redis/redis.conf
-    command: redis-server /etc/redis/redis.conf
+    environment:
+      - REDIS_ARGS=--save 60 1000
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

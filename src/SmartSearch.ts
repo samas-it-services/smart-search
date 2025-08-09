@@ -84,6 +84,8 @@ export class SmartSearch {
     this.database = config.database;
     if (config.cache) {
       this.cache = config.cache;
+      // Initialize cache connection and create search indexes
+      this.initializeCacheConnection();
     }
     
     // Initialize enterprise features
@@ -357,11 +359,20 @@ export class SmartSearch {
         }
       }
 
-      // Cache results if cache is available and enabled
-      if (this.cache && this.cacheEnabled && strategy.primary === 'database' && results.length > 0) {
+      // Cache results if cache is available and enabled (including empty results)
+      if (this.cache && this.cacheEnabled && strategy.primary === 'database') {
         try {
           const cacheKey = this.generateCacheKey(query, options);
-          await this.cache.set(cacheKey, results, options.cacheTTL ?? this.defaultCacheTTL);
+          // Use shorter TTL for empty results to balance performance vs freshness
+          const ttl = results.length > 0 
+            ? (options.cacheTTL ?? this.defaultCacheTTL)
+            : Math.min(options.cacheTTL ?? this.defaultCacheTTL, 60000); // Max 1 minute for empty results
+          
+          await this.cache.set(cacheKey, results, ttl);
+          
+          if (this.logQueries && results.length === 0) {
+            console.log(`🔄 Cached empty results for "${query}" (TTL: ${ttl}ms)`);
+          }
         } catch (cacheError) {
           // Don't fail the search if caching fails
           if (this.logQueries) {
@@ -544,11 +555,40 @@ export class SmartSearch {
       throw new Error('Cache provider not configured');
     }
 
+    // Generate cache key from query and options
+    const cacheKey = this.generateCacheKey(query, options);
+    
     try {
-      return await this.cache.search(query, options);
+      // Try to get results from cache first
+      const cachedResults = await this.cache.get(cacheKey);
+      if (cachedResults && Array.isArray(cachedResults)) {
+        if (this.logQueries) {
+          console.log(`✅ Cache hit for query: "${query}"`);
+        }
+        return cachedResults;
+      }
+
+      // If not in cache, search database and cache results
+      if (this.logQueries) {
+        console.log(`⚠️ Cache miss for query: "${query}", searching database`);
+      }
+      
+      const databaseResults = await this.database.search(query, options);
+      
+      // Cache the results with TTL
+      const ttl = this.defaultCacheTTL; // Use configured TTL
+      await this.cache.set(cacheKey, databaseResults, ttl);
+      
+      if (this.logQueries) {
+        console.log(`✅ Cached ${databaseResults.length} results for query: "${query}"`);
+      }
+      
+      return databaseResults;
     } catch (error) {
       console.error('❌ Cache search failed:', error);
-      throw error;
+      // Fall back to database search
+      console.warn('⚠️ cache search failed, falling back to database:', error instanceof Error ? error.message : String(error));
+      return await this.database.search(query, options);
     }
   }
 
@@ -559,6 +599,24 @@ export class SmartSearch {
       console.error('❌ Database search failed:', error);
       throw error;
     }
+  }
+
+  private generateCacheKey(query: string, options: SearchOptions): string {
+    // Create a deterministic cache key from query and options
+    const normalizedQuery = query.toLowerCase().trim();
+    const keyData = {
+      q: normalizedQuery,
+      filters: options.filters || {},
+      sortBy: options.sortBy || 'relevance',
+      sortOrder: options.sortOrder || 'desc',
+      limit: options.limit || 20,
+      offset: options.offset || 0
+    };
+    
+    // Use base64 encoding of JSON for a clean key
+    const keyString = JSON.stringify(keyData);
+    const keyPrefix = 'search:'; // Default key prefix for cache
+    return keyPrefix + Buffer.from(keyString).toString('base64');
   }
 
   private isCircuitBreakerOpen(): boolean {
@@ -605,13 +663,6 @@ export class SmartSearch {
     }
   }
 
-  private generateCacheKey(query: string, options: SearchOptions): string {
-    const filterString = options.filters ? JSON.stringify(options.filters) : '';
-    const sortString = `${options.sortBy || 'relevance'}_${options.sortOrder || 'desc'}`;
-    const limitString = `${options.limit || 20}_${options.offset || 0}`;
-    
-    return `search:${Buffer.from(`${query}_${filterString}_${sortString}_${limitString}`).toString('base64')}`;
-  }
 
   private logSearchPerformance(
     query: string, 
@@ -785,5 +836,21 @@ export class SmartSearch {
     operationName: string
   ): Promise<T> {
     return this.circuitBreakerManager.execute(operationName, operation);
+  }
+
+  /**
+   * Initialize cache connection and create search indexes
+   */
+  private initializeCacheConnection(): void {
+    if (!this.cache) return;
+    
+    // Connect to cache asynchronously to create search indexes
+    this.cache.connect?.().then(() => {
+      if (this.logQueries) {
+        console.log('✅ Cache connection and search indexes initialized');
+      }
+    }).catch((error) => {
+      console.warn('⚠️ Cache connection failed, continuing without cache:', error?.message || error);
+    });
   }
 }

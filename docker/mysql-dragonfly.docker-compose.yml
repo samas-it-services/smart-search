@@ -43,7 +43,9 @@ services:
 
   # Showcase Application
   mysql-dragonfly-showcase:
-    build: ../showcases/mysql-dragonfly
+    build: 
+      context: ../
+      dockerfile: showcases/mysql-dragonfly/Dockerfile
     container_name: smart-search-mysql-dragonfly-showcase
     environment:
       - PORT=3003

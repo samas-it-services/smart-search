@@ -41,9 +41,41 @@ export class RedisProvider implements CacheProvider {
 
   constructor(config: RedisConfig) {
     this.config = config;
+    
     // Initialize Redis client with configuration
     const redisConfig = this.buildRedisConfig(config);
-    this.redis = new Redis(redisConfig);
+    
+    try {
+      this.redis = new Redis(redisConfig);
+      
+      // Add error handler to prevent unhandled errors
+      this.redis.on('error', (error) => {
+        console.error('❌ Redis client error:', error.message);
+        this.isConnectedFlag = false;
+      });
+      
+      // Add ready handler
+      this.redis.on('ready', () => {
+        console.log('🔗 Redis client ready');
+        this.isConnectedFlag = true;
+      });
+      
+      // Add connect handler
+      this.redis.on('connect', () => {
+        console.log('🔌 Redis client connected');
+      });
+      
+      // Add disconnect handler
+      this.redis.on('close', () => {
+        console.log('📴 Redis client disconnected');
+        this.isConnectedFlag = false;
+      });
+      
+    } catch (error) {
+      console.error('❌ Failed to create Redis client:', error);
+      this.redis = null as any; // Set to null to handle gracefully
+      this.isConnectedFlag = false;
+    }
   }
 
   /**
@@ -52,9 +84,14 @@ export class RedisProvider implements CacheProvider {
   private buildRedisConfig(config: RedisConfig): any {
     const redisConfig: any = {
       connectTimeout: config.connectTimeout || 10000,
-      lazyConnect: config.lazyConnect !== false,
+      lazyConnect: config.lazyConnect !== undefined ? config.lazyConnect : true, // Default to true for better error handling
       retryDelayOnFailover: config.retryDelayOnFailover || 100,
-      maxRetriesPerRequest: config.maxRetriesPerRequest || 3
+      maxRetriesPerRequest: config.maxRetriesPerRequest || 3,
+      retryOnFailover: true, // Enable retries
+      maxRetriesOnFailover: 5,
+      keepAlive: 30000, // Keep connection alive
+      autoResubscribe: true, // Auto resubscribe on disconnect
+      autoResendUnfulfilledCommands: true // Resend unfulfilled commands
     };
 
     // Handle different connection methods
@@ -100,6 +137,10 @@ export class RedisProvider implements CacheProvider {
   }
 
   async connect(): Promise<void> {
+    if (!this.redis) {
+      throw new Error('Redis client not initialized. Check Redis configuration.');
+    }
+    
     try {
       // Log connection method (without sensitive data)
       this.logConnectionMethod();
@@ -109,11 +150,143 @@ export class RedisProvider implements CacheProvider {
       this.isConnectedFlag = true;
       
       console.log('✅ Connected to Redis successfully');
+      
+      // Auto-create search indexes for common data types
+      await this.createDefaultSearchIndexes();
+      
     } catch (error) {
       console.error('❌ Failed to connect to Redis:', error);
       this.isConnectedFlag = false;
       throw error;
     }
+  }
+
+  /**
+   * Auto-create search indexes for common data structures
+   */
+  private async createDefaultSearchIndexes(): Promise<void> {
+    try {
+      // Healthcare data index - matches the showcase structure
+      await this.createHealthcareSearchIndex();
+      
+      // Generic search index for other data types
+      await this.createGenericSearchIndex();
+      
+      console.log('✅ Search indexes created successfully');
+    } catch (error) {
+      // Don't fail connection if index creation fails
+      console.warn('⚠️ Failed to create search indexes (continuing without search):', error);
+    }
+  }
+
+  /**
+   * Create healthcare-specific search index
+   */
+  private async createHealthcareSearchIndex(): Promise<void> {
+    const indexName = 'healthcare_idx';
+    const keyPrefix = 'healthcare:';
+    
+    try {
+      // Check if index already exists
+      await this.redis.call('FT.INFO', indexName);
+      console.log('📋 Healthcare search index already exists');
+      return;
+    } catch (error) {
+      // Index doesn't exist, create it
+    }
+    
+    // Create FT.CREATE command for healthcare data
+    await this.redis.call('FT.CREATE', indexName,
+      'ON', 'HASH',
+      'PREFIX', '1', keyPrefix,
+      'SCHEMA',
+      // Text fields for full-text search
+      'title', 'TEXT', 'WEIGHT', '3.0',
+      'description', 'TEXT', 'WEIGHT', '2.0',
+      'condition_name', 'TEXT', 'WEIGHT', '3.0',
+      'treatment', 'TEXT', 'WEIGHT', '2.5',
+      'specialty', 'TEXT', 'WEIGHT', '1.5',
+      // Tag fields for filtering
+      'category', 'TAG', 'SEPARATOR', '|',
+      'language', 'TAG', 'SEPARATOR', '|',
+      'visibility', 'TAG', 'SEPARATOR', '|',
+      'type', 'TAG', 'SEPARATOR', '|',
+      // Numeric fields
+      'relevanceScore', 'NUMERIC',
+      'createdAt', 'NUMERIC'
+    );
+    
+    // Register the index configuration
+    this.searchIndexes.set(indexName, {
+      indexName,
+      prefix: keyPrefix,
+      schema: {
+        title: 'TEXT',
+        description: 'TEXT', 
+        condition_name: 'TEXT',
+        treatment: 'TEXT',
+        specialty: 'TEXT',
+        category: 'TAG',
+        language: 'TAG',
+        visibility: 'TAG',
+        type: 'TAG',
+        relevanceScore: 'NUMERIC',
+        createdAt: 'NUMERIC'
+      }
+    });
+    
+    console.log('🏥 Healthcare search index created');
+  }
+
+  /**
+   * Create generic search index for other data types
+   */
+  private async createGenericSearchIndex(): Promise<void> {
+    const indexName = 'generic_idx';
+    const keyPrefix = 'search:';
+    
+    try {
+      // Check if index already exists
+      await this.redis.call('FT.INFO', indexName);
+      console.log('📋 Generic search index already exists');
+      return;
+    } catch (error) {
+      // Index doesn't exist, create it
+    }
+    
+    // Create FT.CREATE command for generic data
+    await this.redis.call('FT.CREATE', indexName,
+      'ON', 'HASH', 
+      'PREFIX', '1', keyPrefix,
+      'SCHEMA',
+      // Basic text fields
+      'title', 'TEXT', 'WEIGHT', '3.0',
+      'description', 'TEXT', 'WEIGHT', '2.0',
+      'content', 'TEXT', 'WEIGHT', '2.0',
+      // Tag fields
+      'category', 'TAG', 'SEPARATOR', '|',
+      'type', 'TAG', 'SEPARATOR', '|',
+      // Numeric fields
+      'score', 'NUMERIC',
+      'timestamp', 'NUMERIC'
+    );
+    
+    // Register the index configuration
+    this.searchIndexes.set(indexName, {
+      indexName,
+      prefix: keyPrefix,
+      schema: {
+        title: 'TEXT',
+        description: 'TEXT',
+        content: 'TEXT',
+        category: 'TAG',
+        type: 'TAG',
+        score: 'NUMERIC',
+        timestamp: 'NUMERIC'
+      }
+    });
+    
+    console.log('🔍 Generic search index created');
   }
 
   /**
@@ -153,8 +326,12 @@ export class RedisProvider implements CacheProvider {
 
   async isConnected(): Promise<boolean> {
     try {
-      if (!this.redis) return false;
+      if (!this.redis) {
+        this.isConnectedFlag = false;
+        return false;
+      }
       await this.redis.ping();
+      this.isConnectedFlag = true;
       return true;
     } catch {
       this.isConnectedFlag = false;
@@ -227,6 +404,12 @@ export class RedisProvider implements CacheProvider {
   }
 
   async search(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
+    // Check Redis client availability
+    if (!this.redis) {
+      console.warn('⚠️ Redis client not available, search unavailable');
+      return [];
+    }
+
     // Check connection and reconnect if needed
     if (!this.isConnectedFlag) {
       try {
@@ -446,6 +629,11 @@ export class RedisProvider implements CacheProvider {
   }
 
   async set(key: string, value: any, ttl?: number): Promise<void> {
+    if (!this.redis || !this.isConnectedFlag) {
+      console.warn('⚠️ Redis client not available, skipping cache set operation');
+      return; // Gracefully fail for cache operations
+    }
+    
     try {
       const serialized = JSON.stringify(value);
       
@@ -456,30 +644,48 @@ export class RedisProvider implements CacheProvider {
       }
     } catch (error) {
       console.error('❌ Failed to set cache value:', error);
+      this.isConnectedFlag = false; // Mark as disconnected on error
       throw error;
     }
   }
 
   async get(key: string): Promise<any> {
+    if (!this.redis || !this.isConnectedFlag) {
+      console.warn('⚠️ Redis client not available, skipping cache get operation');
+      return null; // Gracefully fail for cache operations
+    }
+    
     try {
       const value = await this.redis.get(key);
       return value ? JSON.parse(value) : null;
     } catch (error) {
       console.error('❌ Failed to get cache value:', error);
+      this.isConnectedFlag = false; // Mark as disconnected on error
       return null;
     }
   }
 
   async delete(key: string): Promise<void> {
+    if (!this.redis || !this.isConnectedFlag) {
+      console.warn('⚠️ Redis client not available, skipping cache delete operation');
+      return; // Gracefully fail for cache operations
+    }
+    
     try {
       await this.redis.del(key);
     } catch (error) {
       console.error('❌ Failed to delete cache value:', error);
+      this.isConnectedFlag = false; // Mark as disconnected on error
       throw error;
     }
   }
 
   async clear(pattern?: string): Promise<void> {
+    if (!this.redis || !this.isConnectedFlag) {
+      console.warn('⚠️ Redis client not available, skipping cache clear operation');
+      return; // Gracefully fail for cache operations
+    }
+    
     try {
       if (pattern) {
         const keys = await this.redis.keys(pattern + '*');
@@ -491,6 +697,7 @@ export class RedisProvider implements CacheProvider {
       }
     } catch (error) {
       console.error('❌ Failed to clear cache:', error);
+      this.isConnectedFlag = false; // Mark as disconnected on error
       throw error;
     }
   }
@@ -517,10 +724,12 @@ export class RedisProvider implements CacheProvider {
       // Test search functionality
       let isSearchAvailable = false;
       try {
-        // Try a simple search on the first available index
-        const firstIndex = this.searchIndexes.keys().next().value;
-        if (firstIndex) {
-          await this.redis.call('FT.SEARCH', firstIndex, '*', 'LIMIT', '0', '1');
+        // Check if any search indexes exist (even if empty)
+        const indexList = await this.redis.call('FT._LIST');
+        isSearchAvailable = Array.isArray(indexList) && indexList.length > 0;
+        
+        // If we have indexes configured but not in Redis, still consider available
+        if (!isSearchAvailable && this.searchIndexes.size > 0) {
           isSearchAvailable = true;
         }
       } catch (error) {

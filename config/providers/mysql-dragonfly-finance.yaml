@@ -1,0 +1,107 @@
+# SmartSearch Configuration - MySQL + DragonflyDB Finance
+# Optimized for financial data with MySQL + DragonflyDB infrastructure
+
+database:
+  type: mysql
+  connection:
+    host: database
+    port: 3306
+    database: smartsearch
+    user: user
+    password: password
+    ssl: false
+  pool:
+    max: 20
+    min: 4
+    idleTimeoutMillis: 30000
+    acquireTimeoutMillis: 45000
+  options:
+    charset: utf8mb4
+    timezone: UTC
+    sql_mode: STRICT_TRANS_TABLES
+
+cache:
+  type: dragonfly
+  connection:
+    host: cache
+    port: 6379
+    db: 1
+  options:
+    connectTimeout: 5000
+    lazyConnect: false
+    retryDelayOnFailover: 100
+    maxRetriesPerRequest: 5
+    enableAutoPipelining: true
+
+search:
+  fallback: cache
+  tables:
+    finance_data:
+      columns:
+        id: id
+        title: title
+        subtitle: company_name
+        description: description
+        category: sector
+        language: language
+        visibility: visibility
+        createdAt: date_created
+      searchColumns:
+        - title
+        - description
+        - company_name
+        - sector
+        - industry
+        - symbol
+      type: finance
+      searchConfig: fulltext
+      weightConfig:
+        symbol: 1.0
+        company_name: 1.0
+        title: 0.8
+        sector: 0.6
+        description: 0.4
+      autoCreateIndexes: true
+      indexStrategy: fulltext_innodb
+
+circuitBreaker:
+  failureThreshold: 5
+  recoveryTimeout: 30000
+  healthCacheTTL: 15000
+  maxConsecutiveFailures: 8
+  resetTimeout: 60000
+
+cacheConfig:
+  enabled: true
+  defaultTTL: 120000  # Shorter TTL for real-time financial data
+  maxSize: 25000
+  keyPrefix: "mysql_finance:"
+  compressionThreshold: 1024
+  strategies:
+    - type: cache-first
+      ttl: 300000
+    - type: hybrid
+      ttl: 120000
+    - type: database-first
+      ttl: 60000
+
+performance:
+  enableMetrics: true
+  logQueries: false
+  slowQueryThreshold: 500
+  maxConcurrentQueries: 100
+  queryTimeout: 15000
+  connectionTimeout: 5000
+
+# MySQL + Finance optimizations
+mysqlFinanceOptimizations:
+  fulltextMinWordLength: 2
+  fulltextBooleanSyntax: "+ -><()~*:\"\"&|"
+  innodbBufferPoolSize: "2G"
+  queryCacheSize: "512M"
+  symbolIndexing: true
+  marketCapWeighting: true
+  sectorGrouping: true
+  realTimeDataPriority: true
+  riskRatingBoost: 1.5
+  dividendYieldWeighting: 1.3

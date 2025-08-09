@@ -23,7 +23,7 @@ services:
       start_period: 30s
 
   cache:
-    image: dragonflydb/dragonfly:latest
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.21.0
     container_name: smart-search-dragonfly-${PROVIDER_COMBO:-mysql-dragonfly}
     ports:
       - "${DRAGONFLY_PORT:-6380}:6379"
