@@ -1,6 +1,6 @@
 {
   "name": "@samas/smart-search",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Universal search with intelligent fallback for any database + cache combination",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -75,7 +75,7 @@
     "examples:all": "npm run examples:basic && npm run examples:advanced && npm run examples:multi-db",
     "prepublishOnly": "npm run type-check && npm run test:unit && npm run build",
     "version:patch": "./scripts/publish-to-npm.sh patch",
-    "version:minor": "./scripts/publish-to-npm.sh minor", 
+    "version:minor": "./scripts/publish-to-npm.sh minor",
     "version:major": "./scripts/publish-to-npm.sh major",
     "publish:patch": "./scripts/publish-to-npm.sh patch",
     "publish:minor": "./scripts/publish-to-npm.sh minor",
