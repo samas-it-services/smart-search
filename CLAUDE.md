@@ -172,6 +172,86 @@ FOUNDATION AUDIT REPORT:
 STATUS: [PRODUCTION_READY | PROTOTYPE | NON_FUNCTIONAL]
 RECOMMENDATION: [PROCEED_WITH_ENHANCEMENTS | IMPLEMENT_CORE_FIRST | STOP_WORK]
 
+
+
+#### Phase 5: Self-Evaluation Step (Mandatory After Each Report)
+
+After completing the FOUNDATION AUDIT REPORT, Claude MUST:
+
+1. Assign a **Confidence Score** (0–100%) to each checklist item.
+   - Use the Weighted Evidence Method:
+     ```
+     Confidence % = (DirectEvidenceCount * 1.0 + IndirectEvidenceCount * 0.5) 
+                    / TotalEvidenceCount * 100
+     ```
+     - **DirectEvidenceCount** → Evidence directly verified by running commands, inspecting live outputs, or executing integrations.
+     - **IndirectEvidenceCount** → Evidence inferred from documentation or file structure but not tested live.
+   - High Confidence: 90–100%
+   - Medium Confidence: 70–89%
+   - Low Confidence: 0–69%
+
+2. Flag **Low Confidence (<80%)** items with a note explaining why.
+3. List any **Assumptions Made** during analysis.
+4. Suggest **Next Validation Actions** to increase confidence.
+
+---
+
+
+
+## ⚠️ Edge-Case Scenarios to Watch For
+
+Claude MUST handle these tricky cases correctly:
+
+### Case 1: Documentation vs. Reality
+- **Scenario**: Docs claim MySQL integration, but no `mysql2` dependency exists.
+- **Correct Action**: Flag as `PROTOTYPE` and recommend `IMPLEMENT_CORE_FIRST`.
+
+### Case 2: Placeholder Code
+- **Scenario**: Provider files contain "In real implementation, this would..." comments.
+- **Correct Action**: Mark as `NON_FUNCTIONAL` and STOP further enhancement work.
+
+### Case 3: Passing Unit Tests but No Real Integration
+- **Scenario**: All tests pass but they only use mocks.
+- **Correct Action**: Run integration tests with real services before proceeding.
+
+### Case 4: Empty or Minimal Dependencies
+- **Scenario**: Product claims multiple integrations but `package.json` has almost no dependencies.
+- **Correct Action**: Flag as suspicious and verify actual functionality.
+
+---
+
+
+
+## 📄 Explicit Output Examples
+
+### Example: FOUNDATION AUDIT REPORT
+```
+FOUNDATION AUDIT REPORT:
+- [x] ✅ Core functionality verified working (Confidence: 95%)
+- [x] ✅ All claimed integrations have real implementations (Confidence: 88%, Needs PostgreSQL test run)
+- [x] ✅ Dependencies match claimed features (Confidence: 90%)
+- [ ] ❌ Tests pass and test real functionality (Confidence: 60%, All tests are mocks)
+- [x] ✅ Can successfully run basic examples (Confidence: 92%)
+
+STATUS: PROTOTYPE
+RECOMMENDATION: IMPLEMENT_CORE_FIRST
+
+Assumptions Made:
+- MySQL integration may work based on file structure, not yet verified live.
+
+Next Validation Actions:
+- Run live PostgreSQL integration test.
+- Replace mock-based MySQL tests with real database tests.
+```
+
+### Example: STOP IMMEDIATELY Trigger
+```
+STOP IMMEDIATELY: Provider files contain placeholder code and no real database imports.
+STATUS: NON_FUNCTIONAL
+RECOMMENDATION: IMPLEMENT_CORE_FIRST
+```
+---
+
 ### Systematic Analysis Requirements
 
 1. Foundation First: Always audit core before enhancements

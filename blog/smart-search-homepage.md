@@ -120,40 +120,61 @@ Smart Search is a **universal search engine** that seamlessly integrates with yo
 
 ---
 
-## 🛠️ Modern Platform Integration
+## 🌍 Global Platform Integration
 
-### Lovable.dev Integration
-> *AI-powered development workflow*
+**Universal compatibility across 20+ development platforms worldwide**
+
+### 🤖 AI-Powered Platforms
+> *Next-generation development with AI assistance*
+
+| Platform | Setup | Features | Best For |
+|----------|-------|-----------|----------|
+| **[Lovable.dev](smart-search-global-platforms.md#lovabledev-ai-enhanced-react)** 💜 | 2 min | AI components, NLP queries | React + AI development |
+| **[Cursor](smart-search-global-platforms.md#cursor-ai-code-editor)** ⚡ | 3 min | AI code completion | Enhanced coding |
+| **[GitHub Copilot](smart-search-global-platforms.md#github-copilot-integration)** 🐙 | 2 min | Pair programming | Team collaboration |
+| **[Replit](smart-search-global-platforms.md#replit-cloud-collaboration)** 🚀 | 1 min | Cloud IDE | Instant deployment |
+
+### 🇨🇳 Chinese Development Platforms
+> *专为中国开发者优化 (Optimized for Chinese developers)*
+
+| Platform | Setup | Features | Best For |
+|----------|-------|-----------|----------|
+| **[Gitee 码云](smart-search-global-platforms.md#gitee-码云集成)** 🐞 | 2 min | 中文搜索, 本地化 | 中国企业开发 |
+| **[Coding.net 腾讯云](smart-search-global-platforms.md#codingnet-腾讯云开发)** 🐧 | 3 min | 微信集成, 腾讯生态 | 腾讯云用户 |
+| **[Alibaba Cloud](smart-search-global-platforms.md#alibaba-cloud-workbench-阿里云)** ☁️ | 4 min | 企业级, 高可用 | 阿里云企业 |
+| **[Baidu AI Studio](smart-search-global-platforms.md#baidu-ai-studio-百度ai工作室)** 🔍 | 3 min | 百度AI能力 | AI应用开发 |
+
+### 🌐 International Cloud Platforms
+> *Global development environments*
 
 ```bash
-# One-click setup for Lovable.dev
-./scripts/platform-setup/lovable-setup.sh
+# Universal platform detector
+curl -sSL https://smart-search.dev/setup | bash
+# Automatically detects: Codespaces, GitLab IDE, StackBlitz, and more
 
-# AI-enhanced development
-lovable generate search-component --provider postgres --cache redis
+# Or choose manually
+npm run platform:setup
 ```
 
-### Windsurf IDE Integration
-> *Smart editor configuration*
+**Quick Platform Access**:
+- **🌌 [GitHub Codespaces](smart-search-global-platforms.md#github-codespaces)** - Microsoft's cloud development
+- **🦊 [GitLab Web IDE](smart-search-global-platforms.md#gitlab-web-ide)** - GitLab's integrated environment  
+- **⚡ [StackBlitz](smart-search-global-platforms.md#stackblitz-instant-development)** - Instant full-stack development
+- **🌊 [Windsurf IDE](smart-search-global-platforms.md#windsurf-intelligent-ide)** - AI-integrated smart editor
 
+[**🌍 Complete Global Platform Guide →**](smart-search-global-platforms.md)
+
+### 🚀 One-Command Universal Setup
 ```bash
-# Windsurf workspace setup
-./scripts/platform-setup/windsurf-setup.sh
+# Works on ANY platform globally
+curl -sSL https://smart-search.dev/setup | bash
 
-# Smart shortcuts and snippets included
+# Platform-specific optimization included:
+# ✅ Auto-detects your development environment
+# ✅ Configures regional CDN and mirrors
+# ✅ Applies cultural localization (Chinese, Japanese, Korean)
+# ✅ Ensures compliance (GDPR, PIPL, SOC 2)
 ```
-
-### Replit Integration
-> *Cloud IDE deployment*
-
-```bash
-# One-click Replit deployment
-./scripts/platform-setup/replit-setup.sh
-
-# Instant development environment
-```
-
-[**🔧 Complete Platform Setup Guide →**](platform-integration-guide.md)
 
 ---
 
