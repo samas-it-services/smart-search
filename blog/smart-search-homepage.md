@@ -2,9 +2,9 @@
 
 > **Transform your application's search capabilities with enterprise-grade performance, security, and scalability across multiple database and cache providers.**
 
-[![npm version](https://badge.fury.io/js/%40samas%2Fsmart-search.svg)](https://www.npmjs.com/package/@samas/smart-search)
-[![Downloads](https://img.shields.io/npm/dm/@samas/smart-search.svg)](https://www.npmjs.com/package/@samas/smart-search)
-[![License](https://img.shields.io/npm/l/@samas/smart-search.svg)](https://github.com/samas-it-services/smart-search/blob/main/LICENSE)
+[![npm version](https://badge.fury.io/js/%40bilgrami%2Fsmart-search.svg)](https://www.npmjs.com/package/@bilgrami/smart-search)
+[![Downloads](https://img.shields.io/npm/dm/@bilgrami/smart-search.svg)](https://www.npmjs.com/package/@bilgrami/smart-search)
+[![License](https://img.shields.io/npm/l/@bilgrami/smart-search.svg)](https://github.com/samas-it-services/smart-search/blob/main/LICENSE)
 [![Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## 🎯 What is Smart Search?
@@ -225,7 +225,7 @@ npm run platform:setup
 
 ```bash
 # Quick start for immediate results
-npm install @samas/smart-search
+npm install @bilgrami/smart-search
 ./scripts/quick-start.sh postgres redis
 ```
 
@@ -435,10 +435,10 @@ Smart Search is designed to work with your existing development workflow:
 ### 1-Minute Setup
 ```bash
 # Install Smart Search
-npm install @samas/smart-search
+npm install @bilgrami/smart-search
 
 # Generate configuration
-npx @samas/smart-search init
+npx @bilgrami/smart-search init
 
 # Start searching
 npm run dev

@@ -1,12 +1,12 @@
-# @samas/smart-search
+# @bilgrami/smart-search
 
-[![npm version](https://badge.fury.io/js/@samas/smart-search.svg)](https://badge.fury.io/js/@samas/smart-search)
+[![npm version](https://badge.fury.io/js/@bilgrami/smart-search.svg)](https://badge.fury.io/js/@bilgrami/smart-search)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
 **Universal search with intelligent fallback for any database + cache combination**
 
-`@samas/smart-search` provides a unified search interface that works with any database (PostgreSQL, MySQL, MongoDB, Supabase) and cache (Redis, Memcached, DragonflyDB) combination. Features intelligent fallback when cache is unavailable, circuit breaker patterns, and comprehensive performance monitoring.
+`@bilgrami/smart-search` provides a unified search interface that works with any database (PostgreSQL, MySQL, MongoDB, Supabase) and cache (Redis, Memcached, DragonflyDB) combination. Features intelligent fallback when cache is unavailable, circuit breaker patterns, and comprehensive performance monitoring.
 
 ## 🌟 Support the Project
 
@@ -32,7 +32,7 @@ This is an open-source project developed with ❤️ by the community. If you fi
 ### Installation
 
 ```bash
-npm install @samas/smart-search
+npm install @bilgrami/smart-search
 ```
 
 ### 1. Generate Configuration
@@ -41,10 +41,10 @@ Use our CLI to generate a configuration template:
 
 ```bash
 # Generate JSON configuration
-npx @samas/smart-search init json
+npx @bilgrami/smart-search init json
 
 # Or generate YAML configuration  
-npx @samas/smart-search init yaml
+npx @bilgrami/smart-search init yaml
 ```
 
 This creates a `smart-search.config.json` or `smart-search.config.yaml` file.
@@ -101,7 +101,7 @@ REDIS_URL=redis://localhost:6379
 ### 3. Use SmartSearch
 
 ```typescript
-import { SmartSearchFactory } from '@samas/smart-search';
+import { SmartSearchFactory } from '@bilgrami/smart-search';
 
 // Load from configuration file automatically
 const search = SmartSearchFactory.fromConfig();
@@ -125,10 +125,10 @@ console.log(`Strategy: ${results.strategy.primary} (${results.strategy.reason})`
 
 ```bash
 # Validate your configuration
-npx @samas/smart-search validate
+npx @bilgrami/smart-search validate
 
 # Test database and cache connections
-npx @samas/smart-search test-config
+npx @bilgrami/smart-search test-config
 ```
 
 ## 🔧 Configuration Examples
@@ -341,7 +341,7 @@ SMART_SEARCH_FALLBACK=database
 
 Then use:
 ```typescript
-import { SmartSearchFactory } from '@samas/smart-search';
+import { SmartSearchFactory } from '@bilgrami/smart-search';
 
 const search = SmartSearchFactory.fromEnvironment();
 ```
@@ -410,7 +410,7 @@ if (stats.circuitBreaker.isOpen) {
 Create custom providers by implementing the provider interfaces:
 
 ```typescript
-import { DatabaseProvider, SearchResult, SearchOptions, HealthStatus } from '@samas/smart-search';
+import { DatabaseProvider, SearchResult, SearchOptions, HealthStatus } from '@bilgrami/smart-search';
 
 class CustomDatabaseProvider implements DatabaseProvider {
   name = 'CustomDB';
