@@ -1,6 +1,6 @@
 {
   "name": "@samas/smart-search",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Universal search with intelligent fallback for any database + cache combination",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
