@@ -1,5 +1,5 @@
 {
-  "name": "@samas/smart-search",
+  "name": "@bilgrami/smart-search",
   "version": "2.0.1",
   "description": "Universal search with intelligent fallback for any database + cache combination",
   "main": "dist/index.js",
