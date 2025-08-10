@@ -10,6 +10,11 @@ Sometimes you need powerful search capabilities without the complexity of extern
 
 In this showcase, we'll explore how SQLite's advanced FTS5 engine combined with intelligent in-memory caching through Smart Search creates a self-contained search solution that's perfect for edge computing, offline applications, and resource-constrained environments.
 
+> Screenshot guidance: capture both small and medium dataset runs to illustrate UX across scales.
+>
+> - Small (10K records): `DATA_SIZE=small ./scripts/generate-screenshots-docker.sh sqlite-inmemory`
+> - Medium (100K records): `DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh sqlite-inmemory`
+
 ## Why SQLite + InMemory?
 
 ### SQLite FTS5: The Embedded Search Powerhouse
@@ -55,6 +60,22 @@ graph TD
     style E fill:#fff3e0
     style L fill:#c8e6c9
 ```
+
+## Paging Showcase
+
+Paging is supported in the edge demo. The UI shows current page and total pages; API accepts `page` and `limit` and returns pagination metadata.
+
+- Example URL: `http://localhost:3004/api/search?q=performance&page=2&limit=20`
+- UI header example: `Found N results for "performance" (Page 2 of X)` with Next/Previous controls.
+- Include one Page 2 screenshot for common queries to document paging.
+
+## Verify Paging Checklist
+
+- [ ] Header shows `Found <total> results for "<query>" (Page <current> of <pages>)`
+- [ ] Next/Previous controls work and disable at boundaries
+- [ ] Page size (`limit`) control present (10/20/50) if applicable
+- [ ] Pagination state persists across filter changes
+- [ ] Mobile-friendly pagination controls
 
 ## FTS5 Search Capabilities
 

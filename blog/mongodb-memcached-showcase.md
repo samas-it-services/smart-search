@@ -27,6 +27,11 @@ Modern applications often need to search across complex, semi-structured documen
 
 This comprehensive showcase explores how MongoDB's Atlas Search and text indexing capabilities, combined with Memcached's proven distributed caching, delivers enterprise-scale search performance through our Smart Search library.
 
+> Screenshot guidance: capture both small and medium dataset runs for realistic UX and performance context.
+>
+> - Small (10K records): `DATA_SIZE=small ./scripts/generate-screenshots-docker.sh mongodb-memcached`
+> - Medium (100K records): `DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh mongodb-memcached`
+
 **Key Features Demonstrated:**
 - ✅ **Flexible Document Schema** handling evolving data structures
 - ✅ **Aggregation Pipelines** for complex search queries with transformations
@@ -186,6 +191,22 @@ const geoSearch = [
   }
 ];
 ```
+
+## Paging Showcase
+
+Paging is supported in the document search demo. The UI shows current page and total pages, while the API accepts `page` and `limit` and returns pagination metadata. Use this to capture second-page results in documentation.
+
+- Example URL: `http://localhost:3003/api/search?q=laptop&page=2&limit=20`
+- UI header example: `Found N results for "laptop" (Page 2 of X)` with Next/Previous controls.
+- Include a Page 2 screenshot for large categories or generic queries to illustrate paging clearly.
+
+## Verify Paging Checklist
+
+- [ ] Header shows `Found <total> results for "<query>" (Page <current> of <pages>)`
+- [ ] Next/Previous controls active and disabled at boundaries
+- [ ] Page size (`limit`) control visible and working
+- [ ] Filters (e.g., category, price) preserve pagination state
+- [ ] Mobile: controls are reachable and tap targets are large enough
 
 ## Distributed Caching Strategy
 

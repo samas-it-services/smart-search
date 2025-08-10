@@ -28,6 +28,11 @@ Modern financial analytics demands both **reliability and speed**. Traditional b
 
 This comprehensive showcase explores how **Delta Lake's ACID transactions and time travel capabilities** combine with **Redis's sub-millisecond caching** to create a financial analytics platform that delivers both reliability and performance at scale.
 
+> Screenshot guidance: capture both small and medium dataset runs for realistic UX and performance context.
+>
+> - Small (10K records): `DATA_SIZE=small ./scripts/generate-screenshots-docker.sh deltalake-redis`
+> - Medium (100K records): `DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh deltalake-redis`
+
 **Key Features Demonstrated:**
 - ✅ **ACID Transactions** with full consistency guarantees
 - ✅ **Time Travel Queries** for historical analysis and compliance
@@ -450,6 +455,22 @@ async function monitorStorageSavings(tableName) {
 
 ### Data Lake Organization
 ```
+
+## Paging Showcase
+
+Paging is supported in the analytics demo UI to navigate large result sets. The API and UI expose `page` and `limit` controls and display `(Page N of X)`.
+
+- Example URL: `http://localhost:3005/api/search?q=technology%20sector&page=2&limit=20`
+- UI header example: `Found N results (Page 2 of X)` with Next/Previous buttons.
+- Include at least one Page 2 screenshot for dataset sizes small/medium to illustrate paging.
+
+## Verify Paging Checklist
+
+- [ ] Header shows correct totals: `Found <total> results (Page <current> of <pages>)`
+- [ ] Next/Previous controls enable/disable at boundaries
+- [ ] Page size (`limit`) control visible and working (10/20/50/100)
+- [ ] Pagination state preserved across strategy changes
+- [ ] Mobile pagination usability verified
 /financial-delta-lake/
 ├── market_data/               # Real-time market data
 │   ├── sector=technology/     # Partition by sector

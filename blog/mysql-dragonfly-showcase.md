@@ -17,15 +17,22 @@
 4. [Boolean Search Capabilities](#boolean-search-capabilities)
 5. [Multi-Strategy Financial Search Comparison](#-multi-strategy-financial-search-comparison)
 6. [Getting Started](#getting-started)
-7. [Advanced Configuration](#advanced-configuration)
-8. [Production Use Cases](#production-use-cases)
-9. [Best Practices](#best-practices)
+7. [Paging Showcase](#paging-showcase)
+8. [Verify Paging Checklist](#verify-paging-checklist)
+9. [Advanced Configuration](#advanced-configuration)
+10. [Production Use Cases](#production-use-cases)
+11. [Best Practices](#best-practices)
 
 ## Overview
 
 When milliseconds matter and your application demands both rich SQL capabilities and blazing-fast cache performance, the combination of MySQL 8.0's advanced FULLTEXT search with DragonflyDB's ultra-low latency caching creates a search powerhouse.
 
 This comprehensive showcase explores how **MySQL 8.0's Boolean full-text search** paired with **DragonflyDB's memory-efficient caching** delivers enterprise-grade search performance through our Smart Search library. This combination provides sub-5ms response times while supporting complex Boolean queries and JSON document search.
+
+> Screenshot guidance: capture both small and medium dataset runs to provide realistic UX and performance context.
+>
+> - Small (10K records): `DATA_SIZE=small ./scripts/generate-screenshots-docker.sh mysql-dragonfly`
+> - Medium (100K records): `DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh mysql-dragonfly`
 
 **Key Features Demonstrated:**
 - ✅ **Boolean Search Operators** with +, -, "", *, and () support
@@ -113,6 +120,22 @@ AND JSON_EXTRACT(specs, '$.storage') >= 128;
 ALTER TABLE products 
 ADD FULLTEXT(title, description, JSON_UNQUOTE(JSON_EXTRACT(specs, '$.features')));
 ```
+
+## Paging Showcase
+
+The demo supports paging for large result sets. The UI displays current page information and enables next/previous navigation. The API accepts `page` and `limit` parameters, and returns pagination metadata for docs.
+
+- Example URL: `http://localhost:3002/api/search?q=database&page=2&limit=20`
+- UI shows: `Found N results for "query" (Page 2 of X)` with Next/Previous buttons.
+- For documentation, capture at least one screenshot on Page 2 to demonstrate paging clarity.
+
+## Verify Paging Checklist
+
+- [ ] Results header shows: `Found <total> results for "<query>" (Page <current> of <pages>)`
+- [ ] Next/Previous controls enabled/disabled correctly at boundaries
+- [ ] Page size (`limit`) control visible and functional (10/20/50)
+- [ ] Pagination state persists when changing filters (e.g., category)
+- [ ] Keyboard and mobile accessibility (focus order, tap targets)
 
 ## Performance Benchmarks
 

@@ -6,9 +6,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('@samas/smart-search E2E Tests', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-  });
+test.beforeEach(async ({ page }) => {
+  const target = (process as any)?.env?.E2E_TARGET === 'mock' ? '/test-server.html' : '/';
+  await page.goto(target);
+});
 
   test.describe('Basic Search Functionality', () => {
     test('should perform search with Supabase provider', async ({ page }) => {

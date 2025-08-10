@@ -15,6 +15,11 @@ In today's data-driven world, users expect search results in milliseconds, not s
 
 In this showcase, we'll explore how to build a high-performance search system using **PostgreSQL's powerful full-text search capabilities** combined with **Redis caching** through our Smart Search library. This combination delivers sub-10ms response times while maintaining the rich search features PostgreSQL offers.
 
+> Screenshot guidance: capture both small and medium dataset runs to provide realistic UX and performance context.
+>
+> - Small (10K records): `DATA_SIZE=small ./scripts/generate-screenshots-docker.sh postgres-redis`
+> - Medium (100K records): `DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh postgres-redis`
+
 ## Why PostgreSQL + Redis?
 
 ### PostgreSQL: The Search Powerhouse
@@ -58,6 +63,22 @@ The Smart Search library orchestrates this entire flow, providing:
 - Intelligent TTL management  
 - Health monitoring
 - Performance optimization
+
+## Paging Showcase
+
+Paging is supported throughout the demo. The UI shows current page and total pages, and the API accepts `page` and `limit` parameters with pagination metadata in responses.
+
+- Example URL: `http://localhost:3002/api/search?q=diabetes&page=2&limit=20`
+- UI header example: `Found N results for "diabetes" (Page 2 of X)` with Next/Previous controls.
+- Include at least one Page 2 screenshot for generic queries to demonstrate paging clearly.
+
+## Verify Paging Checklist
+
+- [ ] Header shows `Found <total> results for "<query>" (Page <current> of <pages>)`
+- [ ] Next/Previous controls enabled/disabled at boundaries
+- [ ] Page size (`limit`) control visible and working (10/20/50)
+- [ ] Pagination state persists when changing filters (e.g., specialty)
+- [ ] Mobile: controls are reachable and accessible
 
 ## Setting Up the Showcase
 

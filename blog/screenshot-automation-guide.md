@@ -377,6 +377,42 @@ screenshots/blog/
 └── README.md                          # Documentation of screenshot contents
 ```
 
+### Quick Tips & Troubleshooting
+
+- Data size selection
+  - Use DATA_SIZE to capture a realistic mix. For documentation, prefer at least one small set and one medium set:
+    - `DATA_SIZE=small ./scripts/generate-screenshots-docker.sh postgres-redis`
+    - `DATA_SIZE=medium ./scripts/generate-screenshots-docker.sh postgres-redis`
+  - The script prints the active port and dataset size; screenshots will be saved under size-specific folders.
+
+- Paging in showcases
+  - The PostgreSQL + Redis showcase supports paging via the `page` query parameter and UI next/previous controls.
+  - When authoring scenario steps, include a second page capture to demonstrate paging (e.g., Page 2 of results) to keep docs truthful for larger datasets.
+
+- Playwright reliability
+  - Ensure browsers are installed: `npx playwright install --with-deps`
+  - Wait for real UI states before capture (e.g., `.result-item` visible, network idle) to avoid empty screenshots.
+  - Increase timeouts in slower CI: `PWDEBUG=1` or add `page.waitForLoadState('networkidle')` before screenshots.
+  - Run headless locally with the same viewport/resolution used in CI for consistency.
+
+- Docker resource allocation
+  - Allocate sufficient CPU/RAM for stable captures (e.g., 4 CPUs, 6–8GB RAM) to avoid timeouts when using medium datasets.
+  - Verify container health with `docker ps` and `docker-compose ... logs` before runs.
+
+- Port conflicts & dynamic ports
+  - The launcher detects conflicts on standard ports and will shift the showcase port (e.g., 3002 → 13002). Always read the script’s output for the active port.
+  - When running Playwright against a live showcase, set `BASE_URL` accordingly.
+
+- Dataset integrity
+  - If screenshots show empty results, re-seed: `./scripts/seed-data.sh healthcare medium postgres`.
+  - Validate counts with: `docker exec smart-search-postgres psql -U user -d smartsearch -c "SELECT COUNT(*) FROM healthcare_data;"`
+
+- CI flakiness
+  - Add retries in CI (`retries: 2` in Playwright config) and run one worker for stability on shared runners.
+  - Prefer `--no-sandbox` only when strictly required by the runner; document its usage if applied.
+
+> Note: All timing ranges in this guide are indicative and vary by hardware, dataset size, and environment. Capture fresh screenshots after substantial changes to code, datasets, or infrastructure.
+
 ## Troubleshooting Common Issues
 
 ### Service Startup Problems

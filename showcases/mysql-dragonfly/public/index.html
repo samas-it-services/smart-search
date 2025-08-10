@@ -178,6 +178,9 @@
             padding-bottom: 15px;
             border-bottom: 2px solid #f0f0f0;
         }
+        .pagination-controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+        .pagination-controls button { padding: 8px 12px; border: 1px solid #ddd; background: #fff; color: #333; border-radius: 4px; cursor: pointer; }
+        .pagination-controls button:disabled { background: #f8f9fa; color: #999; cursor: not-allowed; }
 
         .results-count {
             font-size: 1.1rem;
@@ -426,7 +429,7 @@
             `;
         }
 
-        async function performSearch(event = null) {
+        async function performSearch(event = null, page = 1) {
             if (event) {
                 event.preventDefault();
             }
@@ -453,7 +456,8 @@
                 const params = new URLSearchParams({
                     q: query,
                     limit: limitFilter.value,
-                    strategy: strategySelector.value
+                    strategy: strategySelector.value,
+                    page: page.toString()
                 });
 
                 if (categoryFilter.value) {
@@ -464,7 +468,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    renderResults(data.data, query);
+                    renderResults(data.data, query, page);
                     
                     // Update stats after search
                     setTimeout(loadStats, 500);
@@ -486,15 +490,19 @@
             }
         }
 
-        function renderResults(searchData, query) {
+        function renderResults(searchData, query, currentPage = 1) {
             const resultsContainer = document.getElementById('resultsContainer');
             const resultsCount = document.getElementById('resultsCount');
             const performanceInfo = document.getElementById('performanceInfo');
 
-            const { results, performance, strategy } = searchData;
+            const { results, performance, strategy, pagination } = searchData;
+
+            const totalResults = pagination?.total || results.length;
+            const limit = pagination?.limit || Number(document.getElementById('limitFilter').value) || 20;
+            const totalPages = Math.ceil(totalResults / limit);
 
             // Update header info
-            resultsCount.textContent = `Found ${results.length} results for "${query}"`;
+            resultsCount.innerHTML = `Found ${totalResults} results for "${query}" ${totalPages > 1 ? `(Page ${currentPage} of ${totalPages})` : ''}`;
             performanceInfo.innerHTML = `
                 ⚡ ${performance.searchTime.toFixed(1)}ms 
                 | 📊 ${performance.strategy} 
@@ -532,6 +540,20 @@
                     </div>
                 </div>
             `).join('');
+
+            // Pagination controls
+            if (totalPages > 1) {
+                const hasPrev = currentPage > 1;
+                const hasNext = currentPage < totalPages;
+                const paginationHtml = `
+                    <div class="pagination-controls">
+                        <button onclick="performSearch(null, ${Math.max(1, currentPage - 1)})" ${hasPrev ? '' : 'disabled'}>← Previous</button>
+                        <span style="padding: 8px 12px; font-weight: bold;">Page ${currentPage} of ${totalPages}</span>
+                        <button onclick="performSearch(null, ${Math.min(totalPages, currentPage + 1)})" ${hasNext ? '' : 'disabled'}>Next →</button>
+                    </div>
+                `;
+                resultsContainer.innerHTML += paginationHtml;
+            }
         }
 
         function highlightText(text, query) {
