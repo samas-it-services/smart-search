@@ -2,6 +2,9 @@
 
 > **Open source security features and best practices for protecting sensitive data in search applications**
 
+## 📖 Navigation
+← [Development Guide](./development-guide.md) | [Back to Main Documentation](../README.md) | [Developer Guides](../README.md#developer-guides) | [Benchmarking Guide →](./benchmarking-guide.md)
+
 [![Open Source](https://img.shields.io/badge/Open%20Source-Apache%202.0-blue)](https://github.com/samas-it-services/smart-search)
 [![Security](https://img.shields.io/badge/Security-Community%20Reviewed-brightgreen)](#community-security)
 [![Transparent](https://img.shields.io/badge/Security-Transparent-orange)](#security-transparency)

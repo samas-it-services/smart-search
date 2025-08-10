@@ -4,6 +4,11 @@
 
 ---
 
+## 📖 Navigation
+← [MySQL + DragonflyDB](./mysql-dragonfly-showcase.md) | [Back to Main Documentation](../README.md) | [Industry Showcases](../README.md#-complete-documentation--guides) | [Delta Lake + Redis →](./deltalake-redis-showcase.md)
+
+---
+
 ## Table of Contents
 
 1. [Overview](#overview)

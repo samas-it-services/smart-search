@@ -4,6 +4,11 @@
 
 ---
 
+## 📖 Navigation
+← [PostgreSQL + Redis](./postgres-redis-showcase.md) | [Back to Main Documentation](../README.md) | [Industry Showcases](../README.md#-complete-documentation--guides) | [MongoDB + Memcached →](./mongodb-memcached-showcase.md)
+
+---
+
 ## Table of Contents
 
 1. [Overview](#overview)

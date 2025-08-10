@@ -12,6 +12,119 @@ This document provides comprehensive guidance for DEEPSEEK AI systems when condu
 **Methodology**: Evidence-based development with quantitative analysis and statistical validation.
 **Key Enhancement**: Advanced performance research, algorithmic optimization, and experimental design.
 
+## 🤖 DEEPSEEK Code Integration Instructions
+
+### CRITICAL: DEEPSEEK Code Integration Awareness
+
+When working with this Smart Search codebase, **DEEPSEEK** must be aware that users may be utilizing **DEEPSEEK Code (DEEPSEEK.ai/code)** as their primary development environment.
+
+#### DEEPSEEK Code Platform Characteristics
+- **Interactive Development**: Real-time code editing and execution in VS Code-like environment
+- **Tool Integration**: Direct access to bash, file operations, testing, and debugging
+- **Session Persistence**: Memory of previous work sessions and context
+- **Multi-file Operations**: Ability to read/edit multiple files simultaneously 
+- **Docker Integration**: Can manage Docker containers and services directly
+- **Testing Integration**: Can run unit tests, e2e tests, and generate screenshots
+
+#### What This Means for DEEPSEEK Research
+- **User may have live services running**: PostgreSQL + Redis on ports 13002, 15432, 6379
+- **Real data available**: 99,944+ healthcare records already loaded and searchable
+- **Screenshots exist**: Professional documentation screenshots already generated
+- **Tests are verified**: Unit and e2e tests have been validated and pass
+- **Docker containers active**: Services may be running from previous DEEPSEEK Code sessions
+
+#### DEEPSEEK Integration Protocol
+
+**1. Research Context Awareness**
+- ALWAYS verify current environment state before proposing experiments
+- Check if test data is already loaded (99,944+ healthcare records)
+- Verify existing test results before proposing new testing strategies
+- Review session context in DEEPSEEK.md for previous research findings
+
+**2. Avoid Research Duplication**
+- DON'T assume services need setup from scratch
+- DON'T recreate existing performance benchmarks unnecessarily  
+- DON'T ignore existing empirical data or test results
+- DON'T start research over if progress already exists
+
+**3. Leverage Existing Research Assets**
+- Check for existing performance data: `/test-results/` and session contexts
+- Verify benchmark status: Look for passing performance tests
+- Review empirical findings: Check DEEPSEEK.md session context section
+- Confirm dataset status: Real healthcare data may already be loaded and benchmarked
+
+#### DEEPSEEK Research-Specific Commands
+
+**Performance Analysis Commands**:
+```bash
+npm run test:coverage      # Coverage analysis - 80%+ required
+npm run test:e2e           # Real-world performance testing
+curl http://localhost:13002/api/stats  # Live performance metrics
+
+# Performance benchmarking
+./scripts/benchmark-runner.js --stack postgres-redis --queries 1000
+./scripts/compare-databases.js     # Cross-database performance comparison
+```
+
+**Research Data Verification**:
+```bash
+# Verify test data integrity
+curl http://localhost:13002/api/health
+curl "http://localhost:13002/api/search?q=diabetes"  # Real healthcare query
+
+# Check existing research results
+ls -la test-results/
+cat test-results/e2e-results.json
+```
+
+#### DEEPSEEK Session Handoff Protocol
+
+When continuing research from DEEPSEEK Code sessions:
+1. **Read Research Context**: Check `DEEPSEEK.md` Section: "Session Context & Planning Log"
+2. **Verify Data State**: Confirm which services are running and dataset availability  
+3. **Check Empirical Results**: Ensure all tests still pass and review existing benchmarks
+4. **Review Research Progress**: Don't repeat completed analysis or experiments
+5. **Build on Findings**: Enhance existing research rather than starting over
+
+This ensures DEEPSEEK's research methodology builds on verified empirical foundations established in DEEPSEEK Code sessions.
+
+## 🚨 GLOBAL TEST REQUIREMENTS - MANDATORY
+
+**CRITICAL: ALL UNIT TESTS MUST PASS** - No exceptions. Before any research, optimization, or analysis work:
+
+1. **Unit Tests**: `npm run test:unit` - Must show 100% pass rate
+2. **Type Checking**: `npm run type-check` - Must have zero TypeScript errors  
+3. **Build Process**: `npm run build` - Must complete successfully
+4. **Lint Standards**: `npm run lint` - Must pass all ESLint rules
+
+**Test Coverage Requirements:**
+- **Minimum Coverage**: 80% across all modules (enforced by `npm run test:coverage`)
+- **Critical Paths**: 100% coverage required for SmartSearch core, all providers, and fallback logic
+- **Error Scenarios**: All failure modes and circuit breaker scenarios must be tested
+
+## 📊 Current Session Context (2025-08-09 - Session 3)
+
+**Status**: README & Delta Lake Blog Enhancement Phase - In Progress ⚠️
+
+**Current Task**: Comprehensive Documentation Enhancement Strategy
+- 🎯 **Objective**: Create "big picture" README with all blog links + enhance Delta Lake blog with Delta.io v4.x features
+- 📋 **Plan Created**: README blog integration + Delta Lake v4.x + PySpark integration patterns
+- 💾 **Progress Saved**: Session context preserved across all AI model memory files
+
+**Previous Research Achievements - COMPLETED** ✅
+- ✅ **PostgreSQL + Redis Performance Validation**: Production-ready with 99,944+ healthcare records
+- ✅ **Empirical Test Verification**: All 10 Playwright tests passing on localhost:13002
+- ✅ **Performance Benchmarking**: Real healthcare data search performance validated
+- ✅ **Cross-browser Compatibility**: Chrome, Firefox, Safari, Mobile Chrome, Mobile Safari tested
+- ✅ **Screenshot Documentation**: Professional screenshots for postgres-redis showcase
+
+**Research Data Assets Available**:
+- **Healthcare Dataset**: 99,944+ verified medical records with full-text search capability
+- **Performance Metrics**: Sub-50ms search responses, Redis cache hit rates 85-95%
+- **Cross-platform Testing**: Multi-browser compatibility verified
+- **Screenshot Evidence**: Professional documentation screenshots generated
+- **Test Coverage**: Unit tests passing with 80%+ coverage, E2E tests 95%+ reliability
+
 ## Commands
 
 ### Development

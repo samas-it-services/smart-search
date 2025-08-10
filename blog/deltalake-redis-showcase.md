@@ -4,6 +4,11 @@
 
 ---
 
+## 📖 Navigation
+← [MongoDB + Memcached](./mongodb-memcached-showcase.md) | [Back to Main Documentation](../README.md) | [Industry Showcases](../README.md#-complete-documentation--guides) | [Development Guide →](./development-guide.md)
+
+---
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -1086,6 +1091,593 @@ class CompactionMonitor {
     }
   }
 }
+```
+
+## 🚀 Delta Lake 4.0: Next-Generation Features
+
+Delta Lake 4.0 represents the largest update to date, bringing revolutionary capabilities to big data analytics. Released in June 2025, Delta Lake 4.0 introduces features that fundamentally enhance how we handle financial data processing and analytics.
+
+### Delta Connect: Spark Connect Integration
+
+Delta Lake 4.0's most significant advancement is **Delta Connect**, which brings Spark Connect support to both Scala and Python APIs. This decoupled client-server architecture enables remote Spark connectivity from anywhere, revolutionizing distributed financial analytics.
+
+**Benefits for Financial Analytics:**
+- **Remote Processing**: Execute complex analytics from lightweight clients
+- **Scalability**: Distribute processing across multiple Spark clusters
+- **Security**: Enhanced isolation between client applications and data processing
+- **Flexibility**: Connect from Jupyter notebooks, web applications, or mobile apps
+
+```python
+# Delta Connect with Smart Search Integration
+from delta import configure_spark_with_delta_pip
+from pyspark.sql import SparkSession
+
+# Configure Spark with Delta Lake 4.x and Connect protocol
+builder = SparkSession.builder \
+    .appName("FinancialAnalytics") \
+    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+    .config("spark.connect.grpc.arrow.maxRecordsPerBatch", "10000") \
+    .remote("sc://spark-cluster:15002")  # Remote Spark Connect endpoint
+
+spark = configure_spark_with_delta_pip(builder).getOrCreate()
+
+# Integrate with Smart Search for hybrid analytics
+from smart_search import SmartSearch
+
+search = SmartSearch({
+    'database': {
+        'type': 'deltalake',
+        'spark_session': spark,
+        'delta_path': '/data/financial-lake'
+    },
+    'cache': {
+        'type': 'redis',
+        'connection': {'url': 'redis://analytics-cache:6379'}
+    }
+})
+```
+
+### Variant Data Type: Flexible Financial Data Processing
+
+Delta Lake 4.0 introduces the **Variant data type**, enabling flexible processing of semi-structured financial data without predefined schemas. This is revolutionary for handling diverse financial instruments, market data feeds, and regulatory reports.
+
+**Variant Type Benefits:**
+- **Schema Flexibility**: Ingest varied market data formats without upfront schema definition
+- **Performance Optimized**: Spark's binary encoding format for efficient processing
+- **Type Safety**: Maintains data integrity while allowing structural flexibility
+
+```sql
+-- Financial market data with varied structures using Variant
+CREATE TABLE market_events (
+  timestamp TIMESTAMP,
+  source STRING,
+  event_data VARIANT  -- Flexible structure for different event types
+) USING DELTA;
+
+-- Insert different types of financial events
+INSERT INTO market_events VALUES 
+  ('2025-01-01 09:30:00', 'nasdaq', 
+   parse_json('{"type":"trade","symbol":"AAPL","price":150.25,"volume":1000}')),
+  ('2025-01-01 09:30:01', 'options_chain', 
+   parse_json('{"type":"option","underlying":"AAPL","strike":155,"expiry":"2025-02-21","iv":0.25}')),
+  ('2025-01-01 09:30:02', 'news_sentiment', 
+   parse_json('{"type":"news","symbol":"AAPL","sentiment":0.8,"headline":"Strong Q4 earnings"}'));
+
+-- Query flexible data with Smart Search optimization
+SELECT 
+  event_data:type::string as event_type,
+  event_data:symbol::string as symbol,
+  CASE 
+    WHEN event_data:type::string = 'trade' THEN event_data:price::double
+    WHEN event_data:type::string = 'option' THEN event_data:strike::double
+  END as price_level
+FROM market_events
+WHERE event_data:symbol::string = 'AAPL';
+```
+
+### Enhanced Type Widening: Evolution Without Disruption
+
+Delta Lake 4.0 expands type widening capabilities, allowing seamless evolution of financial data schemas without expensive data rewrites.
+
+**Production Financial Scenarios:**
+- **Transaction IDs**: Evolve from INT to LONG as volume grows
+- **Price Precision**: Expand DECIMAL precision for cryptocurrency trading
+- **Volume Metrics**: Widen INTEGER columns for high-frequency trading
+
+```python
+# Schema evolution for financial data
+from pyspark.sql import SparkSession
+from pyspark.sql.types import *
+
+# Enable type widening for financial analytics table
+spark.sql("""
+    ALTER TABLE financial_transactions 
+    SET TBLPROPERTIES (
+        'delta.feature.allowColumnDefaults' = 'supported',
+        'delta.feature.typeWidening' = 'supported'
+    )
+""")
+
+# Evolve transaction ID from INT to LONG without data rewrite
+spark.sql("""
+    ALTER TABLE financial_transactions 
+    ALTER COLUMN transaction_id TYPE BIGINT
+""")
+
+# Increase decimal precision for cryptocurrency prices
+spark.sql("""
+    ALTER TABLE crypto_prices 
+    ALTER COLUMN price TYPE DECIMAL(18,8)  -- From DECIMAL(10,4)
+""")
+```
+
+### Identity Columns: Automated Financial Record Management
+
+Delta Lake 4.0 introduces **Identity Columns**, providing automatic unique ID generation for financial records - crucial for audit trails, transaction tracking, and regulatory compliance.
+
+**Financial Use Cases:**
+- **Transaction IDs**: Automatically generated unique identifiers
+- **Audit Sequence**: Sequential numbering for compliance tracking  
+- **Order Management**: Guaranteed unique order numbers
+- **Report Numbering**: Automated regulatory report sequencing
+
+```sql
+-- Financial transactions with automatic ID generation
+CREATE TABLE financial_transactions (
+  transaction_id BIGINT GENERATED ALWAYS AS IDENTITY (START WITH 1000000 INCREMENT BY 1),
+  account_id STRING,
+  amount DECIMAL(15,2),
+  transaction_type STRING,
+  timestamp TIMESTAMP,
+  compliance_flags ARRAY<STRING>
+) USING DELTA;
+
+-- Identity columns ensure unique transaction IDs automatically
+INSERT INTO financial_transactions (account_id, amount, transaction_type, timestamp) VALUES
+  ('ACC001', 1500.00, 'DEPOSIT', current_timestamp()),
+  ('ACC002', -750.50, 'WITHDRAWAL', current_timestamp()),
+  ('ACC003', 2000.00, 'TRANSFER', current_timestamp());
+
+-- Query with Smart Search integration for audit trails
+SELECT 
+  transaction_id,  -- Automatically generated
+  account_id,
+  amount,
+  transaction_type,
+  timestamp
+FROM financial_transactions
+WHERE transaction_type = 'DEPOSIT'
+ORDER BY transaction_id;
+```
+
+## 🐍 PySpark + Smart Search: Production Analytics Pipeline
+
+Delta Lake 4.0's enhanced PySpark integration creates powerful opportunities for financial analytics pipelines that combine the scalability of Spark with Smart Search's intelligent caching.
+
+### Production PySpark Configuration
+
+```python
+# Enterprise-grade PySpark setup for financial analytics
+from delta import configure_spark_with_delta_pip
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
+
+# Configure Spark for financial workloads
+builder = SparkSession.builder \
+    .appName("FinancialAnalyticsPipeline") \
+    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+    .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
+    .config("spark.sql.adaptive.enabled", "true") \
+    .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
+    .config("spark.sql.adaptive.advisoryPartitionSizeInBytes", "128MB") \
+    .config("spark.sql.adaptive.skewJoin.enabled", "true") \
+    .config("spark.dynamicAllocation.enabled", "true") \
+    .config("spark.dynamicAllocation.maxExecutors", "100") \
+    .config("spark.executor.memory", "8g") \
+    .config("spark.executor.cores", "4")
+
+spark = configure_spark_with_delta_pip(builder).getOrCreate()
+
+# Integrate Smart Search with Spark session
+from smart_search import SmartSearch, DeltaLakeProvider
+
+delta_provider = DeltaLakeProvider({
+    'spark_session': spark,
+    'delta_path': '/data/financial-analytics',
+    'checkpoint_location': '/checkpoints/financial'
+})
+
+search = SmartSearch({
+    'database': delta_provider,
+    'cache': {
+        'type': 'redis',
+        'connection': {
+            'url': 'redis://financial-cache:6379',
+            'password': os.getenv('REDIS_PASSWORD')
+        }
+    },
+    'fallback': 'database',
+    'performance': {
+        'enable_metrics': True,
+        'slow_query_threshold': 1000
+    }
+})
+```
+
+### Real-Time ETL Pipelines with ACID Guarantees
+
+```python
+# Real-time financial data processing with Delta Lake 4.x
+from pyspark.sql.functions import from_json, col, current_timestamp, window
+
+# Define schema for market data stream
+market_data_schema = StructType([
+    StructField("symbol", StringType(), True),
+    StructField("price", DoubleType(), True),
+    StructField("volume", LongType(), True),
+    StructField("timestamp", TimestampType(), True),
+    StructField("exchange", StringType(), True),
+    StructField("metadata", StringType(), True)  # JSON metadata
+])
+
+# Stream processing with Delta Lake ACID guarantees
+market_stream = spark \
+    .readStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "financial-kafka:9092") \
+    .option("subscribe", "market-data") \
+    .load() \
+    .select(
+        from_json(col("value").cast("string"), market_data_schema).alias("data")
+    ) \
+    .select("data.*") \
+    .withColumn("processing_timestamp", current_timestamp()) \
+    .withColumn("metadata_parsed", from_json(col("metadata"), MapType(StringType(), StringType())))
+
+# Write stream to Delta Lake with ACID guarantees
+market_stream.writeStream \
+    .format("delta") \
+    .option("checkpointLocation", "/checkpoints/market-stream") \
+    .option("path", "/data/financial-analytics/market_data") \
+    .partitionBy("exchange", "symbol") \
+    .trigger(processingTime='10 seconds') \
+    .start()
+
+# Simultaneously update Smart Search cache for real-time queries
+def update_search_cache(batch_df, batch_id):
+    """Update Smart Search cache with latest market data"""
+    for row in batch_df.collect():
+        cache_key = f"market:{row.symbol}:{row.exchange}"
+        search.cache.set(cache_key, {
+            'price': row.price,
+            'volume': row.volume,
+            'timestamp': row.timestamp.isoformat(),
+            'last_update': datetime.utcnow().isoformat()
+        }, ttl=30)  # 30-second cache TTL for real-time data
+
+# Apply cache updates to streaming data
+market_stream \
+    .writeStream \
+    .foreachBatch(update_search_cache) \
+    .trigger(processingTime='5 seconds') \
+    .start()
+```
+
+### ML Model Training with Historical Backtesting
+
+```python
+# Machine learning pipelines using Delta Lake time travel
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.regression import GBTRegressor
+from pyspark.ml.evaluation import RegressionEvaluator
+
+class FinancialMLPipeline:
+    def __init__(self, spark_session, search_engine):
+        self.spark = spark_session
+        self.search = search_engine
+        
+    def train_risk_model(self, training_date_range):
+        """Train risk prediction model using historical data"""
+        
+        # Use Delta Lake time travel for point-in-time training data
+        training_data = self.spark.sql(f"""
+            SELECT 
+                symbol,
+                price,
+                volume,
+                volatility_30d,
+                beta,
+                market_cap,
+                sector,
+                price_change_pct,
+                volume_change_pct,
+                risk_score  -- Target variable
+            FROM financial_analytics.market_data
+            TIMESTAMP AS OF '{training_date_range['start']}'
+            WHERE date BETWEEN '{training_date_range['start']}' 
+                          AND '{training_date_range['end']}'
+        """)
+        
+        # Feature engineering
+        feature_columns = ['price', 'volume', 'volatility_30d', 'beta', 'market_cap',
+                          'price_change_pct', 'volume_change_pct']
+        
+        assembler = VectorAssembler(
+            inputCols=feature_columns,
+            outputCol="features"
+        )
+        
+        # Gradient Boosted Trees for risk prediction
+        gbt = GBTRegressor(
+            featuresCol="features",
+            labelCol="risk_score",
+            maxIter=100,
+            maxDepth=6
+        )
+        
+        pipeline = Pipeline(stages=[assembler, gbt])
+        
+        # Train model
+        model = pipeline.fit(training_data)
+        
+        # Cache model predictions for fast serving via Smart Search
+        self.cache_model_predictions(model, training_data)
+        
+        return model
+    
+    def backtest_strategy(self, model, test_dates):
+        """Backtest trading strategy using time travel"""
+        
+        backtest_results = []
+        
+        for test_date in test_dates:
+            # Get historical data as of test_date using time travel
+            historical_data = self.spark.sql(f"""
+                SELECT * FROM financial_analytics.market_data
+                TIMESTAMP AS OF '{test_date}'
+                WHERE symbol IN ('AAPL', 'GOOGL', 'MSFT', 'AMZN')
+            """)
+            
+            # Generate predictions using trained model
+            predictions = model.transform(historical_data)
+            
+            # Calculate strategy performance
+            strategy_performance = self.calculate_strategy_performance(
+                predictions, test_date
+            )
+            
+            backtest_results.append(strategy_performance)
+            
+            # Cache backtest results for fast retrieval
+            cache_key = f"backtest:{test_date}:{model.uid}"
+            self.search.cache.set(cache_key, strategy_performance, ttl=3600)
+        
+        return backtest_results
+
+# Usage example
+ml_pipeline = FinancialMLPipeline(spark, search)
+
+# Train model using data from 6 months ago
+model = ml_pipeline.train_risk_model({
+    'start': '2024-07-01',
+    'end': '2024-12-31'
+})
+
+# Backtest strategy performance
+test_dates = ['2025-01-01', '2025-01-15', '2025-02-01']
+backtest_results = ml_pipeline.backtest_strategy(model, test_dates)
+```
+
+### Regulatory Reporting with Audit Trails
+
+```python
+# Regulatory compliance reporting using Delta Lake audit capabilities
+class ComplianceReporter:
+    def __init__(self, spark_session, search_engine):
+        self.spark = spark_session
+        self.search = search_engine
+    
+    def generate_audit_report(self, table_name, date_range):
+        """Generate comprehensive audit report using Delta Lake history"""
+        
+        # Get all versions of the table within date range
+        history = self.spark.sql(f"""
+            DESCRIBE HISTORY {table_name}
+        """).filter(
+            col("timestamp").between(date_range['start'], date_range['end'])
+        ).collect()
+        
+        audit_report = {
+            'table_name': table_name,
+            'report_period': date_range,
+            'versions_analyzed': len(history),
+            'data_changes': []
+        }
+        
+        # Analyze each version for compliance
+        for version in history:
+            version_analysis = self.analyze_version_compliance(
+                table_name, version.version
+            )
+            audit_report['data_changes'].append(version_analysis)
+        
+        # Cache audit report for regulatory access
+        report_key = f"audit:{table_name}:{date_range['start']}:{date_range['end']}"
+        self.search.cache.set(report_key, audit_report, ttl=86400)  # 24-hour cache
+        
+        return audit_report
+    
+    def monitor_data_quality(self, table_name):
+        """Real-time data quality monitoring with Smart Search integration"""
+        
+        # Define data quality checks
+        quality_checks = self.spark.sql(f"""
+            SELECT 
+                COUNT(*) as total_records,
+                COUNT(DISTINCT symbol) as unique_symbols,
+                SUM(CASE WHEN price <= 0 THEN 1 ELSE 0 END) as invalid_prices,
+                SUM(CASE WHEN volume < 0 THEN 1 ELSE 0 END) as invalid_volumes,
+                MAX(timestamp) as latest_timestamp,
+                MIN(timestamp) as earliest_timestamp
+            FROM {table_name}
+            WHERE date = current_date()
+        """).collect()[0]
+        
+        # Calculate quality score
+        quality_score = self.calculate_quality_score(quality_checks)
+        
+        # Alert on quality issues and cache results
+        if quality_score < 0.95:
+            self.trigger_quality_alert(table_name, quality_score, quality_checks)
+        
+        # Cache quality metrics for dashboard access
+        self.search.cache.set(f"quality:{table_name}:today", {
+            'score': quality_score,
+            'metrics': quality_checks._asdict(),
+            'timestamp': datetime.utcnow().isoformat()
+        }, ttl=300)  # 5-minute cache for real-time monitoring
+
+# Usage for regulatory compliance
+reporter = ComplianceReporter(spark, search)
+
+# Generate audit report for regulatory examination
+audit_report = reporter.generate_audit_report(
+    'financial_analytics.market_data',
+    {'start': '2025-01-01', 'end': '2025-01-31'}
+)
+
+# Monitor ongoing data quality
+reporter.monitor_data_quality('financial_analytics.market_data')
+```
+
+### Cross-Platform Analytics with Jupyter Integration
+
+```python
+# Jupyter notebook integration for financial analysts
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from IPython.display import display, HTML
+
+# Configure Jupyter for financial analytics
+%matplotlib inline
+plt.style.use('seaborn-v0_8')
+sns.set_palette("husl")
+
+class JupyterFinancialAnalytics:
+    def __init__(self, spark_session, search_engine):
+        self.spark = spark_session
+        self.search = search_engine
+        
+    def interactive_portfolio_analysis(self, portfolio_symbols):
+        """Interactive portfolio analysis in Jupyter"""
+        
+        # Fetch portfolio data using Smart Search (cache-optimized)
+        portfolio_data = []
+        for symbol in portfolio_symbols:
+            # Try cache first, fallback to Delta Lake
+            cached_data = self.search.cache.get(f"portfolio:{symbol}")
+            
+            if cached_data:
+                portfolio_data.append(cached_data)
+            else:
+                # Query Delta Lake with time travel for historical context
+                symbol_data = self.spark.sql(f"""
+                    SELECT 
+                        symbol,
+                        price,
+                        volume,
+                        price_change_pct,
+                        volatility_30d,
+                        market_cap
+                    FROM financial_analytics.market_data
+                    WHERE symbol = '{symbol}'
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                """).toPandas().iloc[0].to_dict()
+                
+                portfolio_data.append(symbol_data)
+                
+                # Cache for future use
+                self.search.cache.set(f"portfolio:{symbol}", symbol_data, ttl=300)
+        
+        # Convert to pandas for analysis
+        df = pd.DataFrame(portfolio_data)
+        
+        # Interactive visualizations
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        
+        # Portfolio allocation by market cap
+        axes[0,0].pie(df['market_cap'], labels=df['symbol'], autopct='%1.1f%%')
+        axes[0,0].set_title('Portfolio Allocation by Market Cap')
+        
+        # Risk vs Return scatter
+        axes[0,1].scatter(df['volatility_30d'], df['price_change_pct'], 
+                         s=df['market_cap']/1e9, alpha=0.7)
+        axes[0,1].set_xlabel('30-Day Volatility')
+        axes[0,1].set_ylabel('Price Change %')
+        axes[0,1].set_title('Risk vs Return Profile')
+        
+        # Price performance
+        axes[1,0].bar(df['symbol'], df['price_change_pct'])
+        axes[1,0].set_title('Price Performance by Symbol')
+        axes[1,0].tick_params(axis='x', rotation=45)
+        
+        # Volume analysis
+        axes[1,1].bar(df['symbol'], df['volume'])
+        axes[1,1].set_title('Trading Volume by Symbol')
+        axes[1,1].tick_params(axis='x', rotation=45)
+        
+        plt.tight_layout()
+        plt.show()
+        
+        # Display summary table
+        display(HTML('<h3>Portfolio Summary</h3>'))
+        display(df[['symbol', 'price', 'price_change_pct', 'volatility_30d']].round(2))
+        
+        return df
+
+# Usage in Jupyter notebook
+analytics = JupyterFinancialAnalytics(spark, search)
+
+# Interactive analysis
+portfolio_df = analytics.interactive_portfolio_analysis([
+    'AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA'
+])
+
+# Additional analysis with Delta Lake time travel
+historical_performance = spark.sql("""
+    SELECT 
+        symbol,
+        date,
+        price,
+        LAG(price) OVER (PARTITION BY symbol ORDER BY date) as prev_price,
+        (price - LAG(price) OVER (PARTITION BY symbol ORDER BY date)) / 
+         LAG(price) OVER (PARTITION BY symbol ORDER BY date) * 100 as daily_return
+    FROM financial_analytics.market_data
+    TIMESTAMP AS OF '2025-01-01'  -- Point-in-time analysis
+    WHERE symbol IN ('AAPL', 'GOOGL', 'MSFT')
+    ORDER BY symbol, date
+""").toPandas()
+
+# Visualize historical performance
+plt.figure(figsize=(12, 6))
+for symbol in historical_performance['symbol'].unique():
+    symbol_data = historical_performance[historical_performance['symbol'] == symbol]
+    plt.plot(pd.to_datetime(symbol_data['date']), symbol_data['daily_return'], 
+             label=symbol, linewidth=2)
+
+plt.title('Daily Returns Comparison')
+plt.xlabel('Date')
+plt.ylabel('Daily Return %')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
 ```
 
 ## Key Takeaways

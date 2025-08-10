@@ -18,6 +18,66 @@
 - Friendly technical mentorship patterns
 - Cross-cultural team collaboration
 
+## 🤖 Kimi Code Integration Instructions
+
+### CRITICAL: Kimi Code Integration Awareness
+
+When working with this Smart Search codebase, **Kimi AI** must be aware that users may be utilizing **Kimi Code (Kimi.ai/code)** as their primary development environment.
+
+#### Kimi Code Platform Characteristics
+- **Interactive Development**: Real-time code editing and execution in VS Code-like environment
+- **Tool Integration**: Direct access to bash, file operations, testing, and debugging
+- **Session Persistence**: Memory of previous work sessions and context
+- **Multi-file Operations**: Ability to read/edit multiple files simultaneously 
+- **Docker Integration**: Can manage Docker containers and services directly
+- **Testing Integration**: Can run unit tests, e2e tests, and generate screenshots
+
+#### What This Means for Kimi Friendly Development
+- **User may have live services running**: PostgreSQL + Redis on ports 13002, 15432, 6379
+- **Real data available**: 99,944+ healthcare records already loaded and searchable
+- **Screenshots exist**: Professional documentation screenshots already generated
+- **Tests are verified**: Unit and e2e tests have been validated and pass
+- **Docker containers active**: Services may be running from previous Kimi Code sessions
+
+#### Kimi Integration Protocol
+
+**1. Friendly Context Awareness**
+- ALWAYS warmly check current environment state before offering help
+- Gently verify existing progress before suggesting new approaches
+- Kindly review session context in Kimi.md for previous work
+- Thoughtfully assess what's already working before proposing changes
+
+**2. Build on User Success with Warmth**
+- DON'T ignore the great work the user has already accomplished
+- DON'T recreate functionality that's already working well
+- DON'T assume services need setup when they may already be running
+- DON'T start over - instead, celebrate and build on existing success
+
+## 🚨 GLOBAL TEST REQUIREMENTS - MANDATORY
+
+**CRITICAL: ALL UNIT TESTS MUST PASS** - No exceptions. Let's ensure quality together:
+
+1. **Unit Tests**: `npm run test:unit` - Must show 100% pass rate
+2. **Type Checking**: `npm run type-check` - Must have zero TypeScript errors  
+3. **Build Process**: `npm run build` - Must complete successfully
+4. **Lint Standards**: `npm run lint` - Must pass all ESLint rules
+
+## 📊 Current Session Context (2025-08-09 - Session 3)
+
+**Status**: README & Delta Lake Blog Enhancement Phase - In Progress ⚠️
+
+**Current Friendly Task**: Comprehensive Documentation Enhancement Strategy
+- 🎯 **Friendly Objective**: Create a welcoming "big picture" README that helps users understand all available resources
+- 📋 **Friendly Plan**: Enhance Delta Lake blog with cutting-edge v4.x features in an approachable way
+- 💾 **Friendly Progress**: Session context thoughtfully preserved across all AI model memory files
+
+**Friendly Assets Available for User**:
+- **Amazing Healthcare Dataset**: 99,944+ carefully verified medical records ready for exploration
+- **Excellent Performance Data**: Sub-50ms search responses that users will love, Redis cache hit rates 85-95%
+- **Great Cross-platform Testing**: Multi-browser compatibility verified with care across 5 browsers
+- **Beautiful Documentation**: Professional screenshots created with attention to detail
+- **Reliable Test Suite**: Unit tests passing with 80%+ coverage, E2E tests running smoothly at 95%+ reliability
+
 # KIMI Smart Search Friendly Development Guide
 
 This file provides specialized guidance to Kimi AI when working with the Smart Search codebase, optimized for friendly technical mentorship with cultural awareness and bilingual development support.

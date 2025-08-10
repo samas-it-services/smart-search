@@ -18,6 +18,58 @@
 - Cultural adaptation for global teams
 - Mathematical optimization approaches
 
+## 🤖 Qwen 2.5 Code Integration Instructions
+
+### CRITICAL: Qwen 2.5 Code Integration Awareness
+
+When working with this Smart Search codebase, **Qwen 2.5** must be aware that users may be utilizing **Qwen 2.5 Code (Qwen 2.5.ai/code)** as their primary development environment.
+
+#### What This Means for Qwen 2.5 Multilingual Development
+- **User may have live services running**: PostgreSQL + Redis on ports 13002, 15432, 6379
+- **Real data available**: 99,944+ healthcare records already loaded and searchable
+- **Screenshots exist**: Professional documentation screenshots already generated
+- **Tests are verified**: Unit and e2e tests have been validated and pass
+- **Docker containers active**: Services may be running from previous Qwen 2.5 Code sessions
+
+#### Qwen 2.5 Integration Protocol
+
+**1. Multilingual Context Awareness**
+- ALWAYS verify current environment state with mathematical precision
+- Check existing implementations before proposing resource-efficient alternatives
+- Review session context in Qwen 2.5.md for previous multilingual development
+- Optimize for existing infrastructure rather than creating new resource-intensive solutions
+
+**2. Build on Existing Multilingual Assets**
+- DON'T ignore existing efficient implementations that may be working
+- DON'T recreate multilingual functionality that's already optimized
+- DON'T assume services need mathematical re-optimization from scratch
+- DON'T start over - instead, mathematically enhance existing efficiency
+
+## 🚨 GLOBAL TEST REQUIREMENTS - MANDATORY
+
+**CRITICAL: ALL UNIT TESTS MUST PASS** - Mathematical precision required:
+
+1. **Unit Tests**: `npm run test:unit` - Must show 100% pass rate
+2. **Type Checking**: `npm run type-check` - Must have zero TypeScript errors  
+3. **Build Process**: `npm run build` - Must complete successfully
+4. **Lint Standards**: `npm run lint` - Must pass all ESLint rules
+
+## 📊 Current Session Context (2025-08-09 - Session 3)
+
+**Status**: README & Delta Lake Blog Enhancement Phase - In Progress ⚠️
+
+**Current Multilingual Task**: Comprehensive Documentation Enhancement Strategy
+- 🎯 **Multilingual Objective**: Create efficient "big picture" README with resource optimization
+- 📋 **Multilingual Plan**: Enhance Delta Lake blog with mathematically validated v4.x features
+- 💾 **Multilingual Progress**: Session context preserved across all AI model memory files
+
+**Multilingual Assets Available**:
+- **Optimized Healthcare Dataset**: 99,944+ verified medical records with efficient search algorithms
+- **Mathematical Performance Data**: Sub-50ms search responses with 85-95% cache efficiency optimization
+- **Cross-Cultural Testing**: Multi-browser compatibility verified for global deployment efficiency
+- **Multilingual Documentation**: Professional screenshots optimized for international use
+- **Efficient Test Suite**: Unit tests passing with 80%+ coverage, mathematically optimized E2E tests 95%+ reliability
+
 # QWEN 2.5 Smart Search Development Guide
 
 This file provides specialized guidance to Qwen 2.5 when working with the Smart Search codebase, optimized for multilingual development and efficiency-focused implementation.

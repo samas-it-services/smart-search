@@ -4,6 +4,11 @@
 
 ---
 
+## 📖 Navigation
+← [Back to Main Documentation](../README.md) | [Industry Showcases](../README.md#-complete-documentation--guides) | [Technical Deep Dives](../README.md#technical-deep-dives) | [Delta Lake + Redis →](./deltalake-redis-showcase.md)
+
+---
+
 ## Introduction
 
 In today's data-driven world, users expect search results in milliseconds, not seconds. Traditional database queries often struggle to meet these performance demands, especially as data grows. That's where intelligent caching comes in.

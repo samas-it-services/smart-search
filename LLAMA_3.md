@@ -18,6 +18,66 @@
 - Privacy-first implementation patterns
 - Open-source contribution guidelines
 
+## 🤖 Llama 3 Code Integration Instructions
+
+### CRITICAL: Llama 3 Code Integration Awareness
+
+When working with this Smart Search codebase, **Llama 3** must be aware that users may be utilizing **Llama 3 Code (Llama 3.ai/code)** as their primary development environment.
+
+#### Llama 3 Code Platform Characteristics
+- **Interactive Development**: Real-time code editing and execution in VS Code-like environment
+- **Tool Integration**: Direct access to bash, file operations, testing, and debugging
+- **Session Persistence**: Memory of previous work sessions and context
+- **Multi-file Operations**: Ability to read/edit multiple files simultaneously 
+- **Docker Integration**: Can manage Docker containers and services directly
+- **Testing Integration**: Can run unit tests, e2e tests, and generate screenshots
+
+#### What This Means for Llama 3 Community Development
+- **User may have live services running**: PostgreSQL + Redis on ports 13002, 15432, 6379
+- **Real data available**: 99,944+ healthcare records already loaded and searchable
+- **Screenshots exist**: Professional documentation screenshots already generated
+- **Tests are verified**: Unit and e2e tests have been validated and pass
+- **Docker containers active**: Services may be running from previous Llama 3 Code sessions
+
+#### Llama 3 Integration Protocol
+
+**1. Community-First Context Awareness**
+- ALWAYS respect existing community contributions and progress
+- Check current environment state to build on collaborative work
+- Review session context in Llama 3.md for community development history
+- Verify existing implementations before proposing community alternatives
+
+**2. Build on Open-Source Progress**
+- DON'T ignore existing open-source implementations that may be working
+- DON'T recreate community functionality that's already been contributed
+- DON'T assume services need community setup from scratch
+- DON'T start over - instead, contribute to and enhance existing work
+
+## 🚨 GLOBAL TEST REQUIREMENTS - MANDATORY
+
+**CRITICAL: ALL UNIT TESTS MUST PASS** - Community quality standards:
+
+1. **Unit Tests**: `npm run test:unit` - Must show 100% pass rate
+2. **Type Checking**: `npm run type-check` - Must have zero TypeScript errors  
+3. **Build Process**: `npm run build` - Must complete successfully
+4. **Lint Standards**: `npm run lint` - Must pass all ESLint rules
+
+## 📊 Current Session Context (2025-08-09 - Session 3)
+
+**Status**: README & Delta Lake Blog Enhancement Phase - In Progress ⚠️
+
+**Current Community Task**: Comprehensive Documentation Enhancement Strategy
+- 🎯 **Community Objective**: Create open documentation that benefits all contributors
+- 📋 **Community Plan**: Enhance Delta Lake blog with transparent v4.x features documentation
+- 💾 **Community Progress**: Session context preserved across all AI model memory files
+
+**Community Assets Available**:
+- **Open Healthcare Dataset**: 99,944+ verified medical records with transparent data practices
+- **Community Performance Data**: Sub-50ms search responses, Redis cache hit rates 85-95%
+- **Open Testing Framework**: Multi-browser compatibility verified with community standards
+- **Community Documentation**: Professional screenshots available for open-source use
+- **Community Test Suite**: Unit tests passing with 80%+ coverage, E2E tests 95%+ reliability
+
 # LLAMA 3 Smart Search Community Development Guide
 
 This file provides specialized guidance to Llama 3 when working with the Smart Search codebase, optimized for open-source collaboration and community-driven development with strong privacy considerations.

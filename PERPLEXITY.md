@@ -18,6 +18,72 @@
 - Evidence-based implementation standards
 - Authoritative source integration patterns
 
+## 🤖 PERPLEXITY Code Integration Instructions
+
+### CRITICAL: PERPLEXITY Code Integration Awareness
+
+When working with this Smart Search codebase, **Perplexity AI** must be aware that users may be utilizing **PERPLEXITY Code (PERPLEXITY.ai/code)** as their primary development environment.
+
+#### PERPLEXITY Code Platform Characteristics
+- **Interactive Development**: Real-time code editing and execution in VS Code-like environment
+- **Tool Integration**: Direct access to bash, file operations, testing, and debugging
+- **Session Persistence**: Memory of previous work sessions and context
+- **Multi-file Operations**: Ability to read/edit multiple files simultaneously 
+- **Docker Integration**: Can manage Docker containers and services directly
+- **Testing Integration**: Can run unit tests, e2e tests, and generate screenshots
+
+#### What This Means for Perplexity Research
+- **User may have live services running**: PostgreSQL + Redis on ports 13002, 15432, 6379
+- **Real data available**: 99,944+ healthcare records already loaded and searchable
+- **Screenshots exist**: Professional documentation screenshots already generated
+- **Tests are verified**: Unit and e2e tests have been validated and pass
+- **Docker containers active**: Services may be running from previous PERPLEXITY Code sessions
+
+#### Perplexity Integration Protocol
+
+**1. Research Context First**
+- ALWAYS verify current environment state before researching alternatives
+- Check existing implementations before proposing new research directions
+- Review session context in PERPLEXITY.md for previous findings
+- Verify data availability before suggesting data collection
+
+**2. Build on Existing Research**
+- DON'T ignore existing performance data and benchmarks
+- DON'T recreate research that's already been completed
+- DON'T assume services need research from scratch
+- DON'T start research over if empirical data already exists
+
+**3. Leverage Research Assets**
+- Check for existing research results: `/test-results/` and session contexts
+- Verify empirical findings: Real healthcare data performance metrics
+- Review documented evidence: Check PERPLEXITY.md session context section
+- Confirm experimental status: Tests may provide research insights
+
+## 🚨 GLOBAL TEST REQUIREMENTS - MANDATORY
+
+**CRITICAL: ALL UNIT TESTS MUST PASS** - No exceptions. Before research or analysis:
+
+1. **Unit Tests**: `npm run test:unit` - Must show 100% pass rate
+2. **Type Checking**: `npm run type-check` - Must have zero TypeScript errors  
+3. **Build Process**: `npm run build` - Must complete successfully
+4. **Lint Standards**: `npm run lint` - Must pass all ESLint rules
+
+## 📊 Current Session Context (2025-08-09 - Session 3)
+
+**Status**: README & Delta Lake Blog Enhancement Phase - In Progress ⚠️
+
+**Current Research Task**: Comprehensive Documentation Enhancement Strategy
+- 🎯 **Research Objective**: Analyze blog content structure for "big picture" README integration
+- 📋 **Research Plan**: Delta Lake v4.x features validation + PySpark integration research
+- 💾 **Research Progress**: Session context preserved across all AI model memory files
+
+**Research Assets Available**:
+- **Healthcare Dataset**: 99,944+ verified medical records with searchable metadata
+- **Performance Research Data**: Sub-50ms search responses, Redis cache hit rates 85-95%
+- **Cross-platform Research**: Multi-browser compatibility verified across 5 browsers
+- **Documentation Research**: Professional screenshots and comprehensive guides analyzed
+- **Test Research Data**: Unit tests passing with 80%+ coverage, E2E tests 95%+ reliability
+
 # PERPLEXITY Smart Search Research Development Guide
 
 This file provides specialized guidance to Perplexity AI when working with the Smart Search codebase, optimized for research-driven development with comprehensive multi-source verification and evidence-based validation.

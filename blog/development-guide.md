@@ -2,6 +2,9 @@
 
 > **Best practices, patterns, and tips for developing with Smart Search**
 
+## 📖 Navigation
+← [Delta Lake + Redis](./deltalake-redis-showcase.md) | [Back to Main Documentation](../README.md) | [Developer Guides](../README.md#developer-guides) | [Security Guide →](./security-guide.md)
+
 [![Open Source](https://img.shields.io/badge/Open%20Source-Apache%202.0-blue)](https://github.com/samas-it-services/smart-search)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](#typescript-development)
 [![Community](https://img.shields.io/badge/Community-Driven-brightgreen)](#community-patterns)

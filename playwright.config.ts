@@ -17,7 +17,7 @@ export default defineConfig({
     ['junit', { outputFile: 'test-results/e2e-results.xml' }]
   ],
   use: {
-    baseURL: 'http://localhost:13002',
+    baseURL: 'http://localhost:8100',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure'

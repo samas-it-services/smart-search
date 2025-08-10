@@ -7,6 +7,123 @@ Guidance for OpenAI models (GPT-4, GPT-3.5) working with Smart Search codebase.
 - **Focus Areas**: Clean code, clear documentation, practical examples, production-ready implementations
 - **Style**: Concise, user-first, instructional. Clear action items, minimal fluff.
 
+## 🤖 OpenAI Code Integration Instructions
+
+### CRITICAL: OpenAI Code Integration Awareness
+
+When working with this Smart Search codebase, **OpenAI models** must be aware that users may be utilizing **OpenAI Code (OpenAI.ai/code)** as their primary development environment.
+
+#### OpenAI Code Platform Characteristics
+- **Interactive Development**: Real-time code editing and execution in VS Code-like environment
+- **Tool Integration**: Direct access to bash, file operations, testing, and debugging
+- **Session Persistence**: Memory of previous work sessions and context
+- **Multi-file Operations**: Ability to read/edit multiple files simultaneously 
+- **Docker Integration**: Can manage Docker containers and services directly
+- **Testing Integration**: Can run unit tests, e2e tests, and generate screenshots
+
+#### What This Means for OpenAI Models
+- **User may have live services running**: PostgreSQL + Redis on ports 13002, 15432, 6379
+- **Real data available**: 99,944+ healthcare records already loaded and searchable
+- **Screenshots exist**: Professional documentation screenshots already generated
+- **Tests are verified**: Unit and e2e tests have been validated and pass
+- **Docker containers active**: Services may be running from previous OpenAI Code sessions
+
+#### OpenAI Integration Protocol
+
+**1. User-First Context Awareness**
+- ALWAYS ask about current environment state before suggesting setup
+- Check if services are already running to avoid unnecessary work
+- Verify existing progress before proposing new implementations
+- Review session context in OpenAI.md for previous work
+
+**2. Avoid User Frustration**
+- DON'T assume services need setup from scratch
+- DON'T recreate existing functionality unnecessarily  
+- DON'T ignore existing working implementations
+- DON'T start over if progress already exists
+
+**3. Leverage Existing User Assets**
+- Check for existing screenshots: `/screenshots/blog/`
+- Verify working services: Real healthcare data may be loaded
+- Review completed work: Check OpenAI.md session context section
+- Confirm test status: Tests may already be passing
+
+#### OpenAI User-Focused Commands
+
+**Quick Status Check Commands**:
+```bash
+# Check if user's services are already running
+curl http://localhost:13002/api/health
+curl http://localhost:13002/api/stats
+
+# Verify user's existing test results
+npm run test:unit          # Should pass 100%
+npm run test:e2e           # Should work with real data
+```
+
+**User Asset Verification**:
+```bash
+# Check if user already has screenshots
+ls -la screenshots/blog/postgres-redis/
+ls -la screenshots/blog/mysql-dragonfly/
+
+# Verify user's data is loaded
+curl "http://localhost:13002/api/search?q=diabetes"  # Real healthcare query
+```
+
+#### OpenAI Session Handoff Protocol
+
+When helping users continue from OpenAI Code sessions:
+1. **Read User Context**: Check `OpenAI.md` Section: "Session Context & Planning Log"
+2. **Verify User State**: Confirm what's already working for the user
+3. **Check User Progress**: Don't make user repeat completed work
+4. **Build on User Success**: Enhance what's working rather than starting over
+5. **User-Centric Approach**: Focus on user's immediate needs and goals
+
+This ensures OpenAI models provide helpful, non-redundant assistance that builds on the user's existing OpenAI Code progress.
+
+## 🚨 GLOBAL TEST REQUIREMENTS - MANDATORY
+
+**CRITICAL: ALL UNIT TESTS MUST PASS** - No exceptions. Before any development or suggestions:
+
+1. **Unit Tests**: `npm run test:unit` - Must show 100% pass rate
+2. **Type Checking**: `npm run type-check` - Must have zero TypeScript errors  
+3. **Build Process**: `npm run build` - Must complete successfully
+4. **Lint Standards**: `npm run lint` - Must pass all ESLint rules
+
+**Test Coverage Requirements:**
+- **Minimum Coverage**: 80% across all modules (enforced by `npm run test:coverage`)
+- **Critical Paths**: 100% coverage required for SmartSearch core, all providers, and fallback logic
+- **Error Scenarios**: All failure modes and circuit breaker scenarios must be tested
+
+## 📊 Current Session Context (2025-08-09 - Session 3)
+
+**Status**: README & Delta Lake Blog Enhancement Phase - In Progress ⚠️
+
+**Current Task**: Comprehensive Documentation Enhancement Strategy
+- 🎯 **Objective**: Create "big picture" README with all blog links + enhance Delta Lake blog with Delta.io v4.x features
+- 📋 **Plan Created**: README blog integration + Delta Lake v4.x + PySpark integration patterns
+- 💾 **Progress Saved**: Session context preserved across all AI model memory files
+
+**User Achievements - COMPLETED** ✅
+- ✅ **PostgreSQL + Redis Production System**: Working with 99,944+ healthcare records
+- ✅ **Full Test Suite Passing**: All 10 Playwright tests passing on localhost:13002
+- ✅ **Professional Documentation**: Screenshots and comprehensive guides completed
+- ✅ **Cross-browser Compatibility**: Chrome, Firefox, Safari, Mobile Chrome, Mobile Safari verified
+- ✅ **Real Data Verification**: Actual healthcare searches (diabetes, cardiac surgery, immunotherapy)
+
+**User Assets Available**:
+- **Production Healthcare Dataset**: 99,944+ verified medical records ready for search
+- **Performance Validated**: Sub-50ms search responses, Redis cache hit rates 85-95%
+- **Professional Screenshots**: High-quality documentation images already generated
+- **Working Services**: PostgreSQL + Redis may still be running from previous sessions
+- **Passing Tests**: Unit tests with 80%+ coverage, E2E tests 95%+ reliability
+
+**User's Next Goals**:
+- **README Enhancement**: Add comprehensive blog index and architecture overview
+- **Delta Lake Blog**: Upgrade with Delta.io v4.x features and PySpark integration
+- **Documentation Integration**: Link all blog content for "big picture" understanding
+
 ## Commands
 
 ### Development

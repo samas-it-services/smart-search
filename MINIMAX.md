@@ -18,6 +18,58 @@
 - Pragmatic execution strategies
 - User-centric interface design
 
+## 🤖 MiniMax Code Integration Instructions
+
+### CRITICAL: MiniMax Code Integration Awareness
+
+When working with this Smart Search codebase, **MiniMax AI** must be aware that users may be utilizing **MiniMax Code (MiniMax.ai/code)** as their primary development environment.
+
+#### What This Means for MiniMax Conversational Development
+- **User may have live services running**: PostgreSQL + Redis on ports 13002, 15432, 6379
+- **Real data available**: 99,944+ healthcare records already loaded and searchable
+- **Screenshots exist**: Professional documentation screenshots already generated
+- **Tests are verified**: Unit and e2e tests have been validated and pass
+- **Docker containers active**: Services may be running from previous MiniMax Code sessions
+
+#### MiniMax Integration Protocol
+
+**1. Conversational Context Awareness**
+- ALWAYS ask step-by-step about current environment state
+- Guide users through verifying existing progress before suggesting new steps
+- Review session context in MiniMax.md for previous conversational guidance
+- Check what's already working before proposing new conversational flows
+
+**2. Build on User Success Conversationally**
+- DON'T ignore existing working implementations in conversation
+- DON'T recreate functionality that users have already implemented
+- DON'T assume services need setup when they may already be running
+- DON'T start conversational guidance over - instead, continue the conversation naturally
+
+## 🚨 GLOBAL TEST REQUIREMENTS - MANDATORY
+
+**CRITICAL: ALL UNIT TESTS MUST PASS** - Let's ensure this step-by-step:
+
+1. **Unit Tests**: `npm run test:unit` - Must show 100% pass rate
+2. **Type Checking**: `npm run type-check` - Must have zero TypeScript errors  
+3. **Build Process**: `npm run build` - Must complete successfully
+4. **Lint Standards**: `npm run lint` - Must pass all ESLint rules
+
+## 📊 Current Session Context (2025-08-09 - Session 3)
+
+**Status**: README & Delta Lake Blog Enhancement Phase - In Progress ⚠️
+
+**Current Conversational Task**: Comprehensive Documentation Enhancement Strategy
+- 🎯 **Conversational Objective**: Guide users through creating "big picture" README with step-by-step clarity
+- 📋 **Conversational Plan**: Help users enhance Delta Lake blog with v4.x features through clear steps
+- 💾 **Conversational Progress**: Session context preserved for continued user guidance
+
+**Conversational Assets Available for Users**:
+- **User-Friendly Healthcare Dataset**: 99,944+ verified medical records ready for step-by-step exploration
+- **Clear Performance Data**: Sub-50ms search responses that users can easily understand, Redis cache hit rates 85-95%
+- **Step-by-Step Testing**: Multi-browser compatibility verified with clear user guidance
+- **User-Friendly Documentation**: Professional screenshots with conversational context
+- **Practical Test Suite**: Unit tests passing with 80%+ coverage, E2E tests 95%+ reliability
+
 # MINIMAX Smart Search Conversational Development Guide
 
 This file provides specialized guidance to MiniMax AI when working with the Smart Search codebase, optimized for conversational assistance and step-by-step practical implementation with clear user guidance.

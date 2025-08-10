@@ -2,6 +2,9 @@
 
 > **Universal Search Engine Integration - Every Developer, Every Platform, Everywhere**
 
+## 📖 Navigation
+← [Back to Main Documentation](../README.md) | [Platform Guides](../README.md#platform-guides) | [Developer Guides](../README.md#developer-guides)
+
 [![Global Platform Support](https://img.shields.io/badge/Platforms-20%2B%20Supported-brightgreen)](https://github.com/samas/smart-search)
 [![Multi-Language](https://img.shields.io/badge/Languages-English%20%7C%20中文%20%7C%20日本語%20%7C%20한국어-blue)](https://github.com/samas/smart-search)
 [![Regional Compliance](https://img.shields.io/badge/Compliance-GDPR%20%7C%20ICP%20%7C%20SOC2-green)](https://github.com/samas/smart-search)
