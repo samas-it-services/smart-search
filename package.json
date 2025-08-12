@@ -63,7 +63,7 @@
     "test:e2e:mock": "cross-env E2E_TARGET=mock playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
-    "test:serve": "python -m http.server 3000 --directory tests/e2e",
+    "test:serve": "python3 -m http.server 3000 --directory tests/e2e || python -m http.server 3000 --directory tests/e2e",
     "test:all": "npm run test:unit && npm run test:e2e",
     "screenshots": "node generate-screenshots.js",
     "screenshots:all": "node generate-screenshots.js all",

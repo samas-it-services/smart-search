@@ -1,0 +1,14 @@
+version: 1
+dataset: financial
+roles:
+  - id: admin
+    can_edit_policies: true
+    row_filter: "true"
+    column_masks: {}
+  - id: analyst
+    can_edit_policies: false
+    row_filter: "region in ${user.allowed_regions}"
+    column_masks:
+      ssn: "hash"
+      name: "initials"
+

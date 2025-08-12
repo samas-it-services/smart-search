@@ -1,0 +1,32 @@
+version: 1
+dataset: healthcare
+roles:
+  - id: admin
+    can_edit_policies: true
+    row_filter: "true"
+    column_masks: {}
+  - id: data_modeler
+    can_edit_policies: true
+    row_filter: "true"
+    column_masks: {}
+  - id: clinician
+    can_edit_policies: false
+    row_filter: "clinician_id == ${user.id}"
+    column_masks:
+      ssn: "redact_full"
+      dob: "yyyy_mm"
+      address: "redact_part"
+  - id: analyst
+    can_edit_policies: false
+    row_filter: "region in ${user.allowed_regions}"
+    column_masks:
+      ssn: "hash"
+      name: "initials"
+  - id: business_user
+    can_edit_policies: false
+    row_filter: "true"
+    column_masks:
+      ssn: "null"
+      dob: "year_only"
+      address: "city_only"
+

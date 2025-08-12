@@ -1,0 +1,56 @@
+version: '3.9'
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+  delta-api:
+    image: python:3.11-slim
+    env_file:
+      - env.example
+    working_dir: /app
+    volumes:
+      - ./python:/app
+      - ./datasets/generated:${DELTA_DIR:-/data/delta}
+      - ./governance:/workspace/governance
+    command: sh -c "pip install --no-cache-dir fastapi uvicorn pyyaml pydantic redis requests && uvicorn app.main:app --host 0.0.0.0 --port ${PORT_DELTA_API:-8000} --reload"
+    ports:
+      - "${PORT_DELTA_API:-8000}:8000"
+    depends_on:
+      - redis
+  worker:
+    image: node:20
+    env_file:
+      - env.example
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: sh -c "cd worker && npm install --no-audit --no-fund && npm run start"
+    depends_on:
+      - redis
+      - delta-api
+  web:
+    image: node:20
+    env_file:
+      - env.example
+    working_dir: /workspace
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+      - DELTA_API_URL=http://delta-api:${PORT_DELTA_API:-8000}
+    volumes:
+      - ./:/workspace
+    command: sh -c "cd app && npm install --no-audit --no-fund && npm run build && npm run start -- -H 0.0.0.0 -p ${PORT_WEB:-3000}"
+    ports:
+      - "${PORT_WEB:-3000}:3000"
+    depends_on:
+      - delta-api
+      - redis
+  python-examples:
+    image: python:3.11-slim
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: sh -c "pip install --no-cache-dir -r examples/python/requirements.txt && python examples/python/search_delta_redis.py"
+    depends_on:
+      - delta-api
+

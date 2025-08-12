@@ -1,0 +1,14 @@
+version: 1
+dataset: ecommerce
+roles:
+  - id: admin
+    can_edit_policies: true
+    row_filter: "true"
+    column_masks: {}
+  - id: business_user
+    can_edit_policies: false
+    row_filter: "true"
+    column_masks:
+      email: "redact_part"
+      address: "city_only"
+
