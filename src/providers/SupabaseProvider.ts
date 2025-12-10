@@ -44,12 +44,12 @@ export interface SupabaseSearchConfig {
 
 export class SupabaseProvider implements DatabaseProvider {
   name = 'Supabase';
-  private supabase: SupabaseClient;
+  public client: SupabaseClient;
   private isConnectedFlag = false;
-  private searchConfig: SupabaseSearchConfig;
+  private searchConfig?: SupabaseSearchConfig;
 
-  constructor(config: SupabaseConfig, searchConfig: SupabaseSearchConfig) {
-    this.supabase = createClient(config.url, config.key, config.options);
+  constructor(config: SupabaseConfig, searchConfig?: SupabaseSearchConfig) {
+    this.client = createClient(config.url, config.key, config.options);
     this.searchConfig = searchConfig;
   }
 
@@ -57,10 +57,10 @@ export class SupabaseProvider implements DatabaseProvider {
     try {
       // Test connection by checking if we can access the database
       // Try to query the first configured table, or use a system table if none configured
-      const tableNames = Object.keys(this.searchConfig.tables);
+      const tableNames = Object.keys(this.searchConfig?.tables || {});
       const testTable = tableNames.length > 0 ? tableNames[0] : 'information_schema.tables';
       
-      const { error } = await this.supabase
+      const { error } = await this.client
         .from(testTable)
         .select('*')
         .limit(1);
