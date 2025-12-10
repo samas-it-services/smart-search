@@ -82,7 +82,8 @@
     "publish:minor": "./scripts/publish-to-npm.sh minor",
     "publish:major": "./scripts/publish-to-npm.sh major",
     "publish:test": "./scripts/test-publish.sh",
-    "publish:dry-run": "./scripts/publish-to-npm.sh patch --dry-run"
+    "publish:dry-run": "./scripts/publish-to-npm.sh patch --dry-run",
+    "publish:github": "./scripts/publish-to-github.sh"
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"
