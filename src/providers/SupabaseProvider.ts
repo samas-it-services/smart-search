@@ -46,7 +46,7 @@ export class SupabaseProvider implements DatabaseProvider {
   name = 'Supabase';
   public client: SupabaseClient;
   private isConnectedFlag = false;
-  private searchConfig?: SupabaseSearchConfig;
+  private searchConfig: SupabaseSearchConfig | undefined;
 
   constructor(config: SupabaseConfig, searchConfig?: SupabaseSearchConfig) {
     this.client = createClient(config.url, config.key, config.options);
@@ -96,11 +96,15 @@ export class SupabaseProvider implements DatabaseProvider {
 
     // Get tables to search based on filter types or default to all configured tables
     let tablesToSearch: string[];
-    
+
+    if (!this.searchConfig?.tables) {
+      return results;
+    }
+
     if (filters?.type && filters.type.length > 0) {
       // Find tables that match the requested types
       tablesToSearch = Object.keys(this.searchConfig.tables).filter(tableName => {
-        const tableConfig = this.searchConfig.tables[tableName];
+        const tableConfig = this.searchConfig!.tables[tableName];
         return filters.type!.includes(tableConfig.type);
       });
     } else {
@@ -138,7 +142,7 @@ export class SupabaseProvider implements DatabaseProvider {
     const selectColumns = Object.values(columns).filter(Boolean).join(', ');
 
     // Build the search query
-    let queryBuilder = this.supabase
+    let queryBuilder = this.client
       .from(tableType)
       .select(selectColumns);
 
@@ -276,19 +280,19 @@ export class SupabaseProvider implements DatabaseProvider {
 
   async checkHealth(): Promise<HealthStatus> {
     const startTime = Date.now();
-    
+
     try {
       // Test basic connectivity using the same approach as connect()
-      const tableNames = Object.keys(this.searchConfig.tables);
+      const tableNames = Object.keys(this.searchConfig?.tables || {});
       const testTable = tableNames.length > 0 ? tableNames[0] : 'information_schema.tables';
-      
-      const { error } = await this.supabase
+
+      const { error } = await this.client
         .from(testTable)
         .select('*')
         .limit(1);
-      
+
       const latency = Math.max(1, Date.now() - startTime); // Ensure minimum 1ms latency
-      
+
       // PGRST116 = no rows returned, PGRST106 = table not found - both OK for health check
       if (error && !['PGRST116', 'PGRST106'].includes(error.code)) {
         return {
@@ -307,7 +311,7 @@ export class SupabaseProvider implements DatabaseProvider {
         isSearchAvailable: true,
         latency,
         memoryUsage: 'N/A',
-        keyCount: Object.keys(this.searchConfig.tables).length,
+        keyCount: Object.keys(this.searchConfig?.tables || {}).length,
         lastSync: new Date().toISOString(),
         errors: []
       };
