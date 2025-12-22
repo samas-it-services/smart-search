@@ -5,7 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Build outputs
-dist/
+# dist/ - INCLUDED for GitHub dependency support
 build/
 *.tsbuildinfo
 
@@ -82,7 +82,7 @@ pids/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# dist - INCLUDED for GitHub dependency support
 
 # Storybook build outputs
 .out
