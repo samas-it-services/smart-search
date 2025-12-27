@@ -1,0 +1,58 @@
+```mermaid
+graph TB
+    subgraph "Application Layer"
+        A[SmartSearch Client]
+        B[Search Request]
+        C[Search Options]
+    end
+    
+    subgraph "Smart Search Core"
+        D[SmartSearch Class]
+        E[Search Strategy Manager]
+        F[Circuit Breaker Manager]
+        G[Health Monitor]
+        H[Data Governance Service]
+    end
+    
+    subgraph "Provider Layer"
+        I[Database Providers]
+        J[Cache Providers]
+        K[PostgreSQL Provider]
+        L[MySQL Provider]
+        M[MongoDB Provider]
+        N[Redis Provider]
+        O[Memcached Provider]
+        P[Supabase Provider]
+    end
+    
+    subgraph "Infrastructure"
+        Q[PostgreSQL DB]
+        R[MySQL DB]
+        S[MongoDB]
+        T[Redis Cache]
+        U[Memcached]
+        V[Supabase]
+    end
+
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    D --> F
+    D --> G
+    D --> H
+    E --> I
+    E --> J
+    I --> K
+    I --> L
+    I --> M
+    J --> N
+    J --> O
+    I --> P
+    K --> Q
+    L --> R
+    M --> S
+    N --> T
+    O --> U
+    P --> V
+```

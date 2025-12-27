@@ -1,0 +1,50 @@
+```mermaid
+graph TB
+    subgraph "SmartSearch Core Components"
+        A[SmartSearch Class]
+        B[Search Strategy Logic]
+        C[Circuit Breaker]
+        D[Health Monitoring]
+        E[Cache Management]
+        F[Data Governance]
+    end
+    
+    subgraph "Provider Interface"
+        G[DatabaseProvider]
+        H[CacheProvider]
+    end
+    
+    subgraph "Database Providers"
+        I[PostgreSQLProvider]
+        J[MySQLProvider]
+        K[MongoDBProvider]
+        L[SupabaseProvider]
+        M[SQLiteProvider]
+        N[DeltaLakeProvider]
+    end
+    
+    subgraph "Cache Providers"
+        O[RedisProvider]
+        P[MemcachedProvider]
+        Q[DragonflyProvider]
+        R[InMemoryProvider]
+    end
+    
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    A --> F
+    A --> G
+    A --> H
+    G --> I
+    G --> J
+    G --> K
+    G --> L
+    G --> M
+    G --> N
+    H --> O
+    H --> P
+    H --> Q
+    H --> R
+```
