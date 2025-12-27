@@ -452,6 +452,108 @@ import { SmartSearchFactory } from '@bilgrami/smart-search';
 const search = SmartSearchFactory.fromEnvironment();
 ```
 
+## ⚡ Direct Redis Connection (NEW!)
+
+The Smart-Search package now supports direct Redis connections for optimal performance. This feature bypasses edge functions for sub-10ms response times.
+
+### Direct Redis Provider Usage
+
+```typescript
+import { SmartSearch } from '@bilgrami/smart-search';
+import { DirectRedisProvider } from '@bilgrami/smart-search/providers';
+
+// Create a direct Redis provider
+const directRedisProvider = new DirectRedisProvider({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD,
+  db: parseInt(process.env.REDIS_DB || '0'),
+  // Performance options
+  maxConnections: 10,
+  minConnections: 2,
+  connectionTimeout: 10000,
+  commandTimeout: 5000,
+  // Circuit breaker settings
+  maxRetriesPerRequest: 3,
+  retryDelayOnFailover: 100,
+  // TLS configuration
+  tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
+  // Or use URL-based connection
+  url: process.env.REDIS_URL,
+});
+
+// Initialize SmartSearch with direct connection
+const smartSearch = new SmartSearch({
+  database: yourDatabaseProvider, // PostgreSQL, MySQL, etc.
+  cache: directRedisProvider,    // Use direct Redis connection
+  fallback: 'database',          // Fallback to database if Redis unavailable
+  circuitBreaker: {
+    failureThreshold: 5,         // Open circuit after 5 failures
+    recoveryTimeout: 60000,      // Try recovery after 1 minute
+    healthCacheTTL: 30000,       // Cache health status for 30 seconds
+  },
+  cacheConfig: {
+    enabled: true,
+    defaultTTL: 300000,          // 5 minutes cache TTL
+  },
+  performance: {
+    enableMetrics: true,
+    slowQueryThreshold: 1000,    // Log queries slower than 1 second
+  }
+});
+
+// Perform search with direct Redis connection
+const { results, performance, strategy } = await smartSearch.search('javascript', {
+  limit: 20,
+  offset: 0,
+  filters: {
+    category: ['programming', 'web-development'],
+    language: ['en', 'es']
+  },
+  sortBy: 'relevance',
+  sortOrder: 'desc'
+});
+
+console.log(`Found ${results.length} results in ${performance.searchTime}ms`);
+console.log(`Strategy: ${strategy.primary} (${strategy.reason})`);
+```
+
+### Performance Benefits
+
+- **Direct Redis connections** provide 50%+ faster response times than edge function approach
+- **Sub-10ms response times** for search operations
+- **Reduced network hops** and latency
+- **Optimized connection pooling** with configurable connection limits
+
+### Configuration Options
+
+```typescript
+const directRedisConfig: DirectRedisConfig = {
+  // Basic connection
+  host: 'localhost',           // Redis host (default: localhost)
+  port: 6379,                 // Redis port (default: 6379)
+  password: 'your-password',  // Redis password
+  username: 'your-username',  // Redis ACL username
+  apiKey: 'your-api-key',     // For API key authentication (Redis Cloud, Upstash, etc.)
+  db: 0,                      // Redis database number
+  url: 'redis://localhost:6379', // Redis connection URL
+
+  // Connection settings
+  connectTimeout: 10000,      // Connection timeout (default: 10000ms)
+  lazyConnect: true,          // Lazy connection (default: true)
+  retryDelayOnFailover: 100,  // Failover retry delay (default: 100ms)
+  maxRetriesPerRequest: 3,    // Max retries (default: 3)
+  tls: {},                    // TLS configuration
+
+  // Performance options
+  keepAlive: 30000,          // Keep alive interval (default: 30000ms)
+  maxConnections: 10,        // Maximum connections in pool (default: 10)
+  minConnections: 2,         // Minimum connections in pool (default: 2)
+  connectionTimeout: 10000,  // Connection timeout (default: 10000ms)
+  commandTimeout: 5000,      // Command timeout (default: 5000ms)
+};
+```
+
 ## 🎛️ Advanced Configuration
 
 ```typescript

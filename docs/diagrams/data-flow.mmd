@@ -1,0 +1,34 @@
+```mermaid
+sequenceDiagram
+    participant U as User/Client
+    participant S as SmartSearch
+    participant D as Database Provider
+    participant C as Cache Provider
+    participant CB as Circuit Breaker
+    participant HM as Health Monitor
+    
+    U->>S: Search Request (query, options)
+    S->>HM: Check health status
+    HM-->>S: Health status (cache/db availability)
+    
+    alt Cache is healthy and available
+        S->>C: Search in cache
+        alt Cache hit
+            C-->>S: Return cached results
+            S-->>U: Return results (strategy: cache)
+        else Cache miss
+            C-->>S: No results found
+            S->>D: Search in database
+            D-->>S: Return database results
+            S->>C: Cache results
+            S-->>U: Return results (strategy: cache-first)
+        end
+    else Cache unavailable/unhealthy
+        S->>D: Search in database
+        D-->>S: Return database results
+        S-->>U: Return results (strategy: database)
+    end
+    
+    Note over S, CB: Circuit breaker monitors failures
+    Note over S, HM: Health monitor updates status periodically
+```
